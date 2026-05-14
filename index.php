@@ -1,4 +1,10 @@
 <?php
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/E-Commerce-Store',
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 
 require_once __DIR__ . '/config/db.php';
@@ -7,6 +13,34 @@ require_once __DIR__ . '/app/controllers/AuthController.php';
 $page = $_GET['page'] ?? 'home';
 
 $auth = new AuthController($conn);
+
+function dashboardUrlForRole(string $role): string
+{
+    if ($role === 'admin') {
+        return '/E-Commerce-Store/index.php?page=adminDashboard';
+    }
+
+    if ($role === 'seller') {
+        return '/E-Commerce-Store/index.php?page=sellerDashboard';
+    }
+
+    return '/E-Commerce-Store/index.php';
+}
+
+function requireRole(string $role): void
+{
+    $currentRole = $_SESSION['user']['role'] ?? null;
+
+    if ($currentRole !== $role) {
+        header('Location: /E-Commerce-Store/index.php?page=login');
+        exit;
+    }
+}
+
+if ($page === 'home' && !empty($_SESSION['user']['role'])) {
+    header('Location: ' . dashboardUrlForRole($_SESSION['user']['role']));
+    exit;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -50,7 +84,8 @@ elseif ($page === 'logout') {
 
 elseif ($page === 'adminDashboard') {
 
-    include __DIR__ . '/app/views/admin/adminDashboard.php';
+    requireRole('admin');
+    include __DIR__ . '/app/views/admin/AdminDashboard.php';
     exit;
 }
 
@@ -62,6 +97,7 @@ elseif ($page === 'customerDashboard') {
 
 elseif ($page === 'sellerDashboard') {
 
+    requireRole('seller');
     include __DIR__ . '/app/views/seller/sellerDashboard.php';
     exit;
 }

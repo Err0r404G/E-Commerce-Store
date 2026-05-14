@@ -132,6 +132,12 @@ class AuthController
     public function logout(): void
     {
         $_SESSION = [];
+
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+        }
+
         session_destroy();
 
         header('Location: /E-Commerce-Store/index.php');
@@ -177,7 +183,11 @@ class AuthController
     private function dashboardUrl(string $role): string
     {
         if ($role === 'admin') {
-            return '/E-Commerce-Store/app/views/admin/AdminDashboard.php';
+            return '/E-Commerce-Store/index.php?page=adminDashboard';
+        }
+
+        if ($role === 'seller') {
+            return '/E-Commerce-Store/index.php?page=sellerDashboard';
         }
 
         return '/E-Commerce-Store/index.php';
