@@ -1,6 +1,5 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
-
-<link rel="stylesheet" href="/public/css/signup.css">
+<link rel="stylesheet" href="/E-Commerce-Store/public/css/signup.css">
 
 <main class="signup-page">
 

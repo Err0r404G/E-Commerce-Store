@@ -1,7 +1,5 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
-
-<link rel="stylesheet" href="/public/css/login.css">
-
+<link rel="stylesheet" href="/E-Commerce-Store/public/css/login.css">
 <main class="login-page">
 
     <section class="login-card">

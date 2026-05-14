@@ -1,6 +1,6 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
-<link rel="stylesheet" href="/public/css/admin-dashboard.css">
+<link rel="stylesheet" href="/E-Commerce-Store/public/css/admin-dashboard.css">
 
 <section class="admin-layout">
 
