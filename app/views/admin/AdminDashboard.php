@@ -3,7 +3,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-<<<<<<< HEAD
 if (empty($_SESSION['user'])) {
     header('Location: /E-Commerce-Store/index.php?page=login');
     exit;
@@ -23,9 +22,6 @@ include __DIR__ . '/../layouts/adminHeader.php';
 
 <link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css">
 
-=======
-<link rel="stylesheet" href="/E-Commerce-Store/public/css/admin-dashboard.css">
->>>>>>> ddd1176dcb6a4ee4794f1fd76d7ffa40521070c8
 <section class="admin-layout">
 
     <aside class="admin-sidebar">
@@ -40,7 +36,7 @@ include __DIR__ . '/../layouts/adminHeader.php';
 
             <a href="#">
                 <i class="fa-solid fa-user-check"></i>
-                <span>Seller Approvals</span>
+                <span>Vendor Approvals</span>
             </a>
 
             <a href="#">

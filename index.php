@@ -20,8 +20,8 @@ function dashboardUrlForRole(string $role): string
         return '/E-Commerce-Store/index.php?page=adminDashboard';
     }
 
-    if ($role === 'seller') {
-        return '/E-Commerce-Store/index.php?page=sellerDashboard';
+    if ($role === 'vendor') {
+        return '/E-Commerce-Store/index.php?page=vendorDashboard';
     }
 
     return '/E-Commerce-Store/index.php';
@@ -95,10 +95,10 @@ elseif ($page === 'customerDashboard') {
     exit;
 }
 
-elseif ($page === 'sellerDashboard') {
+elseif ($page === 'vendorDashboard') {
 
-    requireRole('seller');
-    include __DIR__ . '/app/views/seller/sellerDashboard.php';
+    requireRole('vendor');
+    include __DIR__ . '/app/views/vendor/vendor_home_page_screen.php';
     exit;
 }
 

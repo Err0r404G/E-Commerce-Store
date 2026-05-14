@@ -46,7 +46,6 @@
         </div>
 
 <div class="auth">
-<<<<<<< HEAD
     <?php if (!empty($_SESSION['user'])): ?>
         <span class="user-name"><?= htmlspecialchars($_SESSION['user']['name']) ?></span>
         <a class="login" href="/E-Commerce-Store/index.php?page=logout">Logout</a>
@@ -54,11 +53,6 @@
         <a class="login" href="/E-Commerce-Store/index.php?page=login">Login</a>
         <a class="signup" href="/E-Commerce-Store/index.php?page=signup">Sign Up</a>
     <?php endif; ?>
-=======
-    <a class="login" href="/E-Commerce-Store/app/views/auth/login.php">Login</a>
-
-    <a class="signup" href="/E-Commerce-Store/app/views/auth/signup.php">Sign Up</a>
->>>>>>> ddd1176dcb6a4ee4794f1fd76d7ffa40521070c8
 </div>
 
     </div>
