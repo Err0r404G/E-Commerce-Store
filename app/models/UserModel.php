@@ -25,18 +25,21 @@ class UserModel
     public function create(array $data): bool
     {
         $stmt = $this->conn->prepare(
-            "INSERT INTO users (name, email, password_hash, phone, role, profile_pic)
-             VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO users (name, email, password_hash, phone, role, profile_pic, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
 
+        $isActive = (int) ($data['is_active'] ?? 1);
+
         $stmt->bind_param(
-            "ssssss",
+            "ssssssi",
             $data['name'],
             $data['email'],
             $data['password_hash'],
             $data['phone'],
             $data['role'],
-            $data['profile_pic']
+            $data['profile_pic'],
+            $isActive
         );
 
         $created = $stmt->execute();
