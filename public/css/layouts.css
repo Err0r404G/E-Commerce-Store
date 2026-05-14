@@ -1110,6 +1110,8 @@ body {
 .admin-content {
     flex: 1;
     background: #faf8fc;
+    min-width: 0;
+    padding: 44px 56px 64px;
 }
 
 /* RESPONSIVE */
@@ -1129,5 +1131,289 @@ body {
 
     .admin-menu a {
         justify-content: center;
+    }
+
+    .admin-content {
+        padding: 28px 18px 44px;
+    }
+}
+.admin-main {
+    padding: 0;
+    min-height: 100%;
+    background: #fbf8fc;
+}
+
+.vendor-approval-page {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.page-header h1 {
+    font-size: 36px;
+    color: #172344;
+    margin-bottom: 12px;
+}
+
+.page-header p {
+    color: #4f5565;
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.stats-row {
+    display: flex;
+    gap: 24px;
+    margin: 48px 0 44px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    width: 285px;
+    background: #fff;
+    border: 1px solid #d4d6dd;
+    border-radius: 8px;
+    padding: 22px 24px;
+}
+
+.stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: #dce7ff;
+    color: #18284a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-top span {
+    color: #d62828;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.stat-card p {
+    margin-top: 20px;
+    color: #555a66;
+    font-weight: 600;
+}
+
+.stat-card h2 {
+    margin-top: 6px;
+    color: #172344;
+    font-size: 32px;
+}
+
+.approval-card {
+    background: #fff;
+    border: 1px solid #d4d6dd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.approval-header {
+    padding: 22px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.approval-header h2 {
+    color: #172344;
+    font-size: 24px;
+}
+
+.approval-tools {
+    display: flex;
+    gap: 12px;
+}
+
+.search-box-small {
+    width: 255px;
+    height: 36px;
+    border: 1px solid #cfd2dc;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 10px;
+}
+
+.search-box-small input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+}
+
+.filter-btn,
+.reject-btn {
+    background: #fff;
+    border: 1px solid #8d929d;
+    padding: 8px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.approval-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.approval-table th,
+.approval-table td {
+    padding: 16px 24px;
+    border-top: 1px solid #d4d6dd;
+    text-align: left;
+}
+
+.approval-table th {
+    background: #f7f5f8;
+    color: #555a66;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.business-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.business-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.business-logo.blue {
+    background: #d8edf4;
+}
+
+.business-logo.dark {
+    background: #142326;
+    color: white;
+}
+
+.business-logo.green {
+    background: #e5f4e6;
+}
+
+.business-info h4 {
+    color: #1c2438;
+    margin-bottom: 3px;
+}
+
+.business-info p,
+.approval-table small {
+    display: block;
+    color: #596070;
+    font-size: 12px;
+}
+
+.approve-btn {
+    background: #172344;
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 2px;
+    font-weight: 700;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.approve-btn:disabled,
+.reject-btn:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.approval-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.approval-status.approved {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+}
+
+.approval-status.pending {
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+}
+
+.empty-cell,
+.admin-loading,
+.admin-error {
+    color: #596070;
+    padding: 24px;
+}
+
+.table-footer {
+    border-top: 1px solid #d4d6dd;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-footer p {
+    color: #596070;
+    font-size: 14px;
+}
+
+.pagination {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.pagination button {
+    border: none;
+    background: transparent;
+    padding: 9px 12px;
+    cursor: pointer;
+}
+
+.pagination .active {
+    background: #172344;
+    color: white;
+    border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 30px;
+    }
+
+    .stats-row {
+        margin: 32px 0;
+    }
+
+    .stat-card,
+    .search-box-small {
+        width: 100%;
+    }
+
+    .approval-header,
+    .table-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
     }
 }
