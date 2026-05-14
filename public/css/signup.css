@@ -90,6 +90,24 @@
     width: 100%;
 }
 
+.auth-message {
+    border-radius: 4px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.auth-message p + p {
+    margin-top: 4px;
+}
+
+.auth-message-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
 .form-group {
     margin-bottom: 18px;
 }

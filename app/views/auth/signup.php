@@ -1,4 +1,9 @@
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php
+$errors = $errors ?? [];
+$old = $old ?? [];
+
+include __DIR__ . '/../layouts/header.php';
+?>
 <link rel="stylesheet" href="/E-Commerce-Store/public/css/signup.css">
 
 <main class="signup-page">
@@ -10,7 +15,15 @@
             <p>Enter your credentials to access the Nexus ecosystem.</p>
         </div>
 
-        <form class="signup-form" action="#" method="POST" enctype="multipart/form-data">
+        <?php if ($errors): ?>
+            <div class="auth-message auth-message-error">
+                <?php foreach ($errors as $error): ?>
+                    <p><?= htmlspecialchars($error) ?></p>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <form class="signup-form" action="/E-Commerce-Store/index.php?page=signup" method="POST" enctype="multipart/form-data">
 
             <div class="profile-upload">
                 <label for="profile_pic" class="profile-box">
@@ -20,7 +33,7 @@
                     </span>
                 </label>
 
-                <input type="file" id="profile_pic" name="profile_pic" hidden>
+                <input type="file" id="profile_pic" name="profile_pic" accept="image/jpeg,image/png,image/webp" hidden>
                 <p>PROFILE PICTURE</p>
             </div>
 
@@ -28,27 +41,27 @@
                 <label>Account Type</label>
 
                 <div class="account-type">
-                    <input type="radio" id="customer" name="role" value="customer" checked>
+                    <input type="radio" id="customer" name="role" value="customer" <?= ($old['role'] ?? 'customer') === 'customer' ? 'checked' : '' ?>>
                     <label for="customer">Customer</label>
 
-                    <input type="radio" id="seller" name="role" value="seller">
+                    <input type="radio" id="seller" name="role" value="seller" <?= ($old['role'] ?? '') === 'seller' ? 'checked' : '' ?>>
                     <label for="seller">Seller</label>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Full Name</label>
-                <input type="text" name="name" placeholder="Name" required>
+                <input type="text" name="name" placeholder="Name" value="<?= htmlspecialchars($old['name'] ?? '') ?>" required>
             </div>
 
             <div class="form-group">
                 <label>Corporate or Personal Email</label>
-                <input type="email" name="email" placeholder="name@company.com" required>
+                <input type="email" name="email" placeholder="name@company.com" value="<?= htmlspecialchars($old['email'] ?? '') ?>" required>
             </div>
 
             <div class="form-group">
                 <label>Phone Number (Optional)</label>
-                <input type="text" name="phone" placeholder="+880 123456789">
+                <input type="text" name="phone" placeholder="+880 123456789" value="<?= htmlspecialchars($old['phone'] ?? '') ?>">
             </div>
 
             <div class="password-grid">
@@ -74,7 +87,7 @@
 
             <p class="login-text">
                 Already have an account?
-                <a href="?page=login">Log In</a>
+                <a href="/E-Commerce-Store/index.php?page=login">Log In</a>
             </p>
 
         </form>

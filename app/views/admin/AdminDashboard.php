@@ -1,6 +1,21 @@
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-<link rel="stylesheet" href="/E-Commerce-Store/public/css/admin-dashboard.css">
+if (empty($_SESSION['user'])) {
+    header('Location: /E-Commerce-Store/index.php');
+    exit;
+}
+
+$currentUser = $_SESSION['user'];
+$adminName = $currentUser['name'];
+$adminRole = $currentUser['role'];
+
+include __DIR__ . '/../layouts/adminHeader.php';
+?>
+
+<link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css">
 
 <section class="admin-layout">
 
@@ -46,13 +61,13 @@
                 </div>
 
                 <div>
-                    <h4>USER ADMIN</h4>
-                    <p>ADMIN</p>
+                    <h4><?= htmlspecialchars($adminName) ?></h4>
+                    <p><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $adminRole))) ?></p>
                 </div>
 
             </div>
 
-            <a href="#" class="logout">
+            <a href="/E-Commerce-Store/index.php?page=logout" class="logout">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 <span>Log Out</span>
             </a>

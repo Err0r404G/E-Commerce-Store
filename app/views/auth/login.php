@@ -1,4 +1,9 @@
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php
+$errors = $errors ?? [];
+$old = $old ?? [];
+
+include __DIR__ . '/../layouts/header.php';
+?>
 <link rel="stylesheet" href="/E-Commerce-Store/public/css/login.css">
 <main class="login-page">
 
@@ -15,14 +20,29 @@
             <span></span>
         </div>
 
-        <form class="login-form" action="#" method="POST">
+        <?php if (!empty($_SESSION['success'])): ?>
+            <div class="auth-message auth-message-success">
+                <p><?= htmlspecialchars($_SESSION['success']) ?></p>
+            </div>
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+
+        <?php if ($errors): ?>
+            <div class="auth-message auth-message-error">
+                <?php foreach ($errors as $error): ?>
+                    <p><?= htmlspecialchars($error) ?></p>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <form class="login-form" action="/E-Commerce-Store/index.php?page=login" method="POST">
 
             <div class="form-group">
                 <label>Email</label>
 
                 <div class="input-box">
                     <i class="fa-regular fa-envelope"></i>
-                    <input type="email" name="email" placeholder="name@company.com" required>
+                    <input type="email" name="email" placeholder="name@company.com" value="<?= htmlspecialchars($old['email'] ?? '') ?>" required>
                 </div>
             </div>
 
@@ -47,6 +67,11 @@
             <button type="submit" class="signin-btn">Sign In</button>
 
         </form>
+
+        <p class="signup-link">
+            New to NexusCommerce?
+            <a href="/E-Commerce-Store/index.php?page=signup">Create an account</a>
+        </p>
 
         <div class="bottom-line"></div>
 

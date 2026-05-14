@@ -51,6 +51,30 @@
     width: 100%;
 }
 
+.auth-message {
+    border-radius: 4px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.auth-message p + p {
+    margin-top: 4px;
+}
+
+.auth-message-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+.auth-message-success {
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
 .form-group {
     margin-bottom: 22px;
 }
@@ -146,6 +170,19 @@
 
 .signin-btn:hover {
     background: #101a31;
+}
+
+.signup-link {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: #657083;
+}
+
+.signup-link a {
+    color: #14213d;
+    font-weight: 700;
+    text-decoration: none;
 }
 
 .bottom-line {
