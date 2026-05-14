@@ -1,9 +1,13 @@
+<<<<<<< HEAD
 <?php
 $errors = $errors ?? [];
 $old = $old ?? [];
 
 include __DIR__ . '/../layouts/header.php';
 ?>
+=======
+<?php include __DIR__ . '/../layouts/header.php'; ?>
+>>>>>>> ddd1176dcb6a4ee4794f1fd76d7ffa40521070c8
 <link rel="stylesheet" href="/E-Commerce-Store/public/css/signup.css">
 
 <main class="signup-page">
