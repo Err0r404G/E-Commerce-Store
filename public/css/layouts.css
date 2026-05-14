@@ -1,0 +1,174 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+/* FIX */
+html,
+body {
+    background: #ffffff;
+    width: 100%;
+    min-height: 100%;
+}
+
+/* NAVBAR */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 14px 30px;
+
+    background: #1e293b;
+    color: white;
+}
+
+/* LOGO */
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+}
+
+.logo span {
+    color: #60a5fa;
+}
+
+/* MENU */
+.menu {
+    display: flex;
+    gap: 25px;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.menu a:hover,
+.menu a.active {
+    color: #fff;
+    border-bottom: 2px solid #60a5fa;
+    padding-bottom: 4px;
+}
+
+/* SEARCH */
+.search-box {
+    display: flex;
+    align-items: center;
+
+    background: #0f172a;
+
+    border: 1px solid #334155;
+
+    padding: 8px 12px;
+
+    border-radius: 8px;
+
+    width: 280px;
+
+    gap: 8px;
+}
+
+.search-box i {
+    color: #94a3b8;
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+
+    color: white;
+
+    width: 100%;
+}
+
+.search-box input::placeholder {
+    color: #64748b;
+}
+
+/* RIGHT SIDE */
+.right-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* ICONS */
+.icons i {
+    color: #cbd5e1;
+    margin: 0 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.icons i:hover {
+    color: #60a5fa;
+}
+
+/* BUTTONS */
+.auth {
+    display: flex;
+    gap: 10px;
+}
+
+.login {
+    padding: 6px 14px;
+
+    border: 1px solid #334155;
+
+    background: transparent;
+
+    color: white;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+.login:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.signup {
+    padding: 6px 14px;
+
+    border: none;
+
+    background: #60a5fa;
+
+    color: #0f172a;
+
+    font-weight: 600;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+.signup:hover {
+    opacity: 0.9;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+
+    .menu {
+        display: none;
+    }
+
+    .search-box {
+        display: none;
+    }
+}
