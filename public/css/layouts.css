@@ -119,6 +119,13 @@ body {
     gap: 10px;
 }
 
+/* COMMON LINK BUTTON STYLE */
+.auth a {
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* LOGIN */
 .login {
     padding: 6px 14px;
 
@@ -133,12 +140,16 @@ body {
     cursor: pointer;
 
     transition: 0.3s;
+
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .login:hover {
     background: rgba(255,255,255,0.05);
 }
 
+/* SIGNUP */
 .signup {
     padding: 6px 14px;
 
@@ -155,6 +166,12 @@ body {
     cursor: pointer;
 
     transition: 0.3s;
+
+    font-size: 14px;
+}
+
+.signup:hover {
+    opacity: 0.9;
 }
 
 .signup:hover {

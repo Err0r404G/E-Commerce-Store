@@ -6,7 +6,7 @@
     <title>NexusCommerce</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/public/css/layouts.css">
+    <link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -45,10 +45,11 @@
             <i class="fa fa-heart"></i>
         </div>
 
-        <div class="auth">
-            <button class="login">Login</button>
-            <button class="signup">Sign Up</button>
-        </div>
+<div class="auth">
+    <a class="login" href="/E-Commerce-Store/app/views/auth/login.php">Login</a>
+
+    <a class="signup" href="/E-Commerce-Store/app/views/auth/signup.php">Sign Up</a>
+</div>
 
     </div>
 
