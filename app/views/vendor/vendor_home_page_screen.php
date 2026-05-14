@@ -1,3 +1,18 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (empty($_SESSION['user'])) {
+    header('Location: /E-Commerce-Store/index.php?page=login');
+    exit;
+}
+
+if (($_SESSION['user']['role'] ?? null) !== 'vendor') {
+    header('Location: /E-Commerce-Store/index.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,16 +26,16 @@
 </head>
 <body>
 
-<?php include '../../views/layouts/vendor_side_menu_bar.php'; ?>
+<?php include __DIR__ . '/../layouts/vendor_side_menu_bar.php'; ?>
 
 <div class="main-layout">
-    <?php include '../../views/layouts/vendor_header.php'; ?>
+    <?php include __DIR__ . '/../layouts/vendor_header.php'; ?>
     
     <div class="main-content">
         <!-- STATS CARDS -->
         <div class="stats-grid">
             <?php 
-            include '../../views/vendor/widgets/home_page_top_stats_card.php';
+            include __DIR__ . '/widgets/home_page_top_stats_card.php';
             
             // StatsCard($icon, $label, $value, $percentage, $isPositive)
             $card1 = new StatsCard('fas fa-money-bill-wave', 'Total Sales', '$42,980.50', 12.5, true);
@@ -42,7 +57,7 @@
             <!-- SALES CHART - 2/3 Width -->
             <div class="dashboard-col-2-3">
                 <?php 
-                include '../../views/vendor/widgets/vendor_homepage_stats.php';
+                include __DIR__ . '/widgets/vendor_homepage_stats.php';
                 
                 $salesCard = new SalesPerformanceCard(
                     'Sales Performance',
@@ -63,7 +78,7 @@
             <!-- POPULAR PRODUCTS - 1/3 Width -->
             <div class="dashboard-col-1-3">
                 <?php 
-                include '../../views/vendor/widgets/homepage_popular_product_card.php';
+                include __DIR__ . '/widgets/homepage_popular_product_card.php';
                 
                 $products = [
                     [
@@ -101,7 +116,7 @@
         <!-- RECENT ORDERS TABLE -->
         <div style="padding: 0 30px; margin-bottom: 30px;">
             <?php 
-            include '../../views/vendor/widgets/home_page_bottom_table.php';
+            include __DIR__ . '/widgets/home_page_bottom_table.php';
             
             $orders = [
                 [
@@ -145,7 +160,7 @@
     </div>
 </div>
 
-<?php include '../../views/layouts/vendor_footer.php'; ?>
+<?php include __DIR__ . '/../layouts/vendor_footer.php'; ?>
 
 </body>
 </html>

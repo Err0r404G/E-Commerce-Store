@@ -1,13 +1,9 @@
-<<<<<<< HEAD
 <?php
 $errors = $errors ?? [];
 $old = $old ?? [];
 
 include __DIR__ . '/../layouts/header.php';
 ?>
-=======
-<?php include __DIR__ . '/../layouts/header.php'; ?>
->>>>>>> ddd1176dcb6a4ee4794f1fd76d7ffa40521070c8
 <link rel="stylesheet" href="/E-Commerce-Store/public/css/signup.css">
 
 <main class="signup-page">
@@ -48,8 +44,8 @@ include __DIR__ . '/../layouts/header.php';
                     <input type="radio" id="customer" name="role" value="customer" <?= ($old['role'] ?? 'customer') === 'customer' ? 'checked' : '' ?>>
                     <label for="customer">Customer</label>
 
-                    <input type="radio" id="seller" name="role" value="seller" <?= ($old['role'] ?? '') === 'seller' ? 'checked' : '' ?>>
-                    <label for="seller">Seller</label>
+                    <input type="radio" id="vendor" name="role" value="vendor" <?= ($old['role'] ?? '') === 'vendor' ? 'checked' : '' ?>>
+                    <label for="vendor">Vendor</label>
                 </div>
             </div>
 
