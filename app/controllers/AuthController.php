@@ -1,4 +1,5 @@
 <?php
+<<<<<<< HEAD
 
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../models/UserModel.php';
@@ -193,3 +194,19 @@ class AuthController
         return '/E-Commerce-Store/index.php';
     }
 }
+=======
+// controllers/AuthController.php
+
+class AuthController {
+    
+    public function showLogin() {
+        // Path to your login view
+        require_once 'views/auth/login.php';
+    }
+
+    public function showSignup() {
+        // Path to your signup view
+        require_once 'views/auth/signup.php';
+    }
+}
+>>>>>>> ddd1176dcb6a4ee4794f1fd76d7ffa40521070c8
