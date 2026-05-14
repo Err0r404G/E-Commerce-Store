@@ -7,7 +7,7 @@
 
     <!-- MENU -->
     <nav class="sidebar-menu">
-        <a href="#" class="menu-item">
+        <a href="/E-Commerce-Store/index.php?page=vendorDashboard" class="menu-item active">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
         </a>
@@ -19,7 +19,7 @@
             <i class="fas fa-boxes"></i>
             <span>Inventory</span>
         </a>
-        <a href="#" class="menu-item active">
+        <a href="#" class="menu-item">
             <i class="fas fa-shopping-cart"></i>
             <span>Orders</span>
         </a>

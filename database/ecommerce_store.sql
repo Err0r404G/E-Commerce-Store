@@ -259,7 +259,7 @@ CREATE TABLE `users` (
   `email` varchar(150) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
-  `role` enum('customer','seller','delivery_manager','admin') NOT NULL,
+  `role` enum('customer','vendor','delivery_manager','admin') NOT NULL,
   `profile_pic` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp()

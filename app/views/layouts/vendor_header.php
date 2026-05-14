@@ -38,8 +38,8 @@
             <div class="divider-vertical"></div>
 
             <div class="auth column gap-2">
-                <p class="title">Welcome, Rohit Shorma!</p>
-                <p class="subtitle">Vendor!</p>
+                <p class="title">Welcome, <?= htmlspecialchars($_SESSION['user']['name'] ?? 'Vendor') ?>!</p>
+                <p class="subtitle">Vendor</p>
             </div>
             <div class="profile-avatar">
                 <i class="fas fa-user"></i>

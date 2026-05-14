@@ -143,7 +143,6 @@ body {
     display: inline-block;
 }
 
-<<<<<<< HEAD
 .user-name {
     align-self: center;
     color: #e2e8f0;
@@ -155,8 +154,6 @@ body {
     white-space: nowrap;
 }
 
-=======
->>>>>>> ddd1176dcb6a4ee4794f1fd76d7ffa40521070c8
 /* LOGIN */
 .login {
     padding: 6px 14px;
