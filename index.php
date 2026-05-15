@@ -356,6 +356,13 @@ elseif ($page === 'deliveryAgentsAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryZonesAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showZonesAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');
@@ -367,6 +374,13 @@ elseif ($page === 'deliveryAgentAction') {
 
     requireRole('delivery_manager');
     $deliveryManager->agentAction();
+    exit;
+}
+
+elseif ($page === 'deliveryZoneAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->zoneAction();
     exit;
 }
 

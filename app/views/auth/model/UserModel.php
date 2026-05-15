@@ -886,6 +886,68 @@ class UserModel
         return $updated;
     }
 
+    public function getDeliveryZones(): array
+    {
+        $zones = [];
+        $result = $this->conn->query(
+            "SELECT id, zone_name, delivery_fee, estimated_days
+             FROM delivery_zones
+             ORDER BY zone_name ASC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $zones[] = $row;
+            }
+        }
+
+        return $zones;
+    }
+
+    public function saveDeliveryZone(int $zoneId, array $data): bool
+    {
+        if ($zoneId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE delivery_zones
+                 SET zone_name = ?, delivery_fee = ?, estimated_days = ?
+                 WHERE id = ?"
+            );
+            $stmt->bind_param(
+                "sdii",
+                $data['zone_name'],
+                $data['delivery_fee'],
+                $data['estimated_days'],
+                $zoneId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO delivery_zones (zone_name, delivery_fee, estimated_days)
+                 VALUES (?, ?, ?)"
+            );
+            $stmt->bind_param(
+                "sdi",
+                $data['zone_name'],
+                $data['delivery_fee'],
+                $data['estimated_days']
+            );
+        }
+
+        $saved = $stmt->execute();
+        $stmt->close();
+
+        return $saved;
+    }
+
+    public function deleteDeliveryZone(int $zoneId): bool
+    {
+        $stmt = $this->conn->prepare("DELETE FROM delivery_zones WHERE id = ?");
+        $stmt->bind_param("i", $zoneId);
+        $deleted = $stmt->execute();
+        $stmt->close();
+
+        return $deleted;
+    }
+
     private function ensureDeliveryAgentColumns(): void
     {
         $nameColumn = $this->conn->query("SHOW COLUMNS FROM delivery_agents LIKE 'name'");
