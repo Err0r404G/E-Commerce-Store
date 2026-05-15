@@ -605,6 +605,43 @@ class CustomerAreaModel
         return $rows;
     }
 
+    public function disputeTargets(int $customerId): array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT o.id AS order_id, o.status, o.created_at, s.id AS seller_id, s.shop_name,
+                    COUNT(oi.id) AS item_count
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             INNER JOIN sellers s ON s.id = oi.seller_id
+             WHERE o.customer_id = ?
+             GROUP BY o.id, o.status, o.created_at, s.id, s.shop_name
+             ORDER BY o.created_at DESC, s.shop_name ASC"
+        );
+        $stmt->bind_param('i', $customerId);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $rows;
+    }
+
+    public function createDispute(int $customerId, int $orderId, int $sellerId, string $description): bool
+    {
+        if (!$this->customerOrderHasSeller($customerId, $orderId, $sellerId)) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO disputes (customer_id, seller_id, order_id, description, status)
+             VALUES (?, ?, ?, ?, 'open')"
+        );
+        $stmt->bind_param('iiis', $customerId, $sellerId, $orderId, $description);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        return $ok;
+    }
+
     private function tableExists(string $table): bool
     {
         $stmt = $this->conn->prepare(
@@ -648,6 +685,23 @@ class CustomerAreaModel
              LIMIT 1"
         );
         $stmt->bind_param('iii', $orderId, $customerId, $orderItemId);
+        $stmt->execute();
+        $ok = (bool) $stmt->get_result()->fetch_row();
+        $stmt->close();
+
+        return $ok;
+    }
+
+    private function customerOrderHasSeller(int $customerId, int $orderId, int $sellerId): bool
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT 1
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             WHERE o.id = ? AND o.customer_id = ? AND oi.seller_id = ?
+             LIMIT 1"
+        );
+        $stmt->bind_param('iii', $orderId, $customerId, $sellerId);
         $stmt->execute();
         $ok = (bool) $stmt->get_result()->fetch_row();
         $stmt->close();
