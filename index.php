@@ -13,6 +13,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/app/views/auth/control/AuthController.php';
 require_once __DIR__ . '/app/controllers/admin/AdminController.php';
 require_once __DIR__ . '/app/controllers/vendor/VendorController.php';
+require_once __DIR__ . '/app/controllers/deliveryManager/DeliveryManagerController.php';
 
 $page = $_GET['page'] ?? 'home';
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -20,6 +21,7 @@ $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $auth = new AuthController($conn);
 $admin = new AdminController($conn);
 $vendor = new VendorController($conn);
+$deliveryManager = new DeliveryManagerController($conn);
 
 function dashboardUrlForRole(string $role): string
 {
@@ -337,6 +339,48 @@ elseif ($page === 'deliveryDashboard') {
 
     requireRole('delivery_manager');
     includeViewOrShowMissing(__DIR__ . '/app/views/deliveryManager/deliveryManagerDashboard.php', 'Delivery Dashboard');
+    exit;
+}
+
+elseif ($page === 'deliverySettingsAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showSettingsAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryAgentsAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showAgentsAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryZonesAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showZonesAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryProfileAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->profileAction();
+    exit;
+}
+
+elseif ($page === 'deliveryAgentAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->agentAction();
+    exit;
+}
+
+elseif ($page === 'deliveryZoneAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->zoneAction();
     exit;
 }
 

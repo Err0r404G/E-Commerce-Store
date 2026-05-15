@@ -42,6 +42,23 @@ class UserModel
         return $profile ?: null;
     }
 
+    public function findDeliveryManagerProfile(int $userId): ?array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT id, name, email, phone, password_hash, role, profile_pic
+             FROM users
+             WHERE id = ? AND role = 'delivery_manager'
+             LIMIT 1"
+        );
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+
+        $profile = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $profile ?: null;
+    }
+
     public function findSellerByUserId(int $userId): ?array
     {
         $stmt = $this->conn->prepare("SELECT * FROM sellers WHERE user_id = ? LIMIT 1");
@@ -749,6 +766,202 @@ class UserModel
 
         $this->conn->commit();
         return true;
+    }
+
+    public function updateDeliveryManagerProfile(int $userId, array $data): bool
+    {
+        $profilePic = $data['profile_pic'] ?? null;
+        $passwordHash = $data['password_hash'] ?? null;
+
+        if ($profilePic !== null && $passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?, profile_pic = ?, password_hash = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("sssssi", $data['name'], $data['email'], $data['phone'], $profilePic, $passwordHash, $userId);
+        } elseif ($profilePic !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?, profile_pic = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("ssssi", $data['name'], $data['email'], $data['phone'], $profilePic, $userId);
+        } elseif ($passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?, password_hash = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("ssssi", $data['name'], $data['email'], $data['phone'], $passwordHash, $userId);
+        } else {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("sssi", $data['name'], $data['email'], $data['phone'], $userId);
+        }
+
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
+    }
+
+    public function getDeliveryAgents(): array
+    {
+        $this->ensureDeliveryAgentColumns();
+
+        $agents = [];
+        $result = $this->conn->query(
+            "SELECT da.id, da.name, da.phone, da.vehicle_type, da.is_active, da.created_at,
+                    COUNT(CASE WHEN d.status IN ('assigned', 'picked_up', 'in_transit') THEN 1 END) AS active_deliveries_count
+             FROM delivery_agents da
+             LEFT JOIN delivery_assignments d ON d.agent_id = da.id
+             GROUP BY da.id, da.name, da.phone, da.vehicle_type, da.is_active, da.created_at
+             ORDER BY da.is_active DESC, da.created_at DESC, da.id DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $agents[] = $row;
+            }
+        }
+
+        return $agents;
+    }
+
+    public function saveDeliveryAgent(int $agentId, array $data): bool
+    {
+        $this->ensureDeliveryAgentColumns();
+
+        if ($agentId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE delivery_agents
+                 SET name = ?, phone = ?, vehicle_type = ?, is_active = ?
+                 WHERE id = ?"
+            );
+            $stmt->bind_param(
+                "sssii",
+                $data['name'],
+                $data['phone'],
+                $data['vehicle_type'],
+                $data['is_active'],
+                $agentId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO delivery_agents (user_id, name, phone, vehicle_type, is_active)
+                 VALUES (NULL, ?, ?, ?, ?)"
+            );
+            $stmt->bind_param(
+                "sssi",
+                $data['name'],
+                $data['phone'],
+                $data['vehicle_type'],
+                $data['is_active']
+            );
+        }
+
+        $saved = $stmt->execute();
+        $stmt->close();
+
+        return $saved;
+    }
+
+    public function toggleDeliveryAgent(int $agentId): bool
+    {
+        $this->ensureDeliveryAgentColumns();
+
+        $stmt = $this->conn->prepare(
+            "UPDATE delivery_agents
+             SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END
+             WHERE id = ?"
+        );
+        $stmt->bind_param("i", $agentId);
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
+    }
+
+    public function getDeliveryZones(): array
+    {
+        $zones = [];
+        $result = $this->conn->query(
+            "SELECT id, zone_name, delivery_fee, estimated_days
+             FROM delivery_zones
+             ORDER BY zone_name ASC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $zones[] = $row;
+            }
+        }
+
+        return $zones;
+    }
+
+    public function saveDeliveryZone(int $zoneId, array $data): bool
+    {
+        if ($zoneId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE delivery_zones
+                 SET zone_name = ?, delivery_fee = ?, estimated_days = ?
+                 WHERE id = ?"
+            );
+            $stmt->bind_param(
+                "sdii",
+                $data['zone_name'],
+                $data['delivery_fee'],
+                $data['estimated_days'],
+                $zoneId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO delivery_zones (zone_name, delivery_fee, estimated_days)
+                 VALUES (?, ?, ?)"
+            );
+            $stmt->bind_param(
+                "sdi",
+                $data['zone_name'],
+                $data['delivery_fee'],
+                $data['estimated_days']
+            );
+        }
+
+        $saved = $stmt->execute();
+        $stmt->close();
+
+        return $saved;
+    }
+
+    public function deleteDeliveryZone(int $zoneId): bool
+    {
+        $stmt = $this->conn->prepare("DELETE FROM delivery_zones WHERE id = ?");
+        $stmt->bind_param("i", $zoneId);
+        $deleted = $stmt->execute();
+        $stmt->close();
+
+        return $deleted;
+    }
+
+    private function ensureDeliveryAgentColumns(): void
+    {
+        $nameColumn = $this->conn->query("SHOW COLUMNS FROM delivery_agents LIKE 'name'");
+
+        if (!$nameColumn || $nameColumn->num_rows === 0) {
+            $this->conn->query("ALTER TABLE delivery_agents ADD name varchar(100) NOT NULL DEFAULT 'Delivery Agent' AFTER user_id");
+        }
+
+        $userIdColumn = $this->conn->query("SHOW COLUMNS FROM delivery_agents LIKE 'user_id'");
+        $userId = $userIdColumn ? $userIdColumn->fetch_assoc() : null;
+
+        if ($userId && strtoupper((string) ($userId['Null'] ?? '')) === 'NO') {
+            $this->conn->query("ALTER TABLE delivery_agents MODIFY user_id int(11) DEFAULT NULL");
+        }
     }
 
     public function create(array $data): bool

@@ -6,17 +6,12 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'profile' ? 'active' : '' ?>">
-            <i class="fa-regular fa-user"></i>
-            <span>Manage Profile</span>
-        </a>
-
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'agents' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryAgentsAjax" class="<?= ($activeDeliveryPage ?? '') === 'agents' ? 'active' : '' ?>">
             <i class="fa-solid fa-people-carry-box"></i>
             <span>Manage Agents</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'zones' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryZonesAjax" class="<?= ($activeDeliveryPage ?? '') === 'zones' ? 'active' : '' ?>">
             <i class="fa-solid fa-map-location-dot"></i>
             <span>Manage Zones</span>
         </a>
@@ -61,7 +56,7 @@
             <span>Daily Weekly Summary</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'settings' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliverySettingsAjax" class="<?= ($activeDeliveryPage ?? '') === 'settings' ? 'active' : '' ?>">
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>
@@ -69,7 +64,7 @@
 
     <div class="admin-user-box delivery-manager-user-box">
         <div class="user-info">
-            <div class="user-icon">
+            <div class="user-icon" id="deliverySidebarLogo">
                 <?php if (!empty($deliveryAvatar)): ?>
                     <img src="/E-Commerce-Store/<?= htmlspecialchars($deliveryAvatar) ?>" alt="">
                 <?php else: ?>
@@ -78,7 +73,7 @@
             </div>
 
             <div>
-                <h4><?= htmlspecialchars($deliveryName ?? 'Delivery Manager') ?></h4>
+                <h4 id="deliverySidebarName"><?= htmlspecialchars($deliveryName ?? 'Delivery Manager') ?></h4>
                 <p><?= htmlspecialchars($deliveryRole ?? 'DELIVERY MANAGER') ?></p>
             </div>
         </div>
