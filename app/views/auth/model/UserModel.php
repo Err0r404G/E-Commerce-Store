@@ -449,6 +449,96 @@ class UserModel
         return $rows;
     }
 
+    public function getVendorEarnings(int $sellerId): array
+    {
+        $seller = $this->findSellerById($sellerId);
+        $commissionRate = (float) ($seller['commission_rate'] ?? 10);
+
+        $summary = [
+            'total_earned' => 0,
+            'commission_rate' => $commissionRate,
+            'commission_deducted' => 0,
+            'net_payout' => 0,
+        ];
+
+        $stmt = $this->conn->prepare(
+            "SELECT COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_earned
+             FROM order_items oi
+             WHERE oi.seller_id = ?"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($row) {
+            $summary['total_earned'] = (float) $row['total_earned'];
+            $summary['commission_deducted'] = $summary['total_earned'] * ($commissionRate / 100);
+            $summary['net_payout'] = $summary['total_earned'] - $summary['commission_deducted'];
+        }
+
+        return [
+            'summary' => $summary,
+            'periods' => [
+                'day' => $this->getVendorEarningsPeriod($sellerId, 'day', $commissionRate),
+                'week' => $this->getVendorEarningsPeriod($sellerId, 'week', $commissionRate),
+                'month' => $this->getVendorEarningsPeriod($sellerId, 'month', $commissionRate),
+            ],
+        ];
+    }
+
+    private function findSellerById(int $sellerId): ?array
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM sellers WHERE id = ? LIMIT 1");
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+
+        $seller = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $seller ?: null;
+    }
+
+    private function getVendorEarningsPeriod(int $sellerId, string $period, float $commissionRate): array
+    {
+        $formats = [
+            'day' => "%Y-%m-%d",
+            'week' => "%x-W%v",
+            'month' => "%Y-%m",
+        ];
+        $format = $formats[$period] ?? $formats['day'];
+        $rows = [];
+
+        $stmt = $this->conn->prepare(
+            "SELECT DATE_FORMAT(o.created_at, '$format') AS period_label,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_earned
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             WHERE oi.seller_id = ?
+             GROUP BY period_label
+             ORDER BY period_label DESC
+             LIMIT 12"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $earned = (float) $row['total_earned'];
+            $commission = $earned * ($commissionRate / 100);
+
+            $rows[] = [
+                'period_label' => $row['period_label'],
+                'total_earned' => $earned,
+                'commission_deducted' => $commission,
+                'net_payout' => $earned - $commission,
+            ];
+        }
+
+        $stmt->close();
+        return $rows;
+    }
+
     private function ensureOrderItemTrackingNoteColumn(): void
     {
         $result = $this->conn->query("SHOW COLUMNS FROM order_items LIKE 'tracking_note'");
