@@ -48,7 +48,7 @@
             <span>Platform Coupons</span>
         </a>
 
-        <a href="#">
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=platformReportsAjax">
             <i class="fa-solid fa-chart-column"></i>
             <span>Platform Reports</span>
         </a>

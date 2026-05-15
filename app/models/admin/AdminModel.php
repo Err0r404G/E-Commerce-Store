@@ -753,6 +753,189 @@ class AdminModel
         return ['success' => $success, 'message' => $success ? 'Settings updated successfully.' : 'Settings update failed.'];
     }
 
+    public function getPlatformReportData(string $month): array
+    {
+        $monthStart = $month . '-01';
+        $monthEnd = date('Y-m-d', strtotime($monthStart . ' +1 month'));
+
+        return [
+            'selected_month' => $month,
+            'month_label' => date('F Y', strtotime($monthStart)),
+            'all_time' => $this->getReportSalesSummary(),
+            'monthly' => $this->getReportSalesSummary($monthStart, $monthEnd),
+            'top_sellers' => $this->getTopPerformingSellers($monthStart, $monthEnd),
+            'top_categories' => $this->getTopSellingCategories($monthStart, $monthEnd),
+            'delivery' => $this->getDeliveryPerformanceOverview($monthStart, $monthEnd),
+            'generated_at' => date('M d, Y h:i A'),
+        ];
+    }
+
+    private function getReportSalesSummary(?string $startDate = null, ?string $endDate = null): array
+    {
+        $where = "WHERE o.status NOT IN ('cancelled', 'returned')";
+        $params = [];
+
+        if ($startDate !== null && $endDate !== null) {
+            $where .= " AND o.created_at >= ? AND o.created_at < ?";
+            $params = [$startDate, $endDate];
+        }
+
+        $orderStmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS orders_count,
+                    COUNT(DISTINCT o.customer_id) AS customers_count,
+                    COALESCE(SUM(o.discount_amount), 0) AS discounts_given,
+                    COALESCE(SUM(o.total_amount), 0) AS order_total
+             FROM orders o
+             {$where}"
+        );
+
+        if ($params) {
+            $orderStmt->bind_param('ss', $params[0], $params[1]);
+        }
+
+        $orderStmt->execute();
+        $orderSummary = $orderStmt->get_result()->fetch_assoc() ?: [];
+        $orderStmt->close();
+
+        $itemStmt = $this->conn->prepare(
+            "SELECT COUNT(DISTINCT o.id) AS orders_count,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS gmv,
+                    COALESCE(SUM((oi.quantity * oi.unit_price) * (COALESCE(s.commission_rate, 10) / 100)), 0) AS commission_earned
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             LEFT JOIN sellers s ON s.id = oi.seller_id
+             {$where}"
+        );
+
+        if ($params) {
+            $itemStmt->bind_param('ss', $params[0], $params[1]);
+        }
+
+        $itemStmt->execute();
+        $itemSummary = $itemStmt->get_result()->fetch_assoc() ?: [];
+        $itemStmt->close();
+
+        return [
+            'orders_count' => (int) ($orderSummary['orders_count'] ?? 0),
+            'customers_count' => (int) ($orderSummary['customers_count'] ?? 0),
+            'units_sold' => (int) ($itemSummary['units_sold'] ?? 0),
+            'gmv' => (float) ($itemSummary['gmv'] ?? 0),
+            'commission_earned' => (float) ($itemSummary['commission_earned'] ?? 0),
+            'discounts_given' => (float) ($orderSummary['discounts_given'] ?? 0),
+            'order_total' => (float) ($orderSummary['order_total'] ?? 0),
+        ];
+    }
+
+    private function getTopPerformingSellers(string $startDate, string $endDate): array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT s.id, COALESCE(s.shop_name, u.name, 'Unknown seller') AS seller_name,
+                    COUNT(DISTINCT o.id) AS orders_count,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS gmv,
+                    COALESCE(SUM((oi.quantity * oi.unit_price) * (COALESCE(s.commission_rate, 10) / 100)), 0) AS commission_earned
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             LEFT JOIN sellers s ON s.id = oi.seller_id
+             LEFT JOIN users u ON u.id = s.user_id
+             WHERE o.status NOT IN ('cancelled', 'returned')
+               AND o.created_at >= ? AND o.created_at < ?
+             GROUP BY s.id, seller_name
+             ORDER BY gmv DESC
+             LIMIT 8"
+        );
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $rows;
+    }
+
+    private function getTopSellingCategories(string $startDate, string $endDate): array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT COALESCE(c.name, 'Uncategorized') AS category_name,
+                    COUNT(DISTINCT o.id) AS orders_count,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS gmv
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             LEFT JOIN products p ON p.id = oi.product_id
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE o.status NOT IN ('cancelled', 'returned')
+               AND o.created_at >= ? AND o.created_at < ?
+             GROUP BY category_name
+             ORDER BY gmv DESC
+             LIMIT 8"
+        );
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $rows;
+    }
+
+    private function getDeliveryPerformanceOverview(string $startDate, string $endDate): array
+    {
+        $statusCounts = [
+            'assigned' => 0,
+            'picked_up' => 0,
+            'in_transit' => 0,
+            'delivered' => 0,
+            'failed' => 0,
+        ];
+
+        $stmt = $this->conn->prepare(
+            "SELECT status, COUNT(*) AS total
+             FROM delivery_assignments
+             WHERE assigned_at >= ? AND assigned_at < ?
+             GROUP BY status"
+        );
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $statusCounts[$row['status']] = (int) $row['total'];
+        }
+
+        $stmt->close();
+
+        $agentStmt = $this->conn->prepare(
+            "SELECT COALESCE(u.name, 'Delivery agent') AS agent_name,
+                    da.vehicle_type,
+                    COUNT(d.id) AS assignments,
+                    SUM(CASE WHEN d.status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
+                    SUM(CASE WHEN d.status = 'failed' THEN 1 ELSE 0 END) AS failed
+             FROM delivery_assignments d
+             LEFT JOIN delivery_agents da ON da.id = d.agent_id
+             LEFT JOIN users u ON u.id = da.user_id
+             WHERE d.assigned_at >= ? AND d.assigned_at < ?
+             GROUP BY d.agent_id, agent_name, da.vehicle_type
+             ORDER BY assignments DESC
+             LIMIT 8"
+        );
+        $agentStmt->bind_param('ss', $startDate, $endDate);
+        $agentStmt->execute();
+        $agents = $agentStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $agentStmt->close();
+
+        $totalAssignments = array_sum($statusCounts);
+        $delivered = $statusCounts['delivered'];
+        $failed = $statusCounts['failed'];
+
+        return [
+            'status_counts' => $statusCounts,
+            'agents' => $agents,
+            'total_assignments' => $totalAssignments,
+            'delivery_success_rate' => $totalAssignments > 0 ? round(($delivered / $totalAssignments) * 100, 2) : 0,
+            'failure_rate' => $totalAssignments > 0 ? round(($failed / $totalAssignments) * 100, 2) : 0,
+        ];
+    }
+
     private function countSellersWithProducts(): int
     {
         $result = $this->conn->query("SELECT COUNT(DISTINCT seller_id) AS total FROM products");

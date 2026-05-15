@@ -800,6 +800,85 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindPlatformReportEvents() {
+        const monthForm = document.getElementById("platformReportMonthForm");
+
+        if (monthForm) {
+            monthForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const activeLink = document.querySelector("[data-page].active");
+                const monthInput = document.getElementById("platformReportMonth");
+                const month = monthInput ? monthInput.value : "";
+                const pageUrl = `/E-Commerce-Store/index.php?page=platformReportsAjax&month=${encodeURIComponent(month)}`;
+
+                loadPage(pageUrl, activeLink || document.querySelector("[data-page*='platformReportsAjax']"));
+            });
+
+            const monthInput = document.getElementById("platformReportMonth");
+
+            if (monthInput) {
+                monthInput.addEventListener("change", function () {
+                    monthForm.dispatchEvent(new Event("submit", { cancelable: true }));
+                });
+            }
+        }
+
+        document.querySelectorAll("[data-report-print]").forEach(button => {
+            button.addEventListener("click", function () {
+                const target = document.getElementById(this.dataset.reportPrint || "");
+
+                if (!target) {
+                    return;
+                }
+
+                const title = target.dataset.reportTitle || "Platform Report";
+                const printWindow = window.open("", "_blank", "width=1100,height=800");
+
+                if (!printWindow) {
+                    alert("Allow popups to print the report summary.");
+                    return;
+                }
+
+                printWindow.document.open();
+                printWindow.document.write(`
+                    <!doctype html>
+                    <html>
+                    <head>
+                        <title>${title}</title>
+                        <style>
+                            body { color: #202331; font-family: Arial, sans-serif; margin: 28px; }
+                            h1, h2, h3, p { margin: 0; }
+                            h1 { font-size: 26px; margin-bottom: 8px; }
+                            h2 { font-size: 20px; margin-bottom: 6px; }
+                            p { color: #596783; line-height: 1.5; }
+                            button, form { display: none !important; }
+                            section, .platform-report-section { border: 1px solid #d4d6dd; border-radius: 6px; margin: 16px 0; padding: 16px; }
+                            .platform-report-grid, .platform-delivery-grid, .platform-report-columns { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
+                            .platform-report-card { border: 1px solid #d4d6dd; border-radius: 6px; padding: 12px; }
+                            .platform-report-card p { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+                            .platform-report-card h3 { font-size: 22px; margin-top: 6px; }
+                            table { border-collapse: collapse; margin-top: 12px; width: 100%; }
+                            th, td { border-bottom: 1px solid #d4d6dd; padding: 9px; text-align: left; }
+                            th { background: #f6f7fb; font-size: 12px; text-transform: uppercase; }
+                            @media print { body { margin: 14mm; } }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${title}</h1>
+                        <p>Printable HTML summary exported from MarketHub admin reports.</p>
+                        ${target.outerHTML}
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+            });
+        });
+
+    }
+
     function bindAccountManagementEvents() {
         const search = document.getElementById("accountSearch");
         const feedback = document.getElementById("accountFeedback");
@@ -1104,6 +1183,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 bindDisputeEvents();
                 bindPlatformCouponEvents();
                 bindAdminSettingsEvents();
+                bindPlatformReportEvents();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

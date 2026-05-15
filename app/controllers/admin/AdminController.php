@@ -236,6 +236,18 @@ class AdminController
         include __DIR__ . '/../../views/admin/AdminSettings.php';
     }
 
+    public function showPlatformReports(): void
+    {
+        $selectedMonth = trim($_GET['month'] ?? date('Y-m'));
+
+        if (!preg_match('/^\d{4}-\d{2}$/', $selectedMonth)) {
+            $selectedMonth = date('Y-m');
+        }
+
+        $reportData = $this->adminModel->getPlatformReportData($selectedMonth);
+        include __DIR__ . '/../../views/admin/PlatformReports.php';
+    }
+
     public function settingsAction(): void
     {
         $this->jsonHeader();

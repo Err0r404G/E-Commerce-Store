@@ -227,6 +227,13 @@ elseif ($page === 'adminSettingsAjax') {
     exit;
 }
 
+elseif ($page === 'platformReportsAjax') {
+
+    requireRole('admin');
+    $admin->showPlatformReports();
+    exit;
+}
+
 elseif ($page === 'adminSettingsAction') {
 
     requireRole('admin');

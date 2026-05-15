@@ -1735,6 +1735,160 @@ body {
     font-weight: 700;
 }
 
+.platform-reports-page {
+    padding: 28px 32px;
+}
+
+.platform-report-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.platform-report-toolbar {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #d4d6dd;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    margin: 24px 0;
+    padding: 16px;
+}
+
+.platform-report-toolbar label {
+    color: #596783;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.platform-report-toolbar input {
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #202331;
+    font: inherit;
+    height: 40px;
+    padding: 0 12px;
+}
+
+.platform-report-toolbar button {
+    background: #172344;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 800;
+    height: 40px;
+    padding: 0 16px;
+}
+
+.platform-report-section {
+    background: #fff;
+    border: 1px solid #d4d6dd;
+    border-radius: 8px;
+    margin-bottom: 22px;
+    padding: 20px;
+}
+
+.platform-section-heading {
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.platform-section-heading h2 {
+    color: #202331;
+    font-size: 22px;
+}
+
+.platform-section-heading p {
+    color: #596783;
+    margin-top: 6px;
+}
+
+.platform-report-grid,
+.platform-delivery-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.platform-delivery-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    margin-bottom: 18px;
+}
+
+.platform-report-card {
+    border: 1px solid #d4d6dd;
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.platform-report-card p {
+    color: #596783;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.platform-report-card h3 {
+    color: #172344;
+    font-size: 24px;
+}
+
+.platform-report-card span {
+    color: #596783;
+    display: block;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.platform-report-card.compact h3 {
+    font-size: 20px;
+}
+
+.platform-report-columns {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platform-report-section .table-wrapper {
+    overflow-x: auto;
+}
+
+@media (max-width: 1100px) {
+    .platform-report-grid,
+    .platform-delivery-grid,
+    .platform-report-columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .platform-reports-page {
+        padding: 18px 14px;
+    }
+
+    .platform-report-header,
+    .platform-section-heading,
+    .platform-report-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .platform-report-grid,
+    .platform-delivery-grid,
+    .platform-report-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
 .vendor-orders-page {
     margin: 0 auto;
     max-width: 1280px;
