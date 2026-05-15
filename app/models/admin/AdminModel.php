@@ -298,7 +298,98 @@ class AdminModel
             'active_sellers' => $this->countSellersWithProducts(),
         ];
 
-        return [$categories, array_values($categoryTree), $stats, $this->getProductsByCategory()];
+        return [$categories, array_values($categoryTree), $stats];
+    }
+
+    public function getProductManagementData(): array
+    {
+        $products = [];
+        $result = $this->conn->query(
+            "SELECT p.id, p.name, p.description, p.price, p.stock_qty, p.primary_image_path,
+                    p.is_available, p.created_at,
+                    c.id AS category_id, c.name AS category_name,
+                    s.id AS seller_id, s.shop_name,
+                    u.name AS seller_name,
+                    COALESCE(SUM(oi.quantity), 0) AS sold_qty
+             FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             LEFT JOIN sellers s ON s.id = p.seller_id
+             LEFT JOIN users u ON u.id = s.user_id
+             LEFT JOIN order_items oi ON oi.product_id = p.id
+             GROUP BY p.id, p.name, p.description, p.price, p.stock_qty, p.primary_image_path,
+                      p.is_available, p.created_at, c.id, c.name, s.id, s.shop_name, u.name
+             ORDER BY p.created_at DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $products[] = $row;
+            }
+        }
+
+        $categories = [];
+        $categoryResult = $this->conn->query("SELECT id, name FROM categories ORDER BY name ASC");
+        if ($categoryResult) {
+            while ($row = $categoryResult->fetch_assoc()) {
+                $categories[] = $row;
+            }
+        }
+
+        $sellers = [];
+        $sellerResult = $this->conn->query(
+            "SELECT s.id, s.shop_name, u.name AS seller_name
+             FROM sellers s
+             LEFT JOIN users u ON u.id = s.user_id
+             ORDER BY s.shop_name ASC"
+        );
+        if ($sellerResult) {
+            while ($row = $sellerResult->fetch_assoc()) {
+                $sellers[] = $row;
+            }
+        }
+
+        $stats = [
+            'total' => count($products),
+            'active' => 0,
+            'removed' => 0,
+        ];
+
+        foreach ($products as $product) {
+            if ((int) $product['is_available'] === 1) {
+                $stats['active']++;
+            } else {
+                $stats['removed']++;
+            }
+        }
+
+        return [$products, $categories, $sellers, $stats];
+    }
+
+    public function setProductAvailability(int $productId, bool $isAvailable): array
+    {
+        $stmt = $this->conn->prepare("SELECT id FROM products WHERE id = ? LIMIT 1");
+        $stmt->bind_param('i', $productId);
+        $stmt->execute();
+        $product = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$product) {
+            return ['success' => false, 'status' => 404, 'message' => 'Product not found.'];
+        }
+
+        $availableValue = $isAvailable ? 1 : 0;
+        $stmt = $this->conn->prepare("UPDATE products SET is_available = ? WHERE id = ?");
+        $stmt->bind_param('ii', $availableValue, $productId);
+        $stmt->execute();
+        $success = $stmt->affected_rows >= 0;
+        $stmt->close();
+
+        return [
+            'success' => $success,
+            'message' => $isAvailable
+                ? 'Product listing activated.'
+                : 'Product listing marked inactive.',
+        ];
     }
 
     public function createCategory(string $name, ?string $description, ?int $parentId): array
@@ -474,28 +565,6 @@ class AdminModel
         if (!$noteColumn || $noteColumn->num_rows === 0) {
             $this->conn->query("ALTER TABLE sellers ADD admin_note TEXT DEFAULT NULL AFTER account_status");
         }
-    }
-
-    private function getProductsByCategory(): array
-    {
-        $productsByCategory = [];
-        $result = $this->conn->query(
-            "SELECT p.id, p.category_id, p.name, p.price, p.stock_qty, p.is_available,
-                    s.shop_name
-             FROM products p
-             LEFT JOIN sellers s ON s.id = p.seller_id
-             WHERE p.category_id IS NOT NULL
-             ORDER BY p.name ASC"
-        );
-
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $categoryId = (int) $row['category_id'];
-                $productsByCategory[$categoryId][] = $row;
-            }
-        }
-
-        return $productsByCategory;
     }
 
     private function categoryNameExists(string $name, ?int $parentId, ?int $excludeId = null): bool

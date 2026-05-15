@@ -2260,6 +2260,45 @@ body {
     min-width: 108px;
 }
 
+.product-tools {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admin-filter-select {
+    background: #fff;
+    border: 1px solid #cfd2dc;
+    border-radius: 4px;
+    color: #202331;
+    font-size: 13px;
+    height: 36px;
+    min-width: 170px;
+    padding: 0 10px;
+}
+
+.product-thumb {
+    align-items: center;
+    background: #eef2f7;
+    border-radius: 8px;
+    color: #52607c;
+    display: flex;
+    height: 42px;
+    justify-content: center;
+    overflow: hidden;
+    width: 42px;
+}
+
+.product-thumb img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.product-table small {
+    display: block;
+    margin-top: 3px;
+}
+
 .empty-cell,
 .admin-loading,
 .admin-error {

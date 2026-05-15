@@ -56,7 +56,7 @@ class AdminController
 
     public function showCategoryManagement(): void
     {
-        [$categories, $categoryTree, $categoryStats, $categoryProducts] = $this->adminModel->getCategoryManagementData();
+        [$categories, $categoryTree, $categoryStats] = $this->adminModel->getCategoryManagementData();
         include __DIR__ . '/../../views/admin/AdminCatagory.php';
     }
 
@@ -104,6 +104,31 @@ class AdminController
         }
 
         $this->jsonResponse(['success' => false, 'message' => 'Invalid category action.'], 422);
+    }
+
+    public function showProductManagement(): void
+    {
+        [$products, $categories, $sellers, $productStats] = $this->adminModel->getProductManagementData();
+        include __DIR__ . '/../../views/admin/ProductManagement.php';
+    }
+
+    public function productAction(): void
+    {
+        $this->jsonHeader();
+
+        if (!$this->isAdmin()) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized request.'], 403);
+        }
+
+        $productId = (int) ($_POST['product_id'] ?? 0);
+        $action = $_POST['action'] ?? '';
+
+        if ($productId <= 0 || !in_array($action, ['deactivate', 'activate'], true)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid product request.'], 422);
+        }
+
+        $result = $this->adminModel->setProductAvailability($productId, $action === 'activate');
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
     }
 
     public function showCustomerAccounts(): void
