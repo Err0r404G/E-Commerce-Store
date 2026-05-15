@@ -18,6 +18,11 @@
             <span>Category Management</span>
         </a>
 
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=productManagementAjax">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Manage Product</span>
+        </a>
+
         <a href="#" data-page="/E-Commerce-Store/index.php?page=adminCustomersAjax">
             <i class="fa-solid fa-users"></i>
             <span>Manage Customer</span>

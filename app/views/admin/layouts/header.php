@@ -6,7 +6,7 @@
     <title>NexusCommerce</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css?v=delivery-manager-create-1">
+    <link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css?v=product-status-direct-1">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">

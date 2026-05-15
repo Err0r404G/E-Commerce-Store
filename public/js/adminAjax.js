@@ -142,10 +142,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function bindCategoryManagementEvents() {
         const search = document.getElementById("categorySearch");
-        const productFilter = document.getElementById("categoryProductFilter");
-        const productsCard = document.getElementById("categoryProductsCard");
-        const productsMeta = document.getElementById("categoryProductsMeta");
-        const productsEmpty = document.getElementById("categoryProductsEmpty");
         const pagination = document.getElementById("categoryPagination");
         const paginationInfo = document.getElementById("categoryPaginationInfo");
         const pageNumbers = document.getElementById("categoryPageNumbers");
@@ -311,41 +307,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        function showCategoryProducts() {
-            if (!productFilter || !productsCard) {
-                return;
-            }
-
-            const categoryId = productFilter.value;
-            const categoryName = productFilter.options[productFilter.selectedIndex].text.trim();
-            let visibleProducts = 0;
-
-            document.querySelectorAll("[data-product-category]").forEach(product => {
-                const isMatch = categoryId !== "" && product.dataset.productCategory === categoryId;
-                product.hidden = !isMatch;
-
-                if (isMatch) {
-                    visibleProducts++;
-                }
-            });
-
-            productsCard.hidden = categoryId === "";
-
-            if (productsMeta && categoryId !== "") {
-                productsMeta.textContent = `${visibleProducts} product${visibleProducts === 1 ? "" : "s"} found in ${categoryName}.`;
-            }
-
-            if (productsEmpty) {
-                productsEmpty.hidden = categoryId === "" || visibleProducts > 0;
-            }
-        }
-
         if (search) {
             search.addEventListener("input", filterCategoryRows);
-        }
-
-        if (productFilter) {
-            productFilter.addEventListener("change", showCategoryProducts);
         }
 
         if (prevPageButton) {
@@ -749,6 +712,85 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function bindProductManagementEvents() {
+        const search = document.getElementById("productSearch");
+        const categoryFilter = document.getElementById("productCategoryFilter");
+        const sellerFilter = document.getElementById("productSellerFilter");
+        const feedback = document.getElementById("productFeedback");
+        const countText = document.getElementById("productCountText");
+
+        function setProductFeedback(message, type = "error") {
+            if (!feedback) {
+                return;
+            }
+
+            feedback.textContent = message;
+            feedback.className = `category-feedback ${type}`;
+            feedback.hidden = message === "";
+        }
+
+        function filterProducts() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            const categoryId = categoryFilter ? categoryFilter.value : "";
+            const sellerId = sellerFilter ? sellerFilter.value : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-product-row]").forEach(row => {
+                const matchesSearch = row.dataset.search.includes(term);
+                const matchesCategory = categoryId === "" || row.dataset.categoryId === categoryId;
+                const matchesSeller = sellerId === "" || row.dataset.sellerId === sellerId;
+                const isVisible = matchesSearch && matchesCategory && matchesSeller;
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} product${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        [search, categoryFilter, sellerFilter].forEach(control => {
+            if (control) {
+                control.addEventListener("input", filterProducts);
+                control.addEventListener("change", filterProducts);
+            }
+        });
+
+        document.querySelectorAll("[data-product-status-action]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("action", this.dataset.productStatusAction || "");
+                formData.append("product_id", this.dataset.productId || "");
+
+                setProductFeedback("");
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=adminProductAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Product listing could not be removed.");
+                        }
+
+                        loadActivePage();
+                    })
+                    .catch(error => {
+                        setProductFeedback(error.message || "Product status could not be updated.");
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        filterProducts();
+    }
+
     document.addEventListener("keydown", function (e) {
         const modal = document.getElementById("categoryModal");
         const sellerModal = document.getElementById("sellerActionModal");
@@ -795,6 +837,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 bindVendorApprovalEvents();
                 bindCategoryManagementEvents();
                 bindAccountManagementEvents();
+                bindProductManagementEvents();
                 bindDisputeEvents();
             })
             .catch(error => {
