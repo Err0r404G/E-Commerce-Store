@@ -8,10 +8,11 @@ session_set_cookie_params([
 session_start();
 
 require_once __DIR__ . '/config/db.php';
-require_once __DIR__ . '/app/controllers/AuthController.php';
-require_once __DIR__ . '/app/controllers/AdminController.php';
+require_once __DIR__ . '/app/views/auth/control/AuthController.php';
+require_once __DIR__ . '/app/controllers/admin/AdminController.php';
 
 $page = $_GET['page'] ?? 'home';
+$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 $auth = new AuthController($conn);
 $admin = new AdminController($conn);
@@ -39,6 +40,25 @@ function requireRole(string $role): void
     }
 }
 
+function includeViewOrShowMissing(string $path, string $title): void
+{
+    if (is_file($path)) {
+        include $path;
+        return;
+    }
+
+    include __DIR__ . '/app/views/layouts/header.php';
+    ?>
+    <main>
+        <section class="hero">
+            <h1><?= htmlspecialchars($title) ?></h1>
+            <p>This view has not been moved into the new MVC structure yet.</p>
+        </section>
+    </main>
+    <?php
+    include __DIR__ . '/app/views/layouts/footer.php';
+}
+
 if ($page === 'home' && !empty($_SESSION['user']['role'])) {
     header('Location: ' . dashboardUrlForRole($_SESSION['user']['role']));
     exit;
@@ -52,7 +72,7 @@ if ($page === 'home' && !empty($_SESSION['user']['role'])) {
 
 if ($page === 'signup') {
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->signup();
     } else {
         $auth->showSignup();
@@ -63,7 +83,7 @@ if ($page === 'signup') {
 
 elseif ($page === 'login') {
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->login();
     } else {
         $auth->showLogin();
@@ -129,20 +149,20 @@ elseif ($page === 'disputeAction') {
 
 elseif ($page === 'customerDashboard') {
 
-    include __DIR__ . '/app/views/customer/customerDashboard.php';
+    includeViewOrShowMissing(__DIR__ . '/app/views/customer/customerDashboard.php', 'Customer Dashboard');
     exit;
 }
 
 elseif ($page === 'vendorDashboard') {
 
     requireRole('vendor');
-    include __DIR__ . '/app/views/vendor/vendor_home_page_screen.php';
+    includeViewOrShowMissing(__DIR__ . '/app/views/vendor/view/vendor_home_page_screen.php', 'Vendor Dashboard');
     exit;
 }
 
 elseif ($page === 'deliveryDashboard') {
 
-    include __DIR__ . '/app/views/delivery_manager/deliveryDashboard.php';
+    includeViewOrShowMissing(__DIR__ . '/app/views/delivery_manager/deliveryDashboard.php', 'Delivery Dashboard');
     exit;
 }
 

@@ -2,7 +2,7 @@
 $errors = $errors ?? [];
 $old = $old ?? [];
 
-include __DIR__ . '/../layouts/header.php';
+include __DIR__ . '/../../layouts/header.php';
 ?>
 <link rel="stylesheet" href="/E-Commerce-Store/public/css/signup.css">
 
