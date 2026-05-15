@@ -175,6 +175,34 @@ elseif ($page === 'vendorProfile') {
     exit;
 }
 
+elseif ($page === 'vendorInventoryAjax') {
+
+    requireRole('vendor');
+    $vendor->showInventoryAjax();
+    exit;
+}
+
+elseif ($page === 'vendorSettingsAjax') {
+
+    requireRole('vendor');
+    $vendor->showSettingsAjax();
+    exit;
+}
+
+elseif ($page === 'vendorProductAction') {
+
+    requireRole('vendor');
+    $vendor->productAction();
+    exit;
+}
+
+elseif ($page === 'vendorProfileAction') {
+
+    requireRole('vendor');
+    $vendor->profileAction();
+    exit;
+}
+
 elseif ($page === 'deliveryDashboard') {
 
     includeViewOrShowMissing(__DIR__ . '/app/views/delivery_manager/deliveryDashboard.php', 'Delivery Dashboard');
