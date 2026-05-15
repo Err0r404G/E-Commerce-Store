@@ -84,6 +84,6 @@ include __DIR__ . '/../layouts/adminHeader.php';
 </main>
 
 </section>
-<script src="/E-Commerce-Store/public/js/adminAjax.js?v=category-modal-1"></script>
+<script src="/E-Commerce-Store/public/js/adminAjax.js?v=category-pagination-1"></script>
 </body>
 </html>

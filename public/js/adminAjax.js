@@ -54,6 +54,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function bindCategoryManagementEvents() {
         const search = document.getElementById("categorySearch");
+        const productFilter = document.getElementById("categoryProductFilter");
+        const productsCard = document.getElementById("categoryProductsCard");
+        const productsMeta = document.getElementById("categoryProductsMeta");
+        const productsEmpty = document.getElementById("categoryProductsEmpty");
+        const pagination = document.getElementById("categoryPagination");
+        const paginationInfo = document.getElementById("categoryPaginationInfo");
+        const pageNumbers = document.getElementById("categoryPageNumbers");
+        const prevPageButton = document.querySelector("[data-category-page-prev]");
+        const nextPageButton = document.querySelector("[data-category-page-next]");
         const modal = document.getElementById("categoryModal");
         const form = document.getElementById("categoryForm");
         const showFormButton = document.getElementById("showCategoryForm");
@@ -63,6 +72,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const nameInput = document.getElementById("categoryName");
         const descriptionInput = document.getElementById("categoryDescription");
         const parentInput = document.getElementById("categoryParent");
+        const rowsPerPage = 5;
+        let currentCategoryPage = 1;
+        let filteredCategoryRows = Array.from(document.querySelectorAll("[data-category-row]"));
 
         function resetForm() {
             if (!form) {
@@ -88,14 +100,123 @@ document.addEventListener("DOMContentLoaded", function () {
             nameInput.focus();
         }
 
+        function filterCategoryRows() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+
+            filteredCategoryRows = Array.from(document.querySelectorAll("[data-category-row]"))
+                .filter(row => row.dataset.search.includes(term));
+            currentCategoryPage = 1;
+            renderCategoryPage();
+        }
+
+        function renderCategoryPage() {
+            const rows = Array.from(document.querySelectorAll("[data-category-row]"));
+            const totalRows = filteredCategoryRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+            if (currentCategoryPage > totalPages) {
+                currentCategoryPage = totalPages;
+            }
+
+            const start = (currentCategoryPage - 1) * rowsPerPage;
+            const visibleRows = filteredCategoryRows.slice(start, start + rowsPerPage);
+
+            rows.forEach(row => {
+                row.style.display = visibleRows.includes(row) ? "" : "none";
+            });
+
+            if (paginationInfo) {
+                const visibleCount = totalRows === 0 ? 0 : Math.min(start + rowsPerPage, totalRows);
+                paginationInfo.textContent = `Showing ${visibleCount} of ${totalRows} categor${totalRows === 1 ? "y" : "ies"}`;
+            }
+
+            if (pagination) {
+                pagination.hidden = totalRows <= rowsPerPage;
+            }
+
+            if (prevPageButton) {
+                prevPageButton.disabled = currentCategoryPage <= 1;
+            }
+
+            if (nextPageButton) {
+                nextPageButton.disabled = currentCategoryPage >= totalPages;
+            }
+
+            if (pageNumbers) {
+                pageNumbers.innerHTML = "";
+
+                for (let page = 1; page <= totalPages; page++) {
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.textContent = page;
+                    button.className = page === currentCategoryPage ? "active" : "";
+                    button.addEventListener("click", function () {
+                        currentCategoryPage = page;
+                        renderCategoryPage();
+                    });
+                    pageNumbers.appendChild(button);
+                }
+            }
+        }
+
+        function showCategoryProducts() {
+            if (!productFilter || !productsCard) {
+                return;
+            }
+
+            const categoryId = productFilter.value;
+            const categoryName = productFilter.options[productFilter.selectedIndex].text.trim();
+            let visibleProducts = 0;
+
+            document.querySelectorAll("[data-product-category]").forEach(product => {
+                const isMatch = categoryId !== "" && product.dataset.productCategory === categoryId;
+                product.hidden = !isMatch;
+
+                if (isMatch) {
+                    visibleProducts++;
+                }
+            });
+
+            productsCard.hidden = categoryId === "";
+
+            if (productsMeta && categoryId !== "") {
+                productsMeta.textContent = `${visibleProducts} product${visibleProducts === 1 ? "" : "s"} found in ${categoryName}.`;
+            }
+
+            if (productsEmpty) {
+                productsEmpty.hidden = categoryId === "" || visibleProducts > 0;
+            }
+        }
+
         if (search) {
-            search.addEventListener("input", function () {
-                const term = this.value.trim().toLowerCase();
-                document.querySelectorAll("[data-category-row]").forEach(row => {
-                    row.style.display = row.dataset.search.includes(term) ? "" : "none";
-                });
+            search.addEventListener("input", filterCategoryRows);
+        }
+
+        if (productFilter) {
+            productFilter.addEventListener("change", showCategoryProducts);
+        }
+
+        if (prevPageButton) {
+            prevPageButton.addEventListener("click", function () {
+                if (currentCategoryPage > 1) {
+                    currentCategoryPage--;
+                    renderCategoryPage();
+                }
             });
         }
+
+        if (nextPageButton) {
+            nextPageButton.addEventListener("click", function () {
+                const totalPages = Math.max(1, Math.ceil(filteredCategoryRows.length / rowsPerPage));
+
+                if (currentCategoryPage < totalPages) {
+                    currentCategoryPage++;
+                    renderCategoryPage();
+                }
+            });
+        }
+
+        renderCategoryPage();
 
         if (showFormButton && form) {
             showFormButton.addEventListener("click", function () {
