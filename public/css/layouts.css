@@ -1520,10 +1520,84 @@ body {
     margin-top: 4px;
 }
 
+.vendor-low-stock-alert {
+    align-items: center;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    display: flex;
+    font-size: 13px;
+    font-weight: 800;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+}
+
+.vendor-low-stock {
+    color: #dc2626 !important;
+    font-weight: 800;
+}
+
 .vendor-secondary-btn {
     background: #fff !important;
     border: 1px solid #d4d6dd !important;
     color: #52607c !important;
+}
+
+.vendor-toggle-coupon {
+    color: #64748b;
+}
+
+.vendor-orders-page {
+    margin: 0 auto;
+    max-width: 1280px;
+}
+
+.vendor-orders-panel {
+    margin-top: 34px;
+}
+
+.vendor-order-filter {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.vendor-order-filter label {
+    color: #596783;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.vendor-order-filter select {
+    background: #fbf9fd;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #1f2937;
+    height: 38px;
+    min-width: 180px;
+    padding: 0 10px;
+}
+
+.vendor-orders-table .status-badge.pending {
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+}
+
+.vendor-orders-table .status-badge.confirmed {
+    background: rgba(96, 165, 250, 0.15);
+    color: #1d4ed8;
+}
+
+.vendor-orders-table .status-badge.shipped {
+    background: rgba(79, 70, 229, 0.14);
+    color: #4338ca;
+}
+
+.vendor-orders-table .status-badge.delivered {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
 }
 
 .vendor-product-actions {

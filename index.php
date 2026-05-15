@@ -189,6 +189,20 @@ elseif ($page === 'vendorSettingsAjax') {
     exit;
 }
 
+elseif ($page === 'vendorCouponsAjax') {
+
+    requireRole('vendor');
+    $vendor->showCouponsAjax();
+    exit;
+}
+
+elseif ($page === 'vendorOrdersAjax') {
+
+    requireRole('vendor');
+    $vendor->showOrdersAjax();
+    exit;
+}
+
 elseif ($page === 'vendorProductAction') {
 
     requireRole('vendor');
@@ -200,6 +214,13 @@ elseif ($page === 'vendorProfileAction') {
 
     requireRole('vendor');
     $vendor->profileAction();
+    exit;
+}
+
+elseif ($page === 'vendorCouponAction') {
+
+    requireRole('vendor');
+    $vendor->couponAction();
     exit;
 }
 

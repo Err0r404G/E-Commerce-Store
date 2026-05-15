@@ -1,4 +1,9 @@
 <section class="vendor-inventory-page">
+    <?php
+    $lowStockThreshold = 5;
+    $lowStockProducts = array_filter($products, static fn ($product) => (int) $product['stock_qty'] < $lowStockThreshold);
+    ?>
+
     <div class="page-header">
         <h1>Inventory</h1>
         <p>Add products to platform categories and manage only your shop inventory.</p>
@@ -77,6 +82,15 @@
                 </div>
             </div>
 
+            <?php if (!empty($lowStockProducts)): ?>
+                <div class="vendor-low-stock-alert">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>
+                        <?= count($lowStockProducts) ?> product<?= count($lowStockProducts) === 1 ? '' : 's' ?> below stock threshold of <?= $lowStockThreshold ?>.
+                    </span>
+                </div>
+            <?php endif; ?>
+
             <div class="table-wrapper">
                 <table class="category-table vendor-product-table">
                     <thead>
@@ -104,7 +118,9 @@
                                 </td>
                                 <td><?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></td>
                                 <td>$<?= number_format((float) $product['price'], 2) ?></td>
-                                <td><?= (int) $product['stock_qty'] ?></td>
+                                <td class="<?= (int) $product['stock_qty'] < $lowStockThreshold ? 'vendor-low-stock' : '' ?>">
+                                    <?= (int) $product['stock_qty'] ?>
+                                </td>
                                 <td>
                                     <span class="approval-status <?= (int) $product['is_available'] === 1 ? 'approved' : 'pending' ?>">
                                         <?= (int) $product['is_available'] === 1 ? 'Available' : 'Hidden' ?>
