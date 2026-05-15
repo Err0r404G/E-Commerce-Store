@@ -10,12 +10,14 @@ session_start();
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/app/views/auth/control/AuthController.php';
 require_once __DIR__ . '/app/controllers/admin/AdminController.php';
+require_once __DIR__ . '/app/controllers/vendor/VendorController.php';
 
 $page = $_GET['page'] ?? 'home';
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 $auth = new AuthController($conn);
 $admin = new AdminController($conn);
+$vendor = new VendorController($conn);
 
 function dashboardUrlForRole(string $role): string
 {
@@ -157,6 +159,19 @@ elseif ($page === 'vendorDashboard') {
 
     requireRole('vendor');
     includeViewOrShowMissing(__DIR__ . '/app/views/vendor/view/vendor_home_page_screen.php', 'Vendor Dashboard');
+    exit;
+}
+
+elseif ($page === 'vendorProfile') {
+
+    requireRole('vendor');
+
+    if ($requestMethod === 'POST') {
+        $vendor->updateProfile();
+    } else {
+        $vendor->showProfile();
+    }
+
     exit;
 }
 
