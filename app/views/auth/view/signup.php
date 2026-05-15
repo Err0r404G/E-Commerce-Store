@@ -34,7 +34,7 @@ include __DIR__ . '/../../layouts/header.php';
                 </label>
 
                 <input type="file" id="profile_pic" name="profile_pic" accept="image/jpeg,image/png,image/webp" hidden>
-                <p>PROFILE PICTURE</p>
+                <p id="profileUploadLabel"><?= ($old['role'] ?? 'customer') === 'vendor' ? 'SHOP LOGO' : 'PROFILE PICTURE' ?></p>
             </div>
 
             <div class="form-group">
@@ -62,6 +62,31 @@ include __DIR__ . '/../../layouts/header.php';
             <div class="form-group">
                 <label>Phone Number (Optional)</label>
                 <input type="text" name="phone" placeholder="+880 123456789" value="<?= htmlspecialchars($old['phone'] ?? '') ?>">
+            </div>
+
+            <div class="vendor-fields" id="vendorFields" <?= ($old['role'] ?? 'customer') === 'vendor' ? '' : 'hidden' ?>>
+                <section class="vendor-form-section">
+                    <h2>Shop Profile</h2>
+
+                    <div class="form-group">
+                        <label>Shop Name</label>
+                        <input type="text" name="shop_name" placeholder="e.g. MAYER DUA TM" value="<?= htmlspecialchars($old['shop_name'] ?? '') ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Shop Description</label>
+                        <textarea name="shop_description" placeholder="Tell customers what your shop sells"><?= htmlspecialchars($old['shop_description'] ?? '') ?></textarea>
+                    </div>
+                </section>
+
+                <section class="vendor-form-section">
+                    <h2>Shop Address</h2>
+
+                    <div class="form-group">
+                        <label>Business Address</label>
+                        <textarea name="shop_address" placeholder="House, road, city, country"><?= htmlspecialchars($old['shop_address'] ?? '') ?></textarea>
+                    </div>
+                </section>
             </div>
 
             <div class="password-grid">
@@ -95,6 +120,26 @@ include __DIR__ . '/../../layouts/header.php';
     </section>
 
 </main>
+
+<script>
+    const vendorRadio = document.getElementById('vendor');
+    const customerRadio = document.getElementById('customer');
+    const vendorFields = document.getElementById('vendorFields');
+    const profileUploadLabel = document.getElementById('profileUploadLabel');
+
+    function syncVendorFields() {
+        const isVendor = vendorRadio.checked;
+        vendorFields.hidden = !isVendor;
+        profileUploadLabel.textContent = isVendor ? 'SHOP LOGO' : 'PROFILE PICTURE';
+        vendorFields.querySelectorAll('input, textarea').forEach((field) => {
+            field.required = isVendor;
+        });
+    }
+
+    vendorRadio.addEventListener('change', syncVendorFields);
+    customerRadio.addEventListener('change', syncVendorFields);
+    syncVendorFields();
+</script>
 
 </body>
 </html>

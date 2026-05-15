@@ -24,6 +24,8 @@ class UserModel
 
     public function create(array $data): bool
     {
+        $this->conn->begin_transaction();
+
         $stmt = $this->conn->prepare(
             "INSERT INTO users (name, email, password_hash, phone, role, profile_pic, is_active)
              VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -43,8 +45,39 @@ class UserModel
         );
 
         $created = $stmt->execute();
+        $userId = (int) $this->conn->insert_id;
         $stmt->close();
 
-        return $created;
+        if (!$created) {
+            $this->conn->rollback();
+            return false;
+        }
+
+        if (($data['role'] ?? '') === 'vendor') {
+            $sellerStmt = $this->conn->prepare(
+                "INSERT INTO sellers (user_id, shop_name, shop_description, shop_logo_path, address, is_approved)
+                 VALUES (?, ?, ?, ?, ?, 0)"
+            );
+
+            $sellerStmt->bind_param(
+                "issss",
+                $userId,
+                $data['shop_name'],
+                $data['shop_description'],
+                $data['shop_logo_path'],
+                $data['shop_address']
+            );
+
+            $sellerCreated = $sellerStmt->execute();
+            $sellerStmt->close();
+
+            if (!$sellerCreated) {
+                $this->conn->rollback();
+                return false;
+            }
+        }
+
+        $this->conn->commit();
+        return true;
     }
 }

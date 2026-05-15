@@ -23,6 +23,9 @@ class AuthController
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
         $role = $_POST['role'] ?? 'customer';
+        $shopName = trim($_POST['shop_name'] ?? '');
+        $shopDescription = trim($_POST['shop_description'] ?? '');
+        $shopAddress = trim($_POST['shop_address'] ?? '');
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
@@ -32,6 +35,9 @@ class AuthController
             'email' => $email,
             'phone' => $phone,
             'role' => $role,
+            'shop_name' => $shopName,
+            'shop_description' => $shopDescription,
+            'shop_address' => $shopAddress,
         ];
 
         if ($name === '' || $email === '' || $password === '' || $confirmPassword === '') {
@@ -46,6 +52,16 @@ class AuthController
             $errors[] = 'Please choose a valid account type.';
         }
 
+        if ($role === 'vendor') {
+            if ($shopName === '' || $shopDescription === '' || $shopAddress === '') {
+                $errors[] = 'Please fill in all required shop details.';
+            }
+
+            if (empty($_FILES['profile_pic']['name'])) {
+                $errors[] = 'Please upload a shop logo.';
+            }
+        }
+
         if (strlen($password) < 6) {
             $errors[] = 'Password must be at least 6 characters.';
         }
@@ -58,7 +74,11 @@ class AuthController
             $errors[] = 'An account already exists with this email.';
         }
 
-        $profilePath = $this->uploadProfileImage($errors);
+        $profilePath = null;
+
+        if (!$errors) {
+            $profilePath = $this->uploadProfileImage($errors);
+        }
 
         if ($errors) {
             $this->showSignup($errors, $old);
@@ -73,6 +93,10 @@ class AuthController
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'profile_pic' => $profilePath,
             'is_active' => $role === 'vendor' ? 0 : 1,
+            'shop_name' => $shopName,
+            'shop_description' => $shopDescription,
+            'shop_address' => $shopAddress,
+            'shop_logo_path' => $role === 'vendor' ? $profilePath : null,
         ]);
 
         if (!$created) {
@@ -110,7 +134,9 @@ class AuthController
         }
 
         if (!$errors && (int) $user['is_active'] !== 1) {
-            $errors[] = 'This account is not active.';
+            $errors[] = $user['role'] === 'vendor'
+                ? 'Your vendor account is waiting for admin approval.'
+                : 'This account is not active.';
         }
 
         if ($errors) {
@@ -154,7 +180,7 @@ class AuthController
         }
 
         if ($_FILES['profile_pic']['error'] !== UPLOAD_ERR_OK) {
-            $errors[] = 'Profile picture upload failed.';
+            $errors[] = 'Image upload failed.';
             return null;
         }
 
@@ -162,7 +188,7 @@ class AuthController
         $mimeType = mime_content_type($_FILES['profile_pic']['tmp_name']);
 
         if (!isset($allowedTypes[$mimeType])) {
-            $errors[] = 'Profile picture must be JPG, PNG, or WEBP.';
+            $errors[] = 'Image must be JPG, PNG, or WEBP.';
             return null;
         }
 
@@ -176,7 +202,7 @@ class AuthController
         $targetPath = $uploadDir . '/' . $fileName;
 
         if (!move_uploaded_file($_FILES['profile_pic']['tmp_name'], $targetPath)) {
-            $errors[] = 'Could not save profile picture.';
+            $errors[] = 'Could not save uploaded image.';
             return null;
         }
 
