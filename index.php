@@ -31,6 +31,10 @@ function dashboardUrlForRole(string $role): string
         return '/E-Commerce-Store/index.php?page=vendorDashboard';
     }
 
+    if ($role === 'delivery_manager') {
+        return '/E-Commerce-Store/index.php?page=deliveryDashboard';
+    }
+
     return '/E-Commerce-Store/index.php';
 }
 
@@ -263,7 +267,7 @@ elseif ($page === 'vendorReviewAction') {
 
 elseif ($page === 'deliveryDashboard') {
 
-    includeViewOrShowMissing(__DIR__ . '/app/views/delivery_manager/deliveryDashboard.php', 'Delivery Dashboard');
+    includeViewOrShowMissing(__DIR__ . '/app/views/deliveryManager/deliveryDashboard.php', 'Delivery Dashboard');
     exit;
 }
 

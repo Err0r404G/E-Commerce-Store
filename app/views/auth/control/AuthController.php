@@ -219,6 +219,10 @@ class AuthController
             return '/E-Commerce-Store/index.php?page=vendorDashboard';
         }
 
+        if ($role === 'delivery_manager') {
+            return '/E-Commerce-Store/index.php?page=deliveryDashboard';
+        }
+
         return '/E-Commerce-Store/index.php';
     }
 }
