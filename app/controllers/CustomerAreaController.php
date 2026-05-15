@@ -145,9 +145,11 @@ class CustomerAreaController
     private function disputes(): void
     {
         $this->requireCustomer();
-        $disputes = $this->model->disputes($this->customerId());
+        $customerId = $this->customerId();
+        $disputes = $this->model->disputes($customerId);
+        $disputeTargets = $this->model->disputeTargets($customerId);
         $cartCount = $this->cartCount();
-        $this->render('disputes', compact('disputes', 'cartCount'));
+        $this->render('disputes', compact('disputes', 'disputeTargets', 'cartCount'));
     }
 
     private function handleAction(string $action): void
@@ -167,6 +169,7 @@ class CustomerAreaController
             'request_return' => $this->requestReturn(),
             'save_review' => $this->saveReview(),
             'delete_review' => $this->deleteReview(),
+            'submit_dispute' => $this->submitDispute(),
             default => $this->redirect('dashboard'),
         };
     }
@@ -421,6 +424,23 @@ class CustomerAreaController
         $this->model->deleteReview($this->customerId(), (int) ($_POST['product_id'] ?? 0), $orderId);
         $this->flash('Review deleted.');
         $this->redirect('order&id=' . $orderId);
+    }
+
+    private function submitDispute(): void
+    {
+        $this->requireCustomer();
+        $target = $_POST['dispute_target'] ?? '';
+        $description = trim($_POST['description'] ?? '');
+        [$orderId, $sellerId] = array_pad(array_map('intval', explode(':', $target, 2)), 2, 0);
+
+        if ($orderId <= 0 || $sellerId <= 0 || strlen($description) < 10) {
+            $this->flash('Choose an order and write at least 10 characters for the dispute.');
+            $this->redirect('disputes');
+        }
+
+        $ok = $this->model->createDispute($this->customerId(), $orderId, $sellerId, $description);
+        $this->flash($ok ? 'Dispute submitted for admin review.' : 'That order and seller combination is not available for your account.');
+        $this->redirect('disputes');
     }
 
     private function cartItems(): array
