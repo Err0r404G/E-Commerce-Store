@@ -9,40 +9,6 @@
         </button>
     </div>
 
-    <form class="category-form" id="categoryForm" hidden>
-        <input type="hidden" name="category_action" id="categoryAction" value="add">
-        <input type="hidden" name="category_id" id="categoryId" value="">
-
-        <div class="category-form-grid">
-            <label>
-                Category Name
-                <input type="text" name="name" id="categoryName" placeholder="Enter category name" required>
-            </label>
-
-            <label>
-                Parent Category
-                <select name="parent_id" id="categoryParent">
-                    <option value="">Primary category</option>
-                    <?php foreach ($categories as $category): ?>
-                        <?php if ($category['parent_id'] === null): ?>
-                            <option value="<?= (int) $category['id'] ?>"><?= htmlspecialchars($category['name']) ?></option>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-
-            <label>
-                Description
-                <input type="text" name="description" id="categoryDescription" placeholder="Short description">
-            </label>
-        </div>
-
-        <div class="category-form-actions">
-            <button class="approve-btn" type="submit">Save Category</button>
-            <button class="reject-btn" id="cancelCategoryForm" type="button">Cancel</button>
-        </div>
-    </form>
-
     <div class="category-stats">
 
         <div class="category-stat-card">
@@ -172,6 +138,65 @@
             <p>Showing <?= count($categories) ?> categor<?= count($categories) === 1 ? 'y' : 'ies' ?></p>
         </div>
 
+    </div>
+
+    <div class="category-modal-backdrop" id="categoryModal" hidden>
+        <div class="category-modal" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+            <div class="category-modal-heading">
+                <h2 id="categoryModalTitle">Add New Category</h2>
+                <p>Define a new product classification for your store's hierarchy.</p>
+            </div>
+
+            <form class="category-form category-modal-form" id="categoryForm">
+                <input type="hidden" name="category_action" id="categoryAction" value="add">
+                <input type="hidden" name="category_id" id="categoryId" value="">
+                <input type="hidden" name="parent_id" id="categoryParent" value="">
+
+                <div class="category-modal-grid">
+                    <div class="category-form-panel category-info-panel">
+                        <h3><i class="fa-solid fa-circle-info"></i> General Information</h3>
+
+                        <label>
+                            Category Name
+                            <input type="text" name="name" id="categoryName" placeholder="e.g. Premium Electronics" required>
+                        </label>
+
+                        <label>
+                            Category Description
+                            <textarea name="description" id="categoryDescription" placeholder="Provide a detailed description for customers and SEO purposes..."></textarea>
+                        </label>
+                    </div>
+
+                    <div class="category-form-panel category-assets-panel">
+                        <h3><i class="fa-regular fa-image"></i> Category Assets</h3>
+
+                        <label class="thumbnail-drop">
+                            <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/gif">
+                            <span class="upload-icon"><i class="fa-regular fa-file-arrow-up"></i></span>
+                            <strong>Upload thumbnail</strong>
+                            <small>PNG, JPG up to 2MB (800x800px)</small>
+                            <em>Select File</em>
+                        </label>
+
+                        <p class="icon-preview-label">Icon Preview</p>
+                        <div class="icon-preview-row">
+                            <button type="button"><i class="fa-solid fa-shapes"></i></button>
+                            <button type="button"><i class="fa-solid fa-computer"></i></button>
+                            <button type="button"><i class="fa-solid fa-couch"></i></button>
+                            <button type="button" class="add-icon"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-modal-actions">
+                    <button class="modal-cancel-btn" id="cancelCategoryForm" type="button">Cancel</button>
+                    <button class="modal-create-btn" type="submit">
+                        <i class="fa-regular fa-circle-plus"></i>
+                        Create Category
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </section>
