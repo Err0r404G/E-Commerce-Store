@@ -1,0 +1,145 @@
+<?php
+$errors = $errors ?? [];
+$old = $old ?? [];
+
+include __DIR__ . '/../../layouts/header.php';
+?>
+<link rel="stylesheet" href="/E-Commerce-Store/public/css/signup.css">
+
+<main class="signup-page">
+
+    <section class="signup-card">
+
+        <div class="signup-header">
+            <h1>Create Account</h1>
+            <p>Enter your credentials to access the Nexus ecosystem.</p>
+        </div>
+
+        <?php if ($errors): ?>
+            <div class="auth-message auth-message-error">
+                <?php foreach ($errors as $error): ?>
+                    <p><?= htmlspecialchars($error) ?></p>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <form class="signup-form" action="/E-Commerce-Store/index.php?page=signup" method="POST" enctype="multipart/form-data">
+
+            <div class="profile-upload">
+                <label for="profile_pic" class="profile-box">
+                    <i class="fa-regular fa-user"></i>
+                    <span class="camera">
+                        <i class="fa-solid fa-camera"></i>
+                    </span>
+                </label>
+
+                <input type="file" id="profile_pic" name="profile_pic" accept="image/jpeg,image/png,image/webp" hidden>
+                <p id="profileUploadLabel"><?= ($old['role'] ?? 'customer') === 'vendor' ? 'SHOP LOGO' : 'PROFILE PICTURE' ?></p>
+            </div>
+
+            <div class="form-group">
+                <label>Account Type</label>
+
+                <div class="account-type">
+                    <input type="radio" id="customer" name="role" value="customer" <?= ($old['role'] ?? 'customer') === 'customer' ? 'checked' : '' ?>>
+                    <label for="customer">Customer</label>
+
+                    <input type="radio" id="vendor" name="role" value="vendor" <?= ($old['role'] ?? '') === 'vendor' ? 'checked' : '' ?>>
+                    <label for="vendor">Vendor</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" placeholder="Name" value="<?= htmlspecialchars($old['name'] ?? '') ?>" required>
+            </div>
+
+            <div class="form-group">
+                <label>Corporate or Personal Email</label>
+                <input type="email" name="email" placeholder="name@company.com" value="<?= htmlspecialchars($old['email'] ?? '') ?>" required>
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number (Optional)</label>
+                <input type="text" name="phone" placeholder="+880 123456789" value="<?= htmlspecialchars($old['phone'] ?? '') ?>">
+            </div>
+
+            <div class="vendor-fields" id="vendorFields" <?= ($old['role'] ?? 'customer') === 'vendor' ? '' : 'hidden' ?>>
+                <section class="vendor-form-section">
+                    <h2>Shop Profile</h2>
+
+                    <div class="form-group">
+                        <label>Shop Name</label>
+                        <input type="text" name="shop_name" placeholder="e.g. MAYER DUA TM" value="<?= htmlspecialchars($old['shop_name'] ?? '') ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Shop Description</label>
+                        <textarea name="shop_description" placeholder="Tell customers what your shop sells"><?= htmlspecialchars($old['shop_description'] ?? '') ?></textarea>
+                    </div>
+                </section>
+
+                <section class="vendor-form-section">
+                    <h2>Shop Address</h2>
+
+                    <div class="form-group">
+                        <label>Business Address</label>
+                        <textarea name="shop_address" placeholder="House, road, city, country"><?= htmlspecialchars($old['shop_address'] ?? '') ?></textarea>
+                    </div>
+                </section>
+            </div>
+
+            <div class="password-grid">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="terms-row">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    I agree to the <a href="#">Terms of Service</a> and <a href="#">Merchant Agreement</a>.
+                </label>
+            </div>
+
+            <button type="submit" class="create-btn">Create Account</button>
+
+            <p class="login-text">
+                Already have an account?
+                <a href="/E-Commerce-Store/index.php?page=login">Log In</a>
+            </p>
+
+        </form>
+
+    </section>
+
+</main>
+
+<script>
+    const vendorRadio = document.getElementById('vendor');
+    const customerRadio = document.getElementById('customer');
+    const vendorFields = document.getElementById('vendorFields');
+    const profileUploadLabel = document.getElementById('profileUploadLabel');
+
+    function syncVendorFields() {
+        const isVendor = vendorRadio.checked;
+        vendorFields.hidden = !isVendor;
+        profileUploadLabel.textContent = isVendor ? 'SHOP LOGO' : 'PROFILE PICTURE';
+        vendorFields.querySelectorAll('input, textarea').forEach((field) => {
+            field.required = isVendor;
+        });
+    }
+
+    vendorRadio.addEventListener('change', syncVendorFields);
+    customerRadio.addEventListener('change', syncVendorFields);
+    syncVendorFields();
+</script>
+
+</body>
+</html>
