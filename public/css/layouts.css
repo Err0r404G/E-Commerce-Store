@@ -1238,6 +1238,10 @@ body {
     font-weight: 700;
 }
 
+.stat-top span.approved-stat-label {
+    color: #15803d;
+}
+
 .stat-card p {
     margin-top: 20px;
     color: #555a66;
@@ -2466,4 +2470,23 @@ body.modal-open {
     background: #fff;
     color: #202331;
     border: 1px solid #8d929d;
+}
+.main-footer {
+    width: 100%;
+    border-top: 1px solid #d4d6dd;
+    background: #fbf8fc;
+    padding: 34px 24px;
+    margin-top: 40px;
+}
+
+.footer-content h3 {
+    color: #172344;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.footer-content p {
+    color: #202331;
+    font-size: 15px;
 }

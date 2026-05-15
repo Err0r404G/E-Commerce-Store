@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../../config/db.php';
-require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../../../../config/db.php';
+require_once __DIR__ . '/../model/UserModel.php';
 
 class AuthController
 {
@@ -14,7 +14,7 @@ class AuthController
 
     public function showSignup(array $errors = [], array $old = []): void
     {
-        require __DIR__ . '/../views/auth/signup.php';
+        require __DIR__ . '/../view/signup.php';
     }
 
     public function signup(): void
@@ -89,7 +89,7 @@ class AuthController
 
     public function showLogin(array $errors = [], array $old = []): void
     {
-        require __DIR__ . '/../views/auth/login.php';
+        require __DIR__ . '/../view/login.php';
     }
 
     public function login(): void
@@ -166,7 +166,7 @@ class AuthController
             return null;
         }
 
-        $uploadDir = __DIR__ . '/../../public/uploads/profiles';
+        $uploadDir = __DIR__ . '/../../../../public/uploads/profiles';
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
