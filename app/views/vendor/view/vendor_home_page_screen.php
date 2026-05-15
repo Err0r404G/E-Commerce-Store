@@ -17,6 +17,7 @@ $currentUser = $_SESSION['user'];
 $vendorName = $currentUser['name'] ?? 'Vendor';
 $vendorRole = strtoupper(str_replace('_', ' ', $currentUser['role'] ?? 'vendor'));
 $vendorAvatar = $currentUser['profile_pic'] ?? null;
+$activeVendorPage = 'dashboard';
 
 include __DIR__ . '/../layouts/header.php';
 ?>
