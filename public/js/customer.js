@@ -49,6 +49,17 @@ if (zoneSelect) {
     });
 }
 
+const savedAddressSelect = document.getElementById('saved-address-select');
+if (savedAddressSelect) {
+    savedAddressSelect.addEventListener('change', function () {
+        const selected = savedAddressSelect.options[savedAddressSelect.selectedIndex];
+        const target = document.getElementById('shipping-address');
+        if (target && selected.dataset.address) {
+            target.value = selected.dataset.address;
+        }
+    });
+}
+
 function updateCheckoutTotal() {
     const subtotalNode = document.getElementById('subtotal');
     if (!subtotalNode) {
