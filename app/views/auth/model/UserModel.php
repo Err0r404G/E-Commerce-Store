@@ -312,6 +312,46 @@ class UserModel
         return $updated;
     }
 
+    public function getVendorReviews(int $sellerId): array
+    {
+        $reviews = [];
+        $stmt = $this->conn->prepare(
+            "SELECT r.id, r.product_id, r.order_id, r.customer_id, r.rating, r.review_text, r.seller_reply, r.created_at,
+                    p.name AS product_name,
+                    u.name AS customer_name, u.email AS customer_email
+             FROM reviews r
+             INNER JOIN products p ON p.id = r.product_id
+             INNER JOIN users u ON u.id = r.customer_id
+             WHERE p.seller_id = ?
+             ORDER BY r.created_at DESC, r.id DESC"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $reviews[] = $row;
+        }
+
+        $stmt->close();
+        return $reviews;
+    }
+
+    public function replyToVendorReview(int $sellerId, int $reviewId, string $reply): bool
+    {
+        $stmt = $this->conn->prepare(
+            "UPDATE reviews r
+             INNER JOIN products p ON p.id = r.product_id
+             SET r.seller_reply = ?
+             WHERE r.id = ? AND p.seller_id = ?"
+        );
+        $stmt->bind_param("sii", $reply, $reviewId, $sellerId);
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
+    }
+
     private function ensureOrderItemTrackingNoteColumn(): void
     {
         $result = $this->conn->query("SHOW COLUMNS FROM order_items LIKE 'tracking_note'");
