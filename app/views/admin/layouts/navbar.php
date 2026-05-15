@@ -3,7 +3,7 @@
     <!-- MENU -->
     <nav class="admin-menu">
 
-        <a href="#" class="active">
+        <a href="#" class="active" data-page="/E-Commerce-Store/index.php?page=adminDashboardAjax">
             <i class="fa-solid fa-table-cells-large"></i>
             <span>Dashboard</span>
         </a>
@@ -16,6 +16,26 @@
         <a href="#" data-page="/E-Commerce-Store/index.php?page=categoryManagementAjax">
             <i class="fa-solid fa-shapes"></i>
             <span>Category Management</span>
+        </a>
+
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=productManagementAjax">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Manage Product</span>
+        </a>
+
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=orderManagementAjax">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Orders</span>
+        </a>
+
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=adminCustomersAjax">
+            <i class="fa-solid fa-users"></i>
+            <span>Manage Customer</span>
+        </a>
+
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=adminDeliveryManagersAjax">
+            <i class="fa-solid fa-truck-fast"></i>
+            <span>Manage Delivery Manager</span>
         </a>
 
         <a href="#" data-page="/E-Commerce-Store/index.php?page=adminDisputesAjax">
