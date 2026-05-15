@@ -26,10 +26,22 @@
                                 <input type="hidden" name="customer_action" value="save_review">
                                 <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
                                 <input type="hidden" name="product_id" value="<?= (int) $item['product_id'] ?>">
-                                <select name="rating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
-                                <input name="review_text" placeholder="Write a review">
-                                <button class="ghost-button dark" type="submit">Save Review</button>
+                                <select name="rating">
+                                    <?php for ($rating = 5; $rating >= 1; $rating--): ?>
+                                        <option value="<?= $rating ?>" <?= (int) ($item['own_rating'] ?? 5) === $rating ? 'selected' : '' ?>><?= $rating ?> star<?= $rating === 1 ? '' : 's' ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <input name="review_text" value="<?= e($item['own_review_text'] ?? '') ?>" placeholder="Write a review">
+                                <button class="ghost-button dark" type="submit"><?= $item['own_review_text'] ? 'Update Review' : 'Save Review' ?></button>
                             </form>
+                            <?php if (!empty($item['own_review_text'])): ?>
+                                <form method="post" class="review-delete-form">
+                                    <input type="hidden" name="customer_action" value="delete_review">
+                                    <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
+                                    <input type="hidden" name="product_id" value="<?= (int) $item['product_id'] ?>">
+                                    <button class="danger-button" type="submit">Delete Review</button>
+                                </form>
+                            <?php endif; ?>
                             <form method="post" class="inline-form">
                                 <input type="hidden" name="customer_action" value="request_return">
                                 <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
@@ -37,6 +49,9 @@
                                 <input name="reason" placeholder="Return reason">
                                 <button class="ghost-button dark" type="submit">Request Return</button>
                             </form>
+                            <?php if (!empty($item['return_status'])): ?>
+                                <p class="helper-text">Return: <?= e(ucwords($item['return_status'])) ?><?= $item['return_reason'] ? ' - ' . e($item['return_reason']) : '' ?></p>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                     <strong><?= money((float) $item['unit_price'] * (int) $item['quantity']) ?></strong>
