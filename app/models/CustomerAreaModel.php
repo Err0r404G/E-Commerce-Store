@@ -221,9 +221,35 @@ class CustomerAreaModel
 
     public function coupon(string $code): ?array
     {
+        $platformCoupon = $this->platformCoupon($code);
+
+        if ($platformCoupon) {
+            return $platformCoupon;
+        }
+
         $stmt = $this->conn->prepare(
-            "SELECT id, code, discount_pct
+            "SELECT id, code, discount_pct, 'vendor' AS funding_source
              FROM coupons
+             WHERE code = ? AND is_active = 1 AND valid_until >= CURDATE() AND uses_count < max_uses
+             LIMIT 1"
+        );
+        $stmt->bind_param('s', $code);
+        $stmt->execute();
+        $coupon = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $coupon ?: null;
+    }
+
+    private function platformCoupon(string $code): ?array
+    {
+        if (!$this->tableExists('platform_coupons')) {
+            return null;
+        }
+
+        $stmt = $this->conn->prepare(
+            "SELECT id, code, discount_pct, 'platform' AS funding_source
+             FROM platform_coupons
              WHERE code = ? AND is_active = 1 AND valid_until >= CURDATE() AND uses_count < max_uses
              LIMIT 1"
         );
@@ -412,7 +438,8 @@ class CustomerAreaModel
             $discount = $coupon ? round($subtotal * ((float) $coupon['discount_pct'] / 100), 2) : 0.0;
             $deliveryFee = (float) ($data['delivery_fee'] ?? 0);
             $total = max(0, $subtotal - $discount + $deliveryFee);
-            $couponId = $coupon ? (int) $coupon['id'] : null;
+            $couponUsageId = $coupon ? (int) $coupon['id'] : null;
+            $couponId = $coupon && ($coupon['funding_source'] ?? 'vendor') === 'vendor' ? (int) $coupon['id'] : null;
 
             $stmt = $this->conn->prepare(
                 "INSERT INTO orders (customer_id, shipping_address, payment_method, subtotal, discount_amount, total_amount, coupon_id)
@@ -444,8 +471,9 @@ class CustomerAreaModel
             $stockStmt->close();
 
             if ($coupon) {
-                $couponStmt = $this->conn->prepare("UPDATE coupons SET uses_count = uses_count + 1 WHERE id = ?");
-                $couponStmt->bind_param('i', $couponId);
+                $couponTable = ($coupon['funding_source'] ?? 'vendor') === 'platform' ? 'platform_coupons' : 'coupons';
+                $couponStmt = $this->conn->prepare("UPDATE {$couponTable} SET uses_count = uses_count + 1 WHERE id = ?");
+                $couponStmt->bind_param('i', $couponUsageId);
                 $couponStmt->execute();
                 $couponStmt->close();
             }

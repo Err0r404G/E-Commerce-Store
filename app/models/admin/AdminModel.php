@@ -15,7 +15,8 @@ class AdminModel
         $vendors = [];
         $result = $this->conn->query(
             "SELECT u.id, u.name, u.email, u.phone, u.is_active, u.created_at,
-                    s.shop_name, s.is_approved, s.account_status, s.admin_note
+                    s.id AS seller_id, s.shop_name, s.is_approved, s.account_status, s.admin_note,
+                    COALESCE(s.commission_rate, 10.00) AS commission_rate
              FROM users u
              LEFT JOIN sellers s ON s.user_id = u.id
              WHERE u.role = 'vendor'
@@ -614,12 +615,352 @@ class AdminModel
         return ['success' => $success, 'message' => $status === 'resolved' ? 'Dispute resolved.' : 'Dispute reopened.'];
     }
 
+    public function getPlatformCoupons(): array
+    {
+        $this->ensurePlatformCouponsTable();
+        $coupons = [];
+        $result = $this->conn->query(
+            "SELECT id, code, discount_pct, max_uses, uses_count, valid_until, is_active, created_at
+             FROM platform_coupons
+             ORDER BY is_active DESC, valid_until DESC, id DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $coupons[] = $row;
+            }
+        }
+
+        return $coupons;
+    }
+
+    public function savePlatformCoupon(array $data): array
+    {
+        $this->ensurePlatformCouponsTable();
+        $couponId = (int) ($data['coupon_id'] ?? 0);
+
+        if ($couponId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE platform_coupons
+                 SET code = ?, discount_pct = ?, max_uses = ?, valid_until = ?, is_active = ?
+                 WHERE id = ?"
+            );
+            $stmt->bind_param(
+                'sdisii',
+                $data['code'],
+                $data['discount_pct'],
+                $data['max_uses'],
+                $data['valid_until'],
+                $data['is_active'],
+                $couponId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO platform_coupons (code, discount_pct, max_uses, valid_until, is_active)
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            $stmt->bind_param(
+                'sdisi',
+                $data['code'],
+                $data['discount_pct'],
+                $data['max_uses'],
+                $data['valid_until'],
+                $data['is_active']
+            );
+        }
+
+        try {
+            $success = $stmt->execute();
+        } catch (mysqli_sql_exception $e) {
+            $stmt->close();
+            return ['success' => false, 'status' => 422, 'message' => 'Coupon code already exists.'];
+        }
+
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $success ? 'Platform coupon saved.' : 'Platform coupon could not be saved.'];
+    }
+
+    public function togglePlatformCoupon(int $couponId): array
+    {
+        $this->ensurePlatformCouponsTable();
+        $stmt = $this->conn->prepare(
+            "UPDATE platform_coupons
+             SET is_active = IF(is_active = 1, 0, 1)
+             WHERE id = ?"
+        );
+        $stmt->bind_param('i', $couponId);
+        $stmt->execute();
+        $success = $stmt->affected_rows > 0;
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $success ? 'Platform coupon status updated.' : 'Platform coupon not found.'];
+    }
+
+    public function getAdminProfile(int $adminId): ?array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT id, name, email, phone, password_hash, role, profile_pic
+             FROM users
+             WHERE id = ? AND role = 'admin'
+             LIMIT 1"
+        );
+        $stmt->bind_param('i', $adminId);
+        $stmt->execute();
+        $profile = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $profile ?: null;
+    }
+
+    public function updateAdminProfile(int $adminId, array $data): array
+    {
+        $profilePic = $data['profile_pic'] ?? null;
+        $passwordHash = $data['password_hash'] ?? null;
+
+        if ($profilePic !== null && $passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?, profile_pic = ?, password_hash = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('ssssi', $data['name'], $data['phone'], $profilePic, $passwordHash, $adminId);
+        } elseif ($profilePic !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?, profile_pic = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('sssi', $data['name'], $data['phone'], $profilePic, $adminId);
+        } elseif ($passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?, password_hash = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('sssi', $data['name'], $data['phone'], $passwordHash, $adminId);
+        } else {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('ssi', $data['name'], $data['phone'], $adminId);
+        }
+
+        $success = $stmt->execute();
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $success ? 'Settings updated successfully.' : 'Settings update failed.'];
+    }
+
+    public function getPlatformReportData(string $month): array
+    {
+        $monthStart = $month . '-01';
+        $monthEnd = date('Y-m-d', strtotime($monthStart . ' +1 month'));
+
+        return [
+            'selected_month' => $month,
+            'month_label' => date('F Y', strtotime($monthStart)),
+            'all_time' => $this->getReportSalesSummary(),
+            'monthly' => $this->getReportSalesSummary($monthStart, $monthEnd),
+            'top_sellers' => $this->getTopPerformingSellers($monthStart, $monthEnd),
+            'top_categories' => $this->getTopSellingCategories($monthStart, $monthEnd),
+            'delivery' => $this->getDeliveryPerformanceOverview($monthStart, $monthEnd),
+            'generated_at' => date('M d, Y h:i A'),
+        ];
+    }
+
+    private function getReportSalesSummary(?string $startDate = null, ?string $endDate = null): array
+    {
+        $where = "WHERE o.status NOT IN ('cancelled', 'returned')";
+        $params = [];
+
+        if ($startDate !== null && $endDate !== null) {
+            $where .= " AND o.created_at >= ? AND o.created_at < ?";
+            $params = [$startDate, $endDate];
+        }
+
+        $orderStmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS orders_count,
+                    COUNT(DISTINCT o.customer_id) AS customers_count,
+                    COALESCE(SUM(o.discount_amount), 0) AS discounts_given,
+                    COALESCE(SUM(o.total_amount), 0) AS order_total
+             FROM orders o
+             {$where}"
+        );
+
+        if ($params) {
+            $orderStmt->bind_param('ss', $params[0], $params[1]);
+        }
+
+        $orderStmt->execute();
+        $orderSummary = $orderStmt->get_result()->fetch_assoc() ?: [];
+        $orderStmt->close();
+
+        $itemStmt = $this->conn->prepare(
+            "SELECT COUNT(DISTINCT o.id) AS orders_count,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS gmv,
+                    COALESCE(SUM((oi.quantity * oi.unit_price) * (COALESCE(s.commission_rate, 10) / 100)), 0) AS commission_earned
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             LEFT JOIN sellers s ON s.id = oi.seller_id
+             {$where}"
+        );
+
+        if ($params) {
+            $itemStmt->bind_param('ss', $params[0], $params[1]);
+        }
+
+        $itemStmt->execute();
+        $itemSummary = $itemStmt->get_result()->fetch_assoc() ?: [];
+        $itemStmt->close();
+
+        return [
+            'orders_count' => (int) ($orderSummary['orders_count'] ?? 0),
+            'customers_count' => (int) ($orderSummary['customers_count'] ?? 0),
+            'units_sold' => (int) ($itemSummary['units_sold'] ?? 0),
+            'gmv' => (float) ($itemSummary['gmv'] ?? 0),
+            'commission_earned' => (float) ($itemSummary['commission_earned'] ?? 0),
+            'discounts_given' => (float) ($orderSummary['discounts_given'] ?? 0),
+            'order_total' => (float) ($orderSummary['order_total'] ?? 0),
+        ];
+    }
+
+    private function getTopPerformingSellers(string $startDate, string $endDate): array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT s.id, COALESCE(s.shop_name, u.name, 'Unknown seller') AS seller_name,
+                    COUNT(DISTINCT o.id) AS orders_count,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS gmv,
+                    COALESCE(SUM((oi.quantity * oi.unit_price) * (COALESCE(s.commission_rate, 10) / 100)), 0) AS commission_earned
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             LEFT JOIN sellers s ON s.id = oi.seller_id
+             LEFT JOIN users u ON u.id = s.user_id
+             WHERE o.status NOT IN ('cancelled', 'returned')
+               AND o.created_at >= ? AND o.created_at < ?
+             GROUP BY s.id, seller_name
+             ORDER BY gmv DESC
+             LIMIT 8"
+        );
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $rows;
+    }
+
+    private function getTopSellingCategories(string $startDate, string $endDate): array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT COALESCE(c.name, 'Uncategorized') AS category_name,
+                    COUNT(DISTINCT o.id) AS orders_count,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS gmv
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             LEFT JOIN products p ON p.id = oi.product_id
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE o.status NOT IN ('cancelled', 'returned')
+               AND o.created_at >= ? AND o.created_at < ?
+             GROUP BY category_name
+             ORDER BY gmv DESC
+             LIMIT 8"
+        );
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $rows;
+    }
+
+    private function getDeliveryPerformanceOverview(string $startDate, string $endDate): array
+    {
+        $statusCounts = [
+            'assigned' => 0,
+            'picked_up' => 0,
+            'in_transit' => 0,
+            'delivered' => 0,
+            'failed' => 0,
+        ];
+
+        $stmt = $this->conn->prepare(
+            "SELECT status, COUNT(*) AS total
+             FROM delivery_assignments
+             WHERE assigned_at >= ? AND assigned_at < ?
+             GROUP BY status"
+        );
+        $stmt->bind_param('ss', $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $statusCounts[$row['status']] = (int) $row['total'];
+        }
+
+        $stmt->close();
+
+        $agentStmt = $this->conn->prepare(
+            "SELECT COALESCE(u.name, 'Delivery agent') AS agent_name,
+                    da.vehicle_type,
+                    COUNT(d.id) AS assignments,
+                    SUM(CASE WHEN d.status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
+                    SUM(CASE WHEN d.status = 'failed' THEN 1 ELSE 0 END) AS failed
+             FROM delivery_assignments d
+             LEFT JOIN delivery_agents da ON da.id = d.agent_id
+             LEFT JOIN users u ON u.id = da.user_id
+             WHERE d.assigned_at >= ? AND d.assigned_at < ?
+             GROUP BY d.agent_id, agent_name, da.vehicle_type
+             ORDER BY assignments DESC
+             LIMIT 8"
+        );
+        $agentStmt->bind_param('ss', $startDate, $endDate);
+        $agentStmt->execute();
+        $agents = $agentStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $agentStmt->close();
+
+        $totalAssignments = array_sum($statusCounts);
+        $delivered = $statusCounts['delivered'];
+        $failed = $statusCounts['failed'];
+
+        return [
+            'status_counts' => $statusCounts,
+            'agents' => $agents,
+            'total_assignments' => $totalAssignments,
+            'delivery_success_rate' => $totalAssignments > 0 ? round(($delivered / $totalAssignments) * 100, 2) : 0,
+            'failure_rate' => $totalAssignments > 0 ? round(($failed / $totalAssignments) * 100, 2) : 0,
+        ];
+    }
+
     private function countSellersWithProducts(): int
     {
         $result = $this->conn->query("SELECT COUNT(DISTINCT seller_id) AS total FROM products");
         $row = $result ? $result->fetch_assoc() : null;
 
         return (int) ($row['total'] ?? 0);
+    }
+
+    private function ensurePlatformCouponsTable(): void
+    {
+        $this->conn->query(
+            "CREATE TABLE IF NOT EXISTS platform_coupons (
+                id int(11) NOT NULL AUTO_INCREMENT,
+                code varchar(50) NOT NULL,
+                discount_pct decimal(5,2) NOT NULL,
+                max_uses int(11) DEFAULT 100,
+                uses_count int(11) DEFAULT 0,
+                valid_until date NOT NULL,
+                is_active tinyint(1) DEFAULT 1,
+                created_at datetime DEFAULT current_timestamp(),
+                PRIMARY KEY (id),
+                UNIQUE KEY code (code)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+        );
     }
 
     private function ensureSellerAccountColumns(): void

@@ -11,6 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function showMessage(element, message, isSuccess) {
+        if (!element) {
+            return;
+        }
+
+        element.hidden = false;
+        element.textContent = message;
+        element.classList.toggle("auth-message-success", isSuccess);
+        element.classList.toggle("auth-message-error", !isSuccess);
+    }
+
     function bindVendorApprovalEvents() {
         const search = document.getElementById("vendorApprovalSearch");
         const modal = document.getElementById("sellerActionModal");
@@ -500,10 +511,23 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedStatus = document.getElementById("selectedDisputeStatus");
         const selectedTitle = document.getElementById("selectedDisputeTitle");
         const selectedDescription = document.getElementById("selectedDisputeDescription");
+        const selectedCustomer = document.getElementById("selectedDisputeCustomer");
+        const selectedSeller = document.getElementById("selectedDisputeSeller");
         const selectedDate = document.getElementById("selectedDisputeDate");
+        const selectedTotal = document.getElementById("selectedDisputeTotal");
         const selectedNote = document.getElementById("selectedDisputeNote");
         const selectedNoteInput = document.getElementById("selectedDisputeNoteInput");
+        const feedback = document.getElementById("disputeActionFeedback");
         let submitAction = "resolve";
+
+        function setFeedback(message, isError = false) {
+            if (!feedback) {
+                return;
+            }
+
+            feedback.textContent = message || "";
+            feedback.classList.toggle("error", Boolean(isError));
+        }
 
         function selectRow(row) {
             if (!row) {
@@ -517,9 +541,13 @@ document.addEventListener("DOMContentLoaded", function () {
             selectedStatus.textContent = row.dataset.status || "Selected case";
             selectedTitle.textContent = `Case #${row.dataset.disputeId || ""} · Order #${row.dataset.orderId || ""}`;
             selectedDescription.textContent = row.dataset.description || "No dispute description provided.";
+            selectedCustomer.textContent = row.dataset.customer || "Unknown customer";
+            selectedSeller.textContent = row.dataset.seller || "Unknown seller";
             selectedDate.textContent = row.dataset.created || "N/A";
-            selectedNote.textContent = row.dataset.adminNote || "No admin note yet.";
+            selectedTotal.textContent = `BDT ${row.dataset.orderTotal || "0.00"}`;
+            selectedNote.textContent = row.dataset.adminNote || "No resolution note yet.";
             selectedNoteInput.value = row.dataset.adminNote || "";
+            setFeedback("");
         }
 
         if (search) {
@@ -553,12 +581,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 e.preventDefault();
 
                 if (!selectedId.value) {
-                    alert("Select a dispute first.");
+                    setFeedback("Select a dispute first.", true);
+                    return;
+                }
+
+                if (submitAction === "resolve" && selectedNoteInput.value.trim().length < 5) {
+                    setFeedback("Write a resolution note before closing this dispute.", true);
+                    selectedNoteInput.focus();
                     return;
                 }
 
                 const formData = new FormData(actionForm);
                 formData.append("action", submitAction);
+                setFeedback("Saving...");
+                actionForm.querySelectorAll("button").forEach(button => {
+                    button.disabled = true;
+                });
 
                 fetch("/E-Commerce-Store/index.php?page=disputeAction", {
                     method: "POST",
@@ -574,10 +612,271 @@ document.addEventListener("DOMContentLoaded", function () {
                         loadActivePage();
                     })
                     .catch(error => {
-                        alert(error.message || "Dispute action failed.");
+                        setFeedback(error.message || "Dispute action failed.", true);
+                        actionForm.querySelectorAll("button").forEach(button => {
+                            button.disabled = false;
+                        });
                     });
             });
         }
+    }
+
+    function bindPlatformCouponEvents() {
+        const form = document.getElementById("platformCouponForm");
+        const resetButton = document.getElementById("platformCouponReset");
+        const feedback = document.getElementById("platformCouponFeedback");
+
+        function setFeedback(message, type = "error") {
+            if (!feedback) {
+                return;
+            }
+
+            feedback.textContent = message;
+            feedback.className = `category-feedback ${type}`;
+            feedback.hidden = message === "";
+        }
+
+        function resetForm() {
+            if (!form) {
+                return;
+            }
+
+            form.reset();
+            document.getElementById("platformCouponId").value = "";
+            document.getElementById("platformCouponActive").checked = true;
+            setFeedback("");
+        }
+
+        if (resetButton) {
+            resetButton.addEventListener("click", resetForm);
+        }
+
+        document.querySelectorAll("[data-platform-coupon-edit]").forEach(button => {
+            button.addEventListener("click", function () {
+                document.getElementById("platformCouponId").value = this.dataset.couponId || "";
+                document.getElementById("platformCouponCode").value = this.dataset.code || "";
+                document.getElementById("platformCouponDiscount").value = this.dataset.discount || "";
+                document.getElementById("platformCouponMaxUses").value = this.dataset.maxUses || "";
+                document.getElementById("platformCouponValidUntil").value = this.dataset.validUntil || "";
+                document.getElementById("platformCouponActive").checked = this.dataset.active === "1";
+                setFeedback("");
+                document.getElementById("platformCouponCode").focus();
+            });
+        });
+
+        document.querySelectorAll("[data-platform-coupon-toggle]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("coupon_action", "toggle");
+                formData.append("coupon_id", this.dataset.couponId || "");
+
+                setFeedback("");
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=platformCouponAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Coupon update failed.");
+                        }
+
+                        loadActivePage();
+                    })
+                    .catch(error => {
+                        setFeedback(error.message || "Coupon update failed.");
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+                setFeedback("");
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=platformCouponAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Coupon save failed.");
+                        }
+
+                        loadActivePage();
+                    })
+                    .catch(error => {
+                        setFeedback(error.message || "Coupon save failed.");
+                        submitButton.disabled = false;
+                    });
+            });
+        }
+    }
+
+    function bindAdminSettingsEvents() {
+        const form = document.getElementById("adminSettingsForm");
+        const message = document.getElementById("adminSettingsMessage");
+        const imageInput = document.getElementById("adminProfileImageInput");
+        const imagePreview = document.getElementById("adminProfileImagePreview");
+
+        if (imageInput && imagePreview) {
+            imageInput.addEventListener("change", function () {
+                const file = imageInput.files[0];
+
+                if (!file) {
+                    return;
+                }
+
+                const imageUrl = URL.createObjectURL(file);
+                imagePreview.innerHTML = "";
+
+                const image = document.createElement("img");
+                image.src = imageUrl;
+                image.alt = "";
+                image.onload = () => URL.revokeObjectURL(imageUrl);
+                imagePreview.appendChild(image);
+            });
+        }
+
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const submitButton = form.querySelector("[type='submit']");
+            const formData = new FormData(form);
+
+            submitButton.disabled = true;
+
+            fetch(form.action, {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    showMessage(message, data.message || "Settings updated.", Boolean(data.success));
+
+                    if (!data.success) {
+                        throw new Error(data.message || "Settings update failed.");
+                    }
+
+                    const sidebarName = document.getElementById("adminSidebarName");
+                    const sidebarAvatar = document.getElementById("adminSidebarAvatar");
+
+                    if (sidebarName && data.name) {
+                        sidebarName.textContent = data.name;
+                    }
+
+                    if (sidebarAvatar && data.profile_pic) {
+                        sidebarAvatar.innerHTML = "";
+                        const image = document.createElement("img");
+                        image.src = `/E-Commerce-Store/${data.profile_pic}`;
+                        image.alt = "";
+                        sidebarAvatar.appendChild(image);
+                    }
+
+                    form.querySelectorAll("input[type='password']").forEach(input => {
+                        input.value = "";
+                    });
+                })
+                .catch(error => {
+                    showMessage(message, error.message || "Settings update failed.", false);
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                });
+        });
+    }
+
+    function bindPlatformReportEvents() {
+        const monthForm = document.getElementById("platformReportMonthForm");
+
+        if (monthForm) {
+            monthForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const activeLink = document.querySelector("[data-page].active");
+                const monthInput = document.getElementById("platformReportMonth");
+                const month = monthInput ? monthInput.value : "";
+                const pageUrl = `/E-Commerce-Store/index.php?page=platformReportsAjax&month=${encodeURIComponent(month)}`;
+
+                loadPage(pageUrl, activeLink || document.querySelector("[data-page*='platformReportsAjax']"));
+            });
+
+            const monthInput = document.getElementById("platformReportMonth");
+
+            if (monthInput) {
+                monthInput.addEventListener("change", function () {
+                    monthForm.dispatchEvent(new Event("submit", { cancelable: true }));
+                });
+            }
+        }
+
+        document.querySelectorAll("[data-report-print]").forEach(button => {
+            button.addEventListener("click", function () {
+                const target = document.getElementById(this.dataset.reportPrint || "");
+
+                if (!target) {
+                    return;
+                }
+
+                const title = target.dataset.reportTitle || "Platform Report";
+                const printWindow = window.open("", "_blank", "width=1100,height=800");
+
+                if (!printWindow) {
+                    alert("Allow popups to print the report summary.");
+                    return;
+                }
+
+                printWindow.document.open();
+                printWindow.document.write(`
+                    <!doctype html>
+                    <html>
+                    <head>
+                        <title>${title}</title>
+                        <style>
+                            body { color: #202331; font-family: Arial, sans-serif; margin: 28px; }
+                            h1, h2, h3, p { margin: 0; }
+                            h1 { font-size: 26px; margin-bottom: 8px; }
+                            h2 { font-size: 20px; margin-bottom: 6px; }
+                            p { color: #596783; line-height: 1.5; }
+                            button, form { display: none !important; }
+                            section, .platform-report-section { border: 1px solid #d4d6dd; border-radius: 6px; margin: 16px 0; padding: 16px; }
+                            .platform-report-grid, .platform-delivery-grid, .platform-report-columns { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
+                            .platform-report-card { border: 1px solid #d4d6dd; border-radius: 6px; padding: 12px; }
+                            .platform-report-card p { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+                            .platform-report-card h3 { font-size: 22px; margin-top: 6px; }
+                            table { border-collapse: collapse; margin-top: 12px; width: 100%; }
+                            th, td { border-bottom: 1px solid #d4d6dd; padding: 9px; text-align: left; }
+                            th { background: #f6f7fb; font-size: 12px; text-transform: uppercase; }
+                            @media print { body { margin: 14mm; } }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${title}</h1>
+                        <p>Printable HTML summary exported from MarketHub admin reports.</p>
+                        ${target.outerHTML}
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+            });
+        });
+
     }
 
     function bindAccountManagementEvents() {
@@ -882,6 +1181,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 bindProductManagementEvents();
                 bindOrderManagementEvents();
                 bindDisputeEvents();
+                bindPlatformCouponEvents();
+                bindAdminSettingsEvents();
+                bindPlatformReportEvents();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

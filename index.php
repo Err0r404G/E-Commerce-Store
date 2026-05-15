@@ -206,6 +206,41 @@ elseif ($page === 'adminDisputesAjax') {
     exit;
 }
 
+elseif ($page === 'platformCouponsAjax') {
+
+    requireRole('admin');
+    $admin->showPlatformCoupons();
+    exit;
+}
+
+elseif ($page === 'platformCouponAction') {
+
+    requireRole('admin');
+    $admin->platformCouponAction();
+    exit;
+}
+
+elseif ($page === 'adminSettingsAjax') {
+
+    requireRole('admin');
+    $admin->showSettings();
+    exit;
+}
+
+elseif ($page === 'platformReportsAjax') {
+
+    requireRole('admin');
+    $admin->showPlatformReports();
+    exit;
+}
+
+elseif ($page === 'adminSettingsAction') {
+
+    requireRole('admin');
+    $admin->settingsAction();
+    exit;
+}
+
 elseif ($page === 'disputeAction') {
 
     $admin->disputeAction();

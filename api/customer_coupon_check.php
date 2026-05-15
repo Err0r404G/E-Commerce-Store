@@ -29,7 +29,8 @@ if (!$coupon) {
 
 echo json_encode([
     'valid' => true,
-    'message' => $coupon['code'] . ' applied: ' . (float) $coupon['discount_pct'] . '% discount.',
+    'message' => $coupon['code'] . ' applied: ' . (float) $coupon['discount_pct'] . '% ' . (($coupon['funding_source'] ?? 'vendor') === 'platform' ? 'platform discount.' : 'discount.'),
     'coupon_id' => (int) $coupon['id'],
     'discount_pct' => (float) $coupon['discount_pct'],
+    'funding_source' => $coupon['funding_source'] ?? 'vendor',
 ]);
