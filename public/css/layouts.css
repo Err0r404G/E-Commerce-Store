@@ -1369,6 +1369,7 @@ body {
 }
 
 .vendor-profile-grid input,
+.vendor-profile-grid select,
 .vendor-profile-grid textarea {
     background: #fbf9fd;
     border: 1px solid #cfd3dc;
@@ -1381,7 +1382,18 @@ body {
     width: 100%;
 }
 
+.vendor-profile-grid input[type="file"] {
+    background: transparent;
+    border: none;
+    height: auto;
+    padding: 10px 0;
+}
+
 .vendor-profile-grid input {
+    height: 42px;
+}
+
+.vendor-profile-grid select {
     height: 42px;
 }
 
@@ -1421,6 +1433,98 @@ body {
     border: none;
     color: #fff;
     cursor: pointer;
+}
+
+.vendor-inventory-page {
+    margin: 0 auto;
+    max-width: 1280px;
+}
+
+.vendor-inventory-grid {
+    display: grid;
+    gap: 22px;
+    margin-top: 34px;
+}
+
+.vendor-product-form .vendor-profile-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.vendor-file-field {
+    justify-content: center;
+}
+
+.vendor-wide-label {
+    color: #4b5563;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.vendor-wide-label textarea {
+    background: #fbf9fd;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #1f2937;
+    font: inherit;
+    min-height: 110px;
+    outline: none;
+    padding: 12px;
+    resize: vertical;
+}
+
+.vendor-check-label {
+    align-items: center;
+    flex-direction: row !important;
+    min-height: 68px;
+    padding-top: 20px;
+}
+
+.vendor-check-label input {
+    height: 16px;
+    width: 16px;
+}
+
+.vendor-panel-heading {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.vendor-panel-heading h2 {
+    margin-bottom: 0;
+}
+
+.vendor-product-search {
+    width: 260px;
+}
+
+.vendor-product-table td strong,
+.vendor-product-table td small {
+    display: block;
+}
+
+.vendor-product-table td small {
+    color: #596783;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.vendor-secondary-btn {
+    background: #fff !important;
+    border: 1px solid #d4d6dd !important;
+    color: #52607c !important;
+}
+
+.vendor-product-actions {
+    border-top: 1px solid #eef0f4;
+    gap: 16px;
+    margin-top: 22px;
+    padding-top: 18px;
 }
 
 /* RESPONSIVE */
@@ -1476,6 +1580,20 @@ body {
 
     .vendor-profile-grid {
         grid-template-columns: 1fr;
+    }
+
+    .vendor-product-form .vendor-profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vendor-panel-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .vendor-product-search {
+        width: 100%;
     }
 }
 .admin-main {
