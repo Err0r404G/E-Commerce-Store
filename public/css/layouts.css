@@ -1792,6 +1792,30 @@ body {
     display: none;
 }
 
+.vendor-earnings-page {
+    margin: 0 auto;
+    max-width: 1280px;
+}
+
+.vendor-earnings-panel {
+    margin-top: 22px;
+}
+
+.vendor-earnings-period[hidden] {
+    display: none;
+}
+
+.vendor-panel-subtitle {
+    color: #596783;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.vendor-commission-cell {
+    color: #dc2626 !important;
+    font-weight: 800;
+}
+
 .vendor-product-actions {
     border-top: 1px solid #eef0f4;
     gap: 16px;

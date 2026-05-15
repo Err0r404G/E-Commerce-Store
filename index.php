@@ -217,6 +217,13 @@ elseif ($page === 'vendorAnalyticsAjax') {
     exit;
 }
 
+elseif ($page === 'vendorEarningsAjax') {
+
+    requireRole('vendor');
+    $vendor->showEarningsAjax();
+    exit;
+}
+
 elseif ($page === 'vendorProductAction') {
 
     requireRole('vendor');

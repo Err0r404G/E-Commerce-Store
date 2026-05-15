@@ -31,7 +31,7 @@
             <span>Analytics</span>
         </a>
 
-        <a href="#">
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorEarningsAjax">
             <i class="fa-regular fa-credit-card"></i>
             <span>Payments</span>
         </a>

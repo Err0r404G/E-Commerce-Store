@@ -185,6 +185,14 @@ class VendorController
         require __DIR__ . '/../../views/vendor/partials/analytics.php';
     }
 
+    public function showEarningsAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $earnings = $this->users->getVendorEarnings((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/partials/earnings.php';
+    }
+
     public function profileAction(): void
     {
         $result = $this->saveProfileFromRequest();
