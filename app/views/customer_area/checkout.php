@@ -8,14 +8,23 @@
             <h2>Shipping Address</h2>
             <?php if (!$addresses): ?>
                 <p class="warning-text">No saved address found. You can paste a delivery address below or add saved addresses from Profile.</p>
+            <?php else: ?>
+                <select id="saved-address-select">
+                    <?php foreach ($addresses as $address): ?>
+                        <?php $addressText = $address['recipient_name'] . "\n" . $address['phone'] . "\n" . $address['address_line'] . "\n" . $address['city'] . ' ' . $address['postal_code']; ?>
+                        <option value="<?= (int) $address['id'] ?>" data-address="<?= e($addressText) ?>" <?= $address['is_default'] ? 'selected' : '' ?>>
+                            <?= e($address['label']) ?><?= $address['is_default'] ? ' - Default' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             <?php endif; ?>
-            <textarea name="shipping_address" required placeholder="Recipient name, phone, street, city, postal code"><?= $addresses ? e($addresses[0]['recipient_name'] . "\n" . $addresses[0]['phone'] . "\n" . $addresses[0]['address_line'] . "\n" . $addresses[0]['city'] . ' ' . $addresses[0]['postal_code']) : '' ?></textarea>
+            <textarea id="shipping-address" name="shipping_address" required placeholder="Recipient name, phone, street, city, postal code"><?= $addresses ? e($addresses[0]['recipient_name'] . "\n" . $addresses[0]['phone'] . "\n" . $addresses[0]['address_line'] . "\n" . $addresses[0]['city'] . ' ' . $addresses[0]['postal_code']) : '' ?></textarea>
 
             <h2>Delivery Zone</h2>
-            <select id="zone-select">
-                <option data-fee="0" data-days="3">Select zone</option>
+            <select id="zone-select" name="delivery_zone_id" required>
+                <option value="" data-fee="0" data-days="3">Select zone</option>
                 <?php foreach ($zones as $zone): ?>
-                    <option data-fee="<?= (float) $zone['delivery_fee'] ?>" data-days="<?= (int) $zone['estimated_days'] ?>"><?= e($zone['zone_name']) ?> - <?= money((float) $zone['delivery_fee']) ?>, <?= (int) $zone['estimated_days'] ?> days</option>
+                    <option value="<?= (int) $zone['id'] ?>" data-fee="<?= (float) $zone['delivery_fee'] ?>" data-days="<?= (int) $zone['estimated_days'] ?>"><?= e($zone['zone_name']) ?> - <?= money((float) $zone['delivery_fee']) ?>, <?= (int) $zone['estimated_days'] ?> days</option>
                 <?php endforeach; ?>
             </select>
 
