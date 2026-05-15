@@ -15,7 +15,8 @@ class AdminModel
         $vendors = [];
         $result = $this->conn->query(
             "SELECT u.id, u.name, u.email, u.phone, u.is_active, u.created_at,
-                    s.shop_name, s.is_approved, s.account_status, s.admin_note
+                    s.id AS seller_id, s.shop_name, s.is_approved, s.account_status, s.admin_note,
+                    COALESCE(s.commission_rate, 10.00) AS commission_rate
              FROM users u
              LEFT JOIN sellers s ON s.user_id = u.id
              WHERE u.role = 'vendor'

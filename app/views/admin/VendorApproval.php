@@ -69,6 +69,7 @@
                     <th>Business Name</th>
                     <th>Contact</th>
                     <th>Date Applied</th>
+                    <th>Commission</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -77,7 +78,7 @@
             <tbody id="vendorApprovalRows">
                 <?php if (empty($vendors)): ?>
                     <tr>
-                        <td colspan="5" class="empty-cell">No seller accounts found.</td>
+                        <td colspan="6" class="empty-cell">No seller accounts found.</td>
                     </tr>
                 <?php endif; ?>
 
@@ -115,6 +116,10 @@
                         </td>
 
                         <td><?= htmlspecialchars($dateApplied) ?></td>
+
+                        <td>
+                            <span class="seller-commission-rate">10.00%</span>
+                        </td>
 
                         <td>
                             <span class="approval-status <?= htmlspecialchars($status) ?>">

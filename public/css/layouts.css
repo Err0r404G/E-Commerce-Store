@@ -1735,6 +1735,11 @@ body {
     font-weight: 700;
 }
 
+.seller-commission-rate {
+    color: #202331;
+    font-weight: 800;
+}
+
 .platform-reports-page {
     padding: 28px 32px;
 }
