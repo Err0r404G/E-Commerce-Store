@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 14, 2026 at 11:12 AM
+-- Generation Time: May 15, 2026 at 12:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,7 +42,9 @@ INSERT INTO `categories` (`id`, `parent_id`, `name`, `description`) VALUES
 (1, NULL, 'Electronics', 'Electronic gadgets and devices'),
 (2, NULL, 'Clothing', 'Fashion and clothing products'),
 (3, NULL, 'Books', 'Books and educational materials'),
-(4, NULL, 'Home & Garden', 'Home improvement and garden products');
+(4, NULL, 'Home & Garden', 'Home improvement and garden products'),
+(5, NULL, 'Mobile', 'Iphone, Samsung'),
+(6, NULL, 'Others', NULL);
 
 -- --------------------------------------------------------
 
@@ -270,7 +272,16 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `phone`, `role`, `profile_pic`, `is_active`, `created_at`) VALUES
-(1, 'Sadman Sakib', 'admin@store.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, 'admin', NULL, 1, '2026-05-14 15:12:12');
+(1, 'Sadman Sakib', 'admin@store.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, 'admin', NULL, 1, '2026-05-14 15:12:12'),
+(2, 'SAKIB SADMAN', 'sakib09837@gmail.com', '$2y$10$WifIFTP8qjrCImdYJNE0iOyKMf5s8jnyXxcJvak7VHY0OiKbWjpoW', '+8801788960006', 'customer', NULL, 1, '2026-05-14 21:52:20'),
+(3, 'SAKIB SADMAN', 'sakib@gmail.com', '$2y$10$rBAfxO8qMrtstaCI2NxCMeSkhistd47fY13qlwEzLGFJpf.LdQ7ey', '+8801788960006', 'customer', NULL, 1, '2026-05-14 21:52:41'),
+(4, 'SAKIB SADMAN', 'sakib1112@gmail.com', '$2y$10$xFSpmW2U066X4invVRiXXuJKwefbr5IOfjDlV2.boQQbhbAtayQeG', '+8801788960006', 'customer', NULL, 1, '2026-05-14 23:52:24'),
+(5, 'SAKIB SADMAN', 's7@gmail.com', '$2y$10$h7bzuVfvkXEThbjcxOYVF.kKotPQwgyOGqIHvcg6.OakymJNyKnF6', '+8801788960006', 'vendor', NULL, 1, '2026-05-15 00:06:00'),
+(6, 'HAMJA@GMAIL.COM', 'HAMJA@GMAIL.COM', '$2y$10$YhvHyuT5k5dYwDaEUXNTLO9fzOcC2LvOCIONX5QAFoGoSiaEVg70u', '123', 'customer', NULL, 1, '2026-05-15 00:53:05'),
+(7, 'SAKIB SADMAN', 's7222@gmail.com', '$2y$10$i7uv512zgpvPY8zVL8kXme/CMACYaPM8u.FkpiO7416JQAHn2Qq.C', '+8801788960006', 'customer', NULL, 1, '2026-05-15 02:30:56'),
+(8, 'SELLER', 'seller@store.com', '$2y$10$BXixd2MHi6OiBvPqoATRe./2QpNMPrAi6MzbJpMS7UUw7Qx.ykvfm', '123', 'vendor', NULL, 1, '2026-05-15 03:42:06'),
+(9, 'CUSTOMER', 'customer@store.com', '$2y$10$JVB6dnbUEVs5qv6JR3bw8uBvZZrd86.E9YY8mApuDf3YbK8yeMqki', '12345', 'customer', NULL, 1, '2026-05-15 04:00:10'),
+(10, 'FRY', 'fry@store.com', '$2y$10$9VZb3ZY6ZFP9M5k5p7JGQuVyFZhZv6YJOdpQfR/JrtHBmIgtM2jI6', '016017012', 'vendor', 'public/uploads/profiles/profile_6a065007632267.83091479.png', 1, '2026-05-15 04:43:19');
 
 -- --------------------------------------------------------
 
@@ -415,7 +426,7 @@ ALTER TABLE `wishlists`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `coupons`
@@ -493,7 +504,7 @@ ALTER TABLE `sellers`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `wishlists`
