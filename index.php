@@ -126,6 +126,13 @@ elseif ($page === 'vendorApprovalsAjax') {
     exit;
 }
 
+elseif ($page === 'adminDashboardAjax') {
+
+    requireRole('admin');
+    $admin->showDashboardHome();
+    exit;
+}
+
 elseif ($page === 'vendorApprovalAction') {
 
     $admin->vendorApprovalAction();
@@ -141,6 +148,30 @@ elseif ($page === 'categoryManagementAjax') {
 elseif ($page === 'categoryAction') {
 
     $admin->categoryAction();
+}
+
+elseif ($page === 'adminCustomersAjax') {
+
+    requireRole('admin');
+    $admin->showCustomerAccounts();
+    exit;
+}
+
+elseif ($page === 'adminDeliveryManagersAjax') {
+
+    requireRole('admin');
+    $admin->showDeliveryManagerAccounts();
+    exit;
+}
+
+elseif ($page === 'adminAccountAction') {
+
+    $admin->accountAction();
+}
+
+elseif ($page === 'createDeliveryManagerAction') {
+
+    $admin->createDeliveryManagerAction();
 }
 
 elseif ($page === 'adminDisputesAjax') {

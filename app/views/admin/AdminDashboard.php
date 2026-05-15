@@ -25,9 +25,10 @@ include __DIR__ . '/layouts/header.php';
     <?php include __DIR__ . '/layouts/navbar.php'; ?>
 
 <main class="admin-content" id="adminContent">
+    <?php include __DIR__ . '/AdminHome.php'; ?>
 
 </main>
 </section>
-<script src="/E-Commerce-Store/public/js/adminAjax.js?v=admin-dispute-1"></script>
+<script src="/E-Commerce-Store/public/js/adminAjax.js?v=delivery-manager-create-1"></script>
 </body>
 </html>
