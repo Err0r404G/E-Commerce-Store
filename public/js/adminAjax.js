@@ -13,6 +13,84 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function bindVendorApprovalEvents() {
         const search = document.getElementById("vendorApprovalSearch");
+        const modal = document.getElementById("sellerActionModal");
+        const modalTitle = document.getElementById("sellerActionTitle");
+        const modalText = document.getElementById("sellerActionText");
+        const actionForm = document.getElementById("sellerActionForm");
+        const actionVendorId = document.getElementById("sellerActionVendorId");
+        const actionType = document.getElementById("sellerActionType");
+        const actionReason = document.getElementById("sellerActionReason");
+        const cancelAction = document.getElementById("cancelSellerAction");
+
+        function closeSellerActionModal() {
+            if (modal) {
+                modal.hidden = true;
+            }
+
+            document.body.classList.remove("modal-open");
+
+            if (actionForm) {
+                actionForm.reset();
+            }
+        }
+
+        function openSellerActionModal(button) {
+            const action = button.dataset.approvalAction;
+            const labels = {
+                reject: {
+                    title: "Reject Seller",
+                    text: "Add the reason for rejecting this seller registration."
+                },
+                suspend: {
+                    title: "Suspend Seller",
+                    text: "Add the reason for suspending this seller account."
+                }
+            };
+
+            if (!modal || !actionVendorId || !actionType || !actionReason) {
+                return;
+            }
+
+            actionVendorId.value = button.dataset.vendorId;
+            actionType.value = action;
+            modalTitle.textContent = labels[action]?.title || "Seller Action";
+            modalText.textContent = labels[action]?.text || "Add a reason before continuing.";
+            modal.hidden = false;
+            document.body.classList.add("modal-open");
+            actionReason.focus();
+        }
+
+        function submitSellerAction(vendorId, action, reason, sourceButton) {
+            const formData = new FormData();
+            formData.append("vendor_id", vendorId);
+            formData.append("action", action);
+            formData.append("reason", reason || "");
+
+            if (sourceButton) {
+                sourceButton.disabled = true;
+            }
+
+            fetch("/E-Commerce-Store/index.php?page=vendorApprovalAction", {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || "Action failed.");
+                    }
+
+                    closeSellerActionModal();
+                    loadActivePage();
+                })
+                .catch(error => {
+                    alert(error.message || "Seller action failed.");
+                    if (sourceButton) {
+                        sourceButton.disabled = false;
+                    }
+                });
+        }
 
         if (search) {
             search.addEventListener("input", function () {
@@ -25,31 +103,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.querySelectorAll("[data-approval-action]").forEach(button => {
             button.addEventListener("click", function () {
-                const formData = new FormData();
-                formData.append("vendor_id", this.dataset.vendorId);
-                formData.append("action", this.dataset.approvalAction);
+                if (this.dataset.requiresReason === "true") {
+                    openSellerActionModal(this);
+                    return;
+                }
 
-                this.disabled = true;
-
-                fetch("/E-Commerce-Store/index.php?page=vendorApprovalAction", {
-                    method: "POST",
-                    body: formData,
-                    credentials: "same-origin"
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            throw new Error(data.message || "Action failed.");
-                        }
-
-                        loadActivePage();
-                    })
-                    .catch(error => {
-                        alert(error.message || "Vendor approval action failed.");
-                        this.disabled = false;
-                    });
+                submitSellerAction(this.dataset.vendorId, this.dataset.approvalAction, "", this);
             });
         });
+
+        if (cancelAction) {
+            cancelAction.addEventListener("click", closeSellerActionModal);
+        }
+
+        if (modal) {
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) {
+                    closeSellerActionModal();
+                }
+            });
+        }
+
+        if (actionForm) {
+            actionForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const reason = actionReason.value.trim();
+
+                if (reason === "") {
+                    actionReason.focus();
+                    return;
+                }
+
+                const submitButton = actionForm.querySelector("[type='submit']");
+                submitSellerAction(actionVendorId.value, actionType.value, reason, submitButton);
+            });
+        }
     }
 
     function bindCategoryManagementEvents() {
@@ -404,6 +492,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.addEventListener("keydown", function (e) {
         const modal = document.getElementById("categoryModal");
+        const sellerModal = document.getElementById("sellerActionModal");
+
+        if (e.key === "Escape" && sellerModal && !sellerModal.hidden) {
+            sellerModal.hidden = true;
+            document.body.classList.remove("modal-open");
+        }
 
         if (e.key === "Escape" && modal && !modal.hidden) {
             modal.hidden = true;

@@ -3,7 +3,7 @@
     <!-- MENU -->
     <nav class="admin-menu">
 
-        <a href="#" class="active">
+        <a href="#" class="active" data-page="/E-Commerce-Store/index.php?page=adminDashboardAjax">
             <i class="fa-solid fa-table-cells-large"></i>
             <span>Dashboard</span>
         </a>
