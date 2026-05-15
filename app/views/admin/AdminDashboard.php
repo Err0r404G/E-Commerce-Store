@@ -20,8 +20,6 @@ $adminRole = $currentUser['role'];
 include __DIR__ . '/../layouts/adminHeader.php';
 ?>
 
-<link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css">
-
 <section class="admin-layout">
 
     <aside class="admin-sidebar">
@@ -39,7 +37,7 @@ include __DIR__ . '/../layouts/adminHeader.php';
                 <span>Vendor Approvals</span>
             </a>
 
-            <a href="#">
+            <a href="#" data-page="/E-Commerce-Store/index.php?page=categoryManagementAjax">
                 <i class="fa-solid fa-shapes"></i>
                 <span>Category Management</span>
             </a>
