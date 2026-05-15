@@ -93,6 +93,34 @@ class AdminController
         $this->jsonResponse(['success' => false, 'message' => 'Invalid category action.'], 422);
     }
 
+    public function showDisputes(): void
+    {
+        [$disputes, $disputeCounts] = $this->adminModel->getDisputeManagementData();
+        include __DIR__ . '/../views/admin/AdminDispute.php';
+    }
+
+    public function disputeAction(): void
+    {
+        $this->jsonHeader();
+
+        if (!$this->isAdmin()) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized request.'], 403);
+        }
+
+        $disputeId = (int) ($_POST['dispute_id'] ?? 0);
+        $action = $_POST['action'] ?? '';
+        $adminNote = trim($_POST['admin_note'] ?? '');
+        $adminNote = $adminNote !== '' ? $adminNote : null;
+
+        if ($disputeId <= 0 || !in_array($action, ['resolve', 'reopen'], true)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid dispute request.'], 422);
+        }
+
+        $status = $action === 'resolve' ? 'resolved' : 'open';
+        $result = $this->adminModel->setDisputeStatus($disputeId, $status, $adminNote);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
     private function isAdmin(): bool
     {
         return ($_SESSION['user']['role'] ?? null) === 'admin';

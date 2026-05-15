@@ -115,6 +115,18 @@ elseif ($page === 'categoryAction') {
     $admin->categoryAction();
 }
 
+elseif ($page === 'adminDisputesAjax') {
+
+    requireRole('admin');
+    $admin->showDisputes();
+    exit;
+}
+
+elseif ($page === 'disputeAction') {
+
+    $admin->disputeAction();
+}
+
 elseif ($page === 'customerDashboard') {
 
     include __DIR__ . '/app/views/customer/customerDashboard.php';

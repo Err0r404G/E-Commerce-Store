@@ -314,6 +314,94 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function bindDisputeEvents() {
+        const search = document.getElementById("disputeSearch");
+        const rows = document.querySelectorAll("[data-dispute-row]");
+        const actionForm = document.getElementById("disputeActionForm");
+        const selectedId = document.getElementById("selectedDisputeId");
+        const selectedStatus = document.getElementById("selectedDisputeStatus");
+        const selectedTitle = document.getElementById("selectedDisputeTitle");
+        const selectedDescription = document.getElementById("selectedDisputeDescription");
+        const selectedDate = document.getElementById("selectedDisputeDate");
+        const selectedNote = document.getElementById("selectedDisputeNote");
+        const selectedNoteInput = document.getElementById("selectedDisputeNoteInput");
+        let submitAction = "resolve";
+
+        function selectRow(row) {
+            if (!row) {
+                return;
+            }
+
+            rows.forEach(item => item.classList.remove("active"));
+            row.classList.add("active");
+
+            selectedId.value = row.dataset.disputeId || "";
+            selectedStatus.textContent = row.dataset.status || "Selected case";
+            selectedTitle.textContent = `Case #${row.dataset.disputeId || ""} · Order #${row.dataset.orderId || ""}`;
+            selectedDescription.textContent = row.dataset.description || "No dispute description provided.";
+            selectedDate.textContent = row.dataset.created || "N/A";
+            selectedNote.textContent = row.dataset.adminNote || "No admin note yet.";
+            selectedNoteInput.value = row.dataset.adminNote || "";
+        }
+
+        if (search) {
+            search.addEventListener("input", function () {
+                const term = this.value.trim().toLowerCase();
+
+                rows.forEach(row => {
+                    row.style.display = row.dataset.search.includes(term) ? "" : "none";
+                });
+            });
+        }
+
+        rows.forEach(row => {
+            row.addEventListener("click", function () {
+                selectRow(this);
+            });
+        });
+
+        if (rows.length > 0) {
+            selectRow(rows[0]);
+        }
+
+        document.querySelectorAll("[data-dispute-submit-action]").forEach(button => {
+            button.addEventListener("click", function () {
+                submitAction = this.dataset.disputeSubmitAction;
+            });
+        });
+
+        if (actionForm) {
+            actionForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                if (!selectedId.value) {
+                    alert("Select a dispute first.");
+                    return;
+                }
+
+                const formData = new FormData(actionForm);
+                formData.append("action", submitAction);
+
+                fetch("/E-Commerce-Store/index.php?page=disputeAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Dispute action failed.");
+                        }
+
+                        loadActivePage();
+                    })
+                    .catch(error => {
+                        alert(error.message || "Dispute action failed.");
+                    });
+            });
+        }
+    }
+
     document.addEventListener("keydown", function (e) {
         const modal = document.getElementById("categoryModal");
 
@@ -341,6 +429,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 activeLink.classList.add("active");
                 bindVendorApprovalEvents();
                 bindCategoryManagementEvents();
+                bindDisputeEvents();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

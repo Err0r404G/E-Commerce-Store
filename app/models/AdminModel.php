@@ -173,6 +173,71 @@ class AdminModel
         return ['success' => $success, 'message' => $success ? 'Category deleted.' : 'Category not found.'];
     }
 
+    public function getDisputeManagementData(): array
+    {
+        $disputes = [];
+        $result = $this->conn->query(
+            "SELECT d.id, d.order_id, d.description, d.status, d.admin_note, d.created_at,
+                    customer.name AS customer_name,
+                    customer.email AS customer_email,
+                    seller_user.name AS seller_name,
+                    s.shop_name,
+                    o.total_amount
+             FROM disputes d
+             LEFT JOIN users customer ON customer.id = d.customer_id
+             LEFT JOIN sellers s ON s.id = d.seller_id
+             LEFT JOIN users seller_user ON seller_user.id = s.user_id
+             LEFT JOIN orders o ON o.id = d.order_id
+             ORDER BY d.status ASC, d.created_at DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $disputes[] = $row;
+            }
+        }
+
+        $counts = [
+            'urgent' => 0,
+            'progress' => 0,
+            'resolved' => 0,
+            'total' => count($disputes),
+        ];
+
+        foreach ($disputes as $dispute) {
+            if ($dispute['status'] === 'resolved') {
+                $counts['resolved']++;
+            } elseif (!empty($dispute['admin_note'])) {
+                $counts['progress']++;
+            } else {
+                $counts['urgent']++;
+            }
+        }
+
+        return [$disputes, $counts];
+    }
+
+    public function setDisputeStatus(int $disputeId, string $status, ?string $adminNote): array
+    {
+        $stmt = $this->conn->prepare("SELECT id FROM disputes WHERE id = ? LIMIT 1");
+        $stmt->bind_param('i', $disputeId);
+        $stmt->execute();
+        $dispute = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$dispute) {
+            return ['success' => false, 'status' => 404, 'message' => 'Dispute not found.'];
+        }
+
+        $stmt = $this->conn->prepare("UPDATE disputes SET status = ?, admin_note = ? WHERE id = ?");
+        $stmt->bind_param('ssi', $status, $adminNote, $disputeId);
+        $stmt->execute();
+        $success = $stmt->affected_rows >= 0;
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $status === 'resolved' ? 'Dispute resolved.' : 'Dispute reopened.'];
+    }
+
     private function countSellersWithProducts(): int
     {
         $result = $this->conn->query("SELECT COUNT(DISTINCT seller_id) AS total FROM products");
