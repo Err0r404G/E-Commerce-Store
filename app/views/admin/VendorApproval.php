@@ -22,7 +22,7 @@
                 <div class="stat-icon">
                     <i class="fa-solid fa-user-check"></i>
                 </div>
-                <span>Approved</span>
+                <span class="approved-stat-label">Approved</span>
             </div>
             <p>Total Vendors</p>
             <h2><?= (int) ($counts['approved'] ?? 0) ?></h2>

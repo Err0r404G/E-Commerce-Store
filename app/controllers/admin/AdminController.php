@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../models/AdminModel.php';
+require_once __DIR__ . '/../../models/admin/AdminModel.php';
 
 class AdminController
 {
@@ -13,13 +13,13 @@ class AdminController
 
     public function showDashboard(): void
     {
-        include __DIR__ . '/../views/admin/AdminDashboard.php';
+        include __DIR__ . '/../../views/admin/AdminDashboard.php';
     }
 
     public function showVendorApprovals(): void
     {
         [$vendors, $counts] = $this->adminModel->getVendorApprovalData();
-        include __DIR__ . '/../views/admin/VendorApproval.php';
+        include __DIR__ . '/../../views/admin/VendorApproval.php';
     }
 
     public function vendorApprovalAction(): void
@@ -44,7 +44,7 @@ class AdminController
     public function showCategoryManagement(): void
     {
         [$categories, $categoryTree, $categoryStats, $categoryProducts] = $this->adminModel->getCategoryManagementData();
-        include __DIR__ . '/../views/admin/AdminCatagory.php';
+        include __DIR__ . '/../../views/admin/AdminCatagory.php';
     }
 
     public function categoryAction(): void
@@ -96,7 +96,7 @@ class AdminController
     public function showDisputes(): void
     {
         [$disputes, $disputeCounts] = $this->adminModel->getDisputeManagementData();
-        include __DIR__ . '/../views/admin/AdminDispute.php';
+        include __DIR__ . '/../../views/admin/AdminDispute.php';
     }
 
     public function disputeAction(): void
