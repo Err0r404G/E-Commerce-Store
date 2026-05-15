@@ -125,7 +125,7 @@ class AdminModel
             'active_sellers' => $this->countSellersWithProducts(),
         ];
 
-        return [$categories, array_values($categoryTree), $stats];
+        return [$categories, array_values($categoryTree), $stats, $this->getProductsByCategory()];
     }
 
     public function createCategory(string $name, ?string $description, ?int $parentId): array
@@ -179,6 +179,28 @@ class AdminModel
         $row = $result ? $result->fetch_assoc() : null;
 
         return (int) ($row['total'] ?? 0);
+    }
+
+    private function getProductsByCategory(): array
+    {
+        $productsByCategory = [];
+        $result = $this->conn->query(
+            "SELECT p.id, p.category_id, p.name, p.price, p.stock_qty, p.is_available,
+                    s.shop_name
+             FROM products p
+             LEFT JOIN sellers s ON s.id = p.seller_id
+             WHERE p.category_id IS NOT NULL
+             ORDER BY p.name ASC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $categoryId = (int) $row['category_id'];
+                $productsByCategory[$categoryId][] = $row;
+            }
+        }
+
+        return $productsByCategory;
     }
 
     private function categoryNameExists(string $name, ?int $parentId, ?int $excludeId = null): bool

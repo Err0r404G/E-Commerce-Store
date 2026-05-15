@@ -48,9 +48,20 @@
         <div class="category-summary-header">
             <h2>Summary</h2>
 
-            <div class="summary-actions">
-                <button type="button" title="Collapse"><i class="fa-solid fa-compress"></i></button>
-                <button type="button" title="Sort"><i class="fa-solid fa-up-down"></i></button>
+            <div class="category-tools">
+                <div class="category-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="categorySearch" placeholder="Search category...">
+                </div>
+
+                <select id="categoryProductFilter" class="category-product-filter">
+                    <option value="">Select category products</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?= (int) $category['id'] ?>">
+                            <?= htmlspecialchars($category['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
         </div>
 
@@ -78,7 +89,7 @@
                     $categoryDescription = (string) ($category['description'] ?? '');
                     $children = $category['children'] ?? [];
                     ?>
-                    <tr class="main-category" data-category-row data-search="<?= htmlspecialchars(strtolower($categoryName . ' ' . $categoryDescription)) ?>">
+                    <tr class="main-category" data-category-row data-category-id="<?= $categoryId ?>" data-search="<?= htmlspecialchars(strtolower($categoryName . ' ' . $categoryDescription)) ?>">
                         <td>
                             <i class="fa-solid <?= empty($children) ? 'fa-chevron-right' : 'fa-chevron-down' ?>"></i>
                             <strong><?= htmlspecialchars($categoryName) ?></strong>
@@ -107,7 +118,7 @@
                         $childName = (string) $child['name'];
                         $childDescription = (string) ($child['description'] ?? '');
                         ?>
-                        <tr class="sub-category" data-category-row data-search="<?= htmlspecialchars(strtolower($childName . ' ' . $childDescription . ' ' . $categoryName)) ?>">
+                        <tr class="sub-category" data-category-row data-category-id="<?= $childId ?>" data-parent-category-id="<?= $categoryId ?>" data-search="<?= htmlspecialchars(strtolower($childName . ' ' . $childDescription . ' ' . $categoryName)) ?>">
                             <td>
                                 <span class="tree-line"></span>
                                 <i class="fa-solid fa-arrow-turn-up fa-rotate-90"></i>
@@ -135,9 +146,51 @@
         </table>
 
         <div class="table-footer">
-            <p>Showing <?= count($categories) ?> categor<?= count($categories) === 1 ? 'y' : 'ies' ?></p>
+            <p id="categoryPaginationInfo">Showing <?= min(count($categories), 5) ?> of <?= count($categories) ?> categor<?= count($categories) === 1 ? 'y' : 'ies' ?></p>
+
+            <div class="category-pagination" id="categoryPagination" aria-label="Category pagination">
+                <button type="button" data-category-page-prev aria-label="Previous page">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+
+                <div id="categoryPageNumbers"></div>
+
+                <button type="button" data-category-page-next aria-label="Next page">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
 
+    </div>
+
+    <div class="category-products-card" id="categoryProductsCard" hidden>
+        <div class="category-products-header">
+            <h2>Available Products</h2>
+            <p id="categoryProductsMeta">Select a category to view products.</p>
+        </div>
+
+        <div class="category-products-list" id="categoryProductsList">
+            <?php foreach ($categoryProducts as $categoryId => $products): ?>
+                <?php foreach ($products as $product): ?>
+                    <?php $isAvailable = (int) $product['is_available'] === 1; ?>
+                    <div class="category-product-item" data-product-category="<?= (int) $categoryId ?>" hidden>
+                        <div>
+                            <h3><?= htmlspecialchars($product['name']) ?></h3>
+                            <p><?= htmlspecialchars($product['shop_name'] ?: 'No seller assigned') ?></p>
+                        </div>
+                        <div class="category-product-details">
+                            <span><?= number_format((float) $product['price'], 2) ?></span>
+                            <span><?= (int) $product['stock_qty'] ?> in stock</span>
+                            <strong class="<?= $isAvailable ? 'available' : 'unavailable' ?>">
+                                <?= $isAvailable ? 'Available' : 'Unavailable' ?>
+                            </strong>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
+
+        <p class="empty-cell" id="categoryProductsEmpty" hidden>No products found in this category.</p>
     </div>
 
     <div class="category-modal-backdrop" id="categoryModal" hidden>
