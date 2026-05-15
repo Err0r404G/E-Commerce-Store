@@ -371,11 +371,55 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindReviewEvents() {
+        const search = document.getElementById("vendorReviewSearch");
+
+        if (search) {
+            search.addEventListener("input", function () {
+                const term = this.value.trim().toLowerCase();
+
+                document.querySelectorAll("[data-vendor-review-row]").forEach(row => {
+                    row.style.display = row.dataset.search.includes(term) ? "" : "none";
+                });
+            });
+        }
+
+        document.querySelectorAll("[data-review-reply-form]").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=vendorReviewAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Reply save failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=vendorReviewsAjax", document.querySelector("[data-vendor-page*='vendorReviewsAjax']"));
+                    })
+                    .catch(error => {
+                        alert(error.message || "Reply save failed.");
+                        submitButton.disabled = false;
+                    });
+            });
+        });
+    }
+
     function bindLoadedPage() {
         bindInventoryEvents();
         bindSettingsEvents();
         bindCouponEvents();
         bindOrderEvents();
+        bindReviewEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

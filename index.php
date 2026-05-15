@@ -203,6 +203,13 @@ elseif ($page === 'vendorOrdersAjax') {
     exit;
 }
 
+elseif ($page === 'vendorReviewsAjax') {
+
+    requireRole('vendor');
+    $vendor->showReviewsAjax();
+    exit;
+}
+
 elseif ($page === 'vendorProductAction') {
 
     requireRole('vendor');
@@ -228,6 +235,13 @@ elseif ($page === 'vendorOrderAction') {
 
     requireRole('vendor');
     $vendor->orderAction();
+    exit;
+}
+
+elseif ($page === 'vendorReviewAction') {
+
+    requireRole('vendor');
+    $vendor->reviewAction();
     exit;
 }
 
