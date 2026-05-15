@@ -43,7 +43,7 @@ class AdminController
 
     public function showCategoryManagement(): void
     {
-        [$categories, $categoryTree, $categoryStats] = $this->adminModel->getCategoryManagementData();
+        [$categories, $categoryTree, $categoryStats, $categoryProducts] = $this->adminModel->getCategoryManagementData();
         include __DIR__ . '/../views/admin/AdminCatagory.php';
     }
 
