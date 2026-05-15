@@ -290,22 +290,48 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function bindOrderEvents() {
+        const incomingOrdersButton = document.querySelector("[data-incoming-orders]");
         const statusFilter = document.getElementById("vendorOrderStatusFilter");
         const search = document.getElementById("vendorOrderSearch");
+        const ordersLink = document.querySelector("[data-vendor-page*='vendorOrdersAjax']");
+
+        function getOrdersUrl() {
+            const status = statusFilter ? statusFilter.value : "";
+            const url = new URL("/E-Commerce-Store/index.php", window.location.origin);
+
+            url.searchParams.set("page", "vendorOrdersAjax");
+
+            if (status !== "") {
+                url.searchParams.set("status", status);
+            }
+
+            return url.pathname + url.search;
+        }
+
+        function reloadOrders() {
+            loadPage(getOrdersUrl(), ordersLink);
+        }
 
         function filterOrders() {
-            const status = statusFilter ? statusFilter.value : "";
             const term = search ? search.value.trim().toLowerCase() : "";
 
             document.querySelectorAll("[data-vendor-order-row]").forEach(row => {
-                const matchesStatus = status === "" || row.dataset.status === status;
-                const matchesSearch = term === "" || row.dataset.search.includes(term);
-                row.style.display = matchesStatus && matchesSearch ? "" : "none";
+                row.style.display = term === "" || row.dataset.search.includes(term) ? "" : "none";
+            });
+        }
+
+        if (incomingOrdersButton) {
+            incomingOrdersButton.addEventListener("click", function () {
+                if (statusFilter) {
+                    statusFilter.value = "";
+                }
+
+                reloadOrders();
             });
         }
 
         if (statusFilter) {
-            statusFilter.addEventListener("change", filterOrders);
+            statusFilter.addEventListener("change", reloadOrders);
         }
 
         if (search) {
@@ -331,7 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             throw new Error(data.message || "Order update failed.");
                         }
 
-                        loadPage("/E-Commerce-Store/index.php?page=vendorOrdersAjax", document.querySelector("[data-vendor-page*='vendorOrdersAjax']"));
+                        loadPage(getOrdersUrl(), ordersLink);
                     })
                     .catch(error => {
                         alert(error.message || "Order update failed.");
@@ -361,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             throw new Error(data.message || "Order ship failed.");
                         }
 
-                        loadPage("/E-Commerce-Store/index.php?page=vendorOrdersAjax", document.querySelector("[data-vendor-page*='vendorOrdersAjax']"));
+                        loadPage(getOrdersUrl(), ordersLink);
                     })
                     .catch(error => {
                         alert(error.message || "Order ship failed.");

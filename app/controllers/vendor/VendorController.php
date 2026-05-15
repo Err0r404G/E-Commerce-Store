@@ -157,7 +157,14 @@ class VendorController
     public function showOrdersAjax(): void
     {
         $seller = $this->requireSeller();
-        $orders = $this->users->getVendorOrderItems((int) $seller['id']);
+        $allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered'];
+        $selectedStatus = strtolower(trim($_GET['status'] ?? ''));
+
+        if (!in_array($selectedStatus, $allowedStatuses, true)) {
+            $selectedStatus = '';
+        }
+
+        $orders = $this->users->getVendorOrderItems((int) $seller['id'], $selectedStatus);
 
         require __DIR__ . '/../../views/vendor/partials/orders.php';
     }

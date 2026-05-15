@@ -1,7 +1,18 @@
 <section class="vendor-orders-page">
     <div class="page-header">
-        <h1>Orders</h1>
-        <p>View incoming orders for your products and filter by item status.</p>
+        <div>
+            <h1>Orders</h1>
+            <p>View incoming orders for your products and filter by item status.</p>
+        </div>
+
+        <button
+            type="button"
+            class="vendor-incoming-orders-btn"
+            data-incoming-orders
+        >
+            <i class="fa-regular fa-clipboard"></i>
+            <span>Incoming Orders</span>
+        </button>
     </div>
 
     <section class="vendor-profile-panel vendor-orders-panel">
@@ -16,11 +27,11 @@
 
                 <label for="vendorOrderStatusFilter">Status</label>
                 <select id="vendorOrderStatusFilter">
-                    <option value="">All statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
+                    <option value="" <?= ($selectedStatus ?? '') === '' ? 'selected' : '' ?>>All statuses</option>
+                    <option value="pending" <?= ($selectedStatus ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
+                    <option value="confirmed" <?= ($selectedStatus ?? '') === 'confirmed' ? 'selected' : '' ?>>Confirmed</option>
+                    <option value="shipped" <?= ($selectedStatus ?? '') === 'shipped' ? 'selected' : '' ?>>Shipped</option>
+                    <option value="delivered" <?= ($selectedStatus ?? '') === 'delivered' ? 'selected' : '' ?>>Delivered</option>
                 </select>
             </div>
         </div>

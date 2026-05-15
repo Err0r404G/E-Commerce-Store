@@ -268,23 +268,36 @@ class UserModel
         return $updated;
     }
 
-    public function getVendorOrderItems(int $sellerId): array
+    public function getVendorOrderItems(int $sellerId, string $status = ''): array
     {
         $this->ensureOrderItemTrackingNoteColumn();
 
         $orders = [];
-        $stmt = $this->conn->prepare(
-            "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status, oi.tracking_note,
-                    p.name AS product_name, o.shipping_address, o.payment_method, o.created_at,
-                    u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
-             FROM order_items oi
-             INNER JOIN products p ON p.id = oi.product_id
-             INNER JOIN orders o ON o.id = oi.order_id
-             INNER JOIN users u ON u.id = o.customer_id
-             WHERE oi.seller_id = ?
-             ORDER BY o.created_at DESC, oi.id DESC"
-        );
-        $stmt->bind_param("i", $sellerId);
+        $allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered'];
+        $hasStatusFilter = in_array($status, $allowedStatuses, true);
+        $sql = "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status, oi.tracking_note,
+                       p.name AS product_name, o.shipping_address, o.payment_method, o.created_at,
+                       u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+                FROM order_items oi
+                INNER JOIN products p ON p.id = oi.product_id
+                INNER JOIN orders o ON o.id = oi.order_id
+                INNER JOIN users u ON u.id = o.customer_id
+                WHERE oi.seller_id = ?";
+
+        if ($hasStatusFilter) {
+            $sql .= " AND oi.item_status = ?";
+        }
+
+        $sql .= " ORDER BY o.created_at DESC, oi.id DESC";
+
+        $stmt = $this->conn->prepare($sql);
+
+        if ($hasStatusFilter) {
+            $stmt->bind_param("is", $sellerId, $status);
+        } else {
+            $stmt->bind_param("i", $sellerId);
+        }
+
         $stmt->execute();
 
         $result = $stmt->get_result();
