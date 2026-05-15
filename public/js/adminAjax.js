@@ -500,10 +500,23 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedStatus = document.getElementById("selectedDisputeStatus");
         const selectedTitle = document.getElementById("selectedDisputeTitle");
         const selectedDescription = document.getElementById("selectedDisputeDescription");
+        const selectedCustomer = document.getElementById("selectedDisputeCustomer");
+        const selectedSeller = document.getElementById("selectedDisputeSeller");
         const selectedDate = document.getElementById("selectedDisputeDate");
+        const selectedTotal = document.getElementById("selectedDisputeTotal");
         const selectedNote = document.getElementById("selectedDisputeNote");
         const selectedNoteInput = document.getElementById("selectedDisputeNoteInput");
+        const feedback = document.getElementById("disputeActionFeedback");
         let submitAction = "resolve";
+
+        function setFeedback(message, isError = false) {
+            if (!feedback) {
+                return;
+            }
+
+            feedback.textContent = message || "";
+            feedback.classList.toggle("error", Boolean(isError));
+        }
 
         function selectRow(row) {
             if (!row) {
@@ -517,9 +530,13 @@ document.addEventListener("DOMContentLoaded", function () {
             selectedStatus.textContent = row.dataset.status || "Selected case";
             selectedTitle.textContent = `Case #${row.dataset.disputeId || ""} · Order #${row.dataset.orderId || ""}`;
             selectedDescription.textContent = row.dataset.description || "No dispute description provided.";
+            selectedCustomer.textContent = row.dataset.customer || "Unknown customer";
+            selectedSeller.textContent = row.dataset.seller || "Unknown seller";
             selectedDate.textContent = row.dataset.created || "N/A";
-            selectedNote.textContent = row.dataset.adminNote || "No admin note yet.";
+            selectedTotal.textContent = `BDT ${row.dataset.orderTotal || "0.00"}`;
+            selectedNote.textContent = row.dataset.adminNote || "No resolution note yet.";
             selectedNoteInput.value = row.dataset.adminNote || "";
+            setFeedback("");
         }
 
         if (search) {
@@ -553,12 +570,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 e.preventDefault();
 
                 if (!selectedId.value) {
-                    alert("Select a dispute first.");
+                    setFeedback("Select a dispute first.", true);
+                    return;
+                }
+
+                if (submitAction === "resolve" && selectedNoteInput.value.trim().length < 5) {
+                    setFeedback("Write a resolution note before closing this dispute.", true);
+                    selectedNoteInput.focus();
                     return;
                 }
 
                 const formData = new FormData(actionForm);
                 formData.append("action", submitAction);
+                setFeedback("Saving...");
+                actionForm.querySelectorAll("button").forEach(button => {
+                    button.disabled = true;
+                });
 
                 fetch("/E-Commerce-Store/index.php?page=disputeAction", {
                     method: "POST",
@@ -574,7 +601,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         loadActivePage();
                     })
                     .catch(error => {
-                        alert(error.message || "Dispute action failed.");
+                        setFeedback(error.message || "Dispute action failed.", true);
+                        actionForm.querySelectorAll("button").forEach(button => {
+                            button.disabled = false;
+                        });
                     });
             });
         }

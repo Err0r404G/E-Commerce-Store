@@ -233,6 +233,10 @@ class AdminController
             $this->jsonResponse(['success' => false, 'message' => 'Invalid dispute request.'], 422);
         }
 
+        if ($action === 'resolve' && ($adminNote === null || strlen($adminNote) < 5)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Write a resolution note before closing the dispute.'], 422);
+        }
+
         $status = $action === 'resolve' ? 'resolved' : 'open';
         $result = $this->adminModel->setDisputeStatus($disputeId, $status, $adminNote);
         $this->jsonResponse($result, (int) ($result['status'] ?? 200));

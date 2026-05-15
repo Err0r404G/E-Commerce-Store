@@ -2,39 +2,7 @@
 
     <div class="dispute-header">
         <h1>Dispute Management</h1>
-        <p>Review customer disputes, inspect order context, and close resolved cases.</p>
-    </div>
-
-    <div class="dispute-stats">
-        <div class="dispute-stat-card">
-            <div class="dispute-icon urgent">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <div>
-                <p>Needs Review</p>
-                <h2><?= (int) ($disputeCounts['urgent'] ?? 0) ?></h2>
-            </div>
-        </div>
-
-        <div class="dispute-stat-card">
-            <div class="dispute-icon progress">
-                <i class="fa-solid fa-arrows-rotate"></i>
-            </div>
-            <div>
-                <p>In Progress</p>
-                <h2><?= (int) ($disputeCounts['progress'] ?? 0) ?></h2>
-            </div>
-        </div>
-
-        <div class="dispute-stat-card">
-            <div class="dispute-icon resolved">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div>
-                <p>Resolved</p>
-                <h2><?= (int) ($disputeCounts['resolved'] ?? 0) ?></h2>
-            </div>
-        </div>
+        <p>Open: <?= (int) (($disputeCounts['urgent'] ?? 0) + ($disputeCounts['progress'] ?? 0)) ?> · Closed: <?= (int) ($disputeCounts['resolved'] ?? 0) ?></p>
     </div>
 
     <div class="dispute-tools">
@@ -70,6 +38,7 @@
                         $statusLabel = $isResolved ? 'Resolved' : (!empty($dispute['admin_note']) ? 'In Progress' : 'Needs Review');
                         $sellerName = $dispute['shop_name'] ?: ($dispute['seller_name'] ?: 'Unknown seller');
                         $createdAt = $dispute['created_at'] ? date('M d, Y', strtotime($dispute['created_at'])) : 'N/A';
+                        $orderTotal = isset($dispute['total_amount']) ? number_format((float) $dispute['total_amount'], 2) : '0.00';
                         $searchText = strtolower(
                             'case ' . $dispute['id'] . ' order ' . $dispute['order_id'] . ' ' .
                             $dispute['customer_name'] . ' ' . $dispute['customer_email'] . ' ' .
@@ -87,10 +56,11 @@
                             data-status="<?= htmlspecialchars($statusLabel) ?>"
                             data-status-class="<?= htmlspecialchars($statusClass) ?>"
                             data-created="<?= htmlspecialchars($createdAt) ?>"
+                            data-order-total="<?= htmlspecialchars($orderTotal) ?>"
                             data-admin-note="<?= htmlspecialchars($dispute['admin_note'] ?: '') ?>">
                             <td>
                                 Case #<?= (int) $dispute['id'] ?>
-                                <small>Order #<?= (int) $dispute['order_id'] ?> · <?= htmlspecialchars($createdAt) ?></small>
+                                <small>Order #<?= (int) $dispute['order_id'] ?> · BDT <?= htmlspecialchars($orderTotal) ?></small>
                             </td>
                             <td>
                                 <?= htmlspecialchars($dispute['customer_name'] ?: 'Unknown') ?>
@@ -106,8 +76,7 @@
 
         <aside class="dispute-detail" id="disputeDetail">
             <div class="detail-title">
-                <h2>Case Details</h2>
-                <i class="fa-solid fa-scale-balanced"></i>
+                <h2>Dispute Details</h2>
             </div>
 
             <div class="selected-case">
@@ -116,28 +85,35 @@
                 <span id="selectedDisputeDescription">Choose a row to view dispute details.</span>
             </div>
 
-            <div class="case-timeline">
-                <h4>Timeline</h4>
-                <div class="timeline-item active">
-                    <span></span>
-                    <div>
-                        <strong>Dispute opened</strong>
-                        <p id="selectedDisputeDate">N/A</p>
-                    </div>
+            <dl class="case-meta">
+                <div>
+                    <dt>Customer</dt>
+                    <dd id="selectedDisputeCustomer">N/A</dd>
                 </div>
-                <div class="timeline-item">
-                    <span></span>
-                    <div>
-                        <strong>Admin note</strong>
-                        <p id="selectedDisputeNote">No admin note yet.</p>
-                    </div>
+                <div>
+                    <dt>Seller</dt>
+                    <dd id="selectedDisputeSeller">N/A</dd>
                 </div>
+                <div>
+                    <dt>Opened</dt>
+                    <dd id="selectedDisputeDate">N/A</dd>
+                </div>
+                <div>
+                    <dt>Order Total</dt>
+                    <dd id="selectedDisputeTotal">BDT 0.00</dd>
+                </div>
+            </dl>
+
+            <div class="case-note">
+                <h4>Resolution Note Sent To Customer</h4>
+                <p id="selectedDisputeNote">No resolution note yet.</p>
             </div>
 
             <form class="detail-actions" id="disputeActionForm">
                 <input type="hidden" name="dispute_id" id="selectedDisputeId">
-                <textarea class="dispute-note-input" name="admin_note" id="selectedDisputeNoteInput" placeholder="Add an admin note..."></textarea>
-                <button class="refund-btn" type="submit" data-dispute-submit-action="resolve">Mark Resolved</button>
+                <textarea class="dispute-note-input" name="admin_note" id="selectedDisputeNoteInput" minlength="5" placeholder="Write the resolution note the customer will see..."></textarea>
+                <p class="form-feedback" id="disputeActionFeedback" aria-live="polite"></p>
+                <button class="refund-btn" type="submit" data-dispute-submit-action="resolve">Close Dispute</button>
                 <button class="info-btn" type="submit" data-dispute-submit-action="reopen">Reopen Case</button>
             </form>
         </aside>

@@ -3511,85 +3511,30 @@ body.modal-open {
 }
 
 .dispute-page {
-    padding: 30px 34px;
+    padding: 24px 30px;
 }
 
 .dispute-header h1 {
-    font-size: 38px;
+    font-size: 30px;
     color: #202331;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .dispute-header p {
     color: #4f5565;
-    font-size: 17px;
+    font-size: 15px;
     line-height: 1.5;
-}
-
-.dispute-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
-    margin: 34px 0;
 }
 
 .dispute-tools {
     display: flex;
     justify-content: flex-end;
-    margin-bottom: 18px;
-}
-
-.dispute-stat-card {
-    height: 86px;
-    background: #fff;
-    border: 1px solid #d4d6dd;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    padding: 0 26px;
-}
-
-.dispute-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-}
-
-.dispute-icon.urgent {
-    background: #ffd4cf;
-    color: #e12222;
-}
-
-.dispute-icon.progress {
-    background: #cfe3ff;
-    color: #365c87;
-}
-
-.dispute-icon.resolved {
-    background: #e1e1e4;
-    color: #202331;
-}
-
-.dispute-stat-card p {
-    color: #596783;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.dispute-stat-card h2 {
-    color: #202331;
-    font-size: 26px;
-    margin-top: 3px;
+    margin: 20px 0 14px;
 }
 
 .dispute-content {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, .9fr);
     background: #fff;
     border: 1px solid #d4d6dd;
     border-radius: 8px;
@@ -3608,7 +3553,7 @@ body.modal-open {
 .dispute-table th,
 .dispute-table td {
     border-bottom: 1px solid #d4d6dd;
-    padding: 20px 24px;
+    padding: 16px 20px;
     text-align: left;
     color: #202331;
 }
@@ -3639,7 +3584,7 @@ body.modal-open {
 .status-badge {
     display: inline-block;
     padding: 6px 12px;
-    border-radius: 20px;
+    border-radius: 4px;
     font-size: 13px;
 }
 
@@ -3660,7 +3605,7 @@ body.modal-open {
 
 .dispute-detail {
     border-left: 1px solid #d4d6dd;
-    padding: 28px 24px;
+    padding: 22px;
 }
 
 .detail-title {
@@ -3670,7 +3615,7 @@ body.modal-open {
 }
 
 .detail-title h2 {
-    font-size: 26px;
+    font-size: 22px;
     color: #202331;
 }
 
@@ -3680,11 +3625,11 @@ body.modal-open {
 }
 
 .selected-case {
-    margin-top: 28px;
+    margin-top: 18px;
     border: 1px solid #cfd3dc;
     border-radius: 4px;
     padding: 16px;
-    background: #fbf8fc;
+    background: #fff;
 }
 
 .selected-case p {
@@ -3701,64 +3646,51 @@ body.modal-open {
     margin-bottom: 8px;
 }
 
-.case-timeline {
-    margin-top: 26px;
+.selected-case span {
+    color: #3c465a;
+    display: block;
+    line-height: 1.5;
 }
 
-.case-timeline h4 {
-    color: #596783;
-    letter-spacing: 1px;
-    margin-bottom: 16px;
-}
-
-.timeline-item {
-    display: flex;
+.case-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-    position: relative;
-    padding-bottom: 16px;
+    margin-top: 16px;
 }
 
-.timeline-item::before {
-    content: "";
-    position: absolute;
-    left: 5px;
-    top: 15px;
-    width: 2px;
-    height: 38px;
-    background: #cfd3dc;
+.case-meta div,
+.case-note {
+    border: 1px solid #d4d6dd;
+    border-radius: 4px;
+    padding: 12px;
 }
 
-.timeline-item:last-child::before {
-    display: none;
-}
-
-.timeline-item span {
-    width: 12px;
-    height: 12px;
-    background: #cfd3dc;
-    border-radius: 50%;
-    margin-top: 4px;
-    z-index: 1;
-}
-
-.timeline-item.active span {
-    background: #172344;
-}
-
-.timeline-item strong {
-    color: #202331;
-    font-size: 13px;
-}
-
-.timeline-item p {
+.case-meta dt,
+.case-note h4 {
     color: #596783;
     font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.case-meta dd,
+.case-note p {
+    color: #202331;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.case-note {
+    margin-top: 16px;
 }
 
 .detail-actions {
     border-top: 1px solid #d4d6dd;
     margin-top: 18px;
-    padding-top: 24px;
+    padding-top: 18px;
     display: grid;
     gap: 12px;
 }
@@ -3780,6 +3712,21 @@ body.modal-open {
     cursor: pointer;
 }
 
+.detail-actions button:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+.form-feedback {
+    color: #2d5c36;
+    font-size: 13px;
+    min-height: 18px;
+}
+
+.form-feedback.error {
+    color: #b91c1c;
+}
+
 .refund-btn {
     background: #172344;
     color: white;
@@ -3796,6 +3743,31 @@ body.modal-open {
     background: #fff;
     color: #202331;
     border: 1px solid #8d929d;
+}
+
+@media (max-width: 980px) {
+    .dispute-content {
+        grid-template-columns: 1fr;
+    }
+
+    .dispute-detail {
+        border-left: 0;
+        border-top: 1px solid #d4d6dd;
+    }
+}
+
+@media (max-width: 640px) {
+    .dispute-page {
+        padding: 18px 14px;
+    }
+
+    .dispute-tools {
+        justify-content: stretch;
+    }
+
+    .case-meta {
+        grid-template-columns: 1fr;
+    }
 }
 .main-footer {
     width: 100%;
