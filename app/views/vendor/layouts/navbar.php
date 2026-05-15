@@ -6,7 +6,7 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="#">
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorInventoryAjax">
             <i class="fa-solid fa-box-archive"></i>
             <span>Inventory</span>
         </a>
@@ -26,7 +26,7 @@
             <span>Payments</span>
         </a>
 
-        <a href="/E-Commerce-Store/index.php?page=vendorProfile" class="<?= ($activeVendorPage ?? '') === 'profile' ? 'active' : '' ?>">
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorSettingsAjax" class="<?= ($activeVendorPage ?? '') === 'profile' ? 'active' : '' ?>">
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>
@@ -34,7 +34,7 @@
 
     <div class="admin-user-box vendor-user-box">
         <div class="user-info">
-            <div class="user-icon">
+            <div class="user-icon" id="vendorSidebarLogo">
                 <?php if (!empty($vendorAvatar)): ?>
                     <img src="/E-Commerce-Store/<?= htmlspecialchars($vendorAvatar) ?>" alt="">
                 <?php else: ?>
@@ -43,7 +43,7 @@
             </div>
 
             <div>
-                <h4><?= htmlspecialchars($vendorName ?? 'Vendor') ?></h4>
+                <h4 id="vendorSidebarName"><?= htmlspecialchars($vendorName ?? 'Vendor') ?></h4>
                 <p><?= htmlspecialchars($vendorRole ?? 'VENDOR') ?></p>
             </div>
         </div>

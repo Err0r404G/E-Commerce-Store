@@ -42,6 +42,115 @@ class UserModel
         return $profile ?: null;
     }
 
+    public function findSellerByUserId(int $userId): ?array
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM sellers WHERE user_id = ? LIMIT 1");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+
+        $seller = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $seller ?: null;
+    }
+
+    public function getPlatformCategories(): array
+    {
+        $categories = [];
+        $result = $this->conn->query("SELECT id, name FROM categories ORDER BY parent_id IS NOT NULL, name ASC");
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $categories[] = $row;
+            }
+        }
+
+        return $categories;
+    }
+
+    public function getVendorProducts(int $sellerId): array
+    {
+        $products = [];
+        $stmt = $this->conn->prepare(
+            "SELECT p.id, p.category_id, p.name, p.description, p.price, p.stock_qty, p.primary_image_path,
+                    p.is_available, p.created_at, c.name AS category_name
+             FROM products p
+             LEFT JOIN categories c ON c.id = p.category_id
+             WHERE p.seller_id = ?
+             ORDER BY p.created_at DESC"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+
+        $stmt->close();
+        return $products;
+    }
+
+    public function saveVendorProduct(int $sellerId, array $data): bool
+    {
+        $productId = (int) ($data['product_id'] ?? 0);
+        $imagePath = $data['primary_image_path'] ?? null;
+
+        if ($productId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE products
+                 SET category_id = ?, name = ?, description = ?, price = ?, stock_qty = ?,
+                     primary_image_path = COALESCE(?, primary_image_path), is_available = ?
+                 WHERE id = ? AND seller_id = ?"
+            );
+
+            $stmt->bind_param(
+                "issdisiii",
+                $data['category_id'],
+                $data['name'],
+                $data['description'],
+                $data['price'],
+                $data['stock_qty'],
+                $imagePath,
+                $data['is_available'],
+                $productId,
+                $sellerId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO products (seller_id, category_id, name, description, price, stock_qty, primary_image_path, is_available)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+
+            $stmt->bind_param(
+                "iissdisi",
+                $sellerId,
+                $data['category_id'],
+                $data['name'],
+                $data['description'],
+                $data['price'],
+                $data['stock_qty'],
+                $imagePath,
+                $data['is_available']
+            );
+        }
+
+        $saved = $stmt->execute();
+        $stmt->close();
+
+        return $saved;
+    }
+
+    public function deleteVendorProduct(int $sellerId, int $productId): bool
+    {
+        $stmt = $this->conn->prepare("DELETE FROM products WHERE id = ? AND seller_id = ?");
+        $stmt->bind_param("ii", $productId, $sellerId);
+        $deleted = $stmt->execute();
+        $stmt->close();
+
+        return $deleted;
+    }
+
     public function emailExistsForAnotherUser(string $email, int $userId): bool
     {
         $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1");
