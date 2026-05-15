@@ -11,9 +11,14 @@
             <span>Inventory</span>
         </a>
 
-        <a href="#">
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorOrdersAjax">
             <i class="fa-regular fa-clipboard"></i>
             <span>Orders</span>
+        </a>
+
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorCouponsAjax">
+            <i class="fa-solid fa-ticket"></i>
+            <span>Promo Codes</span>
         </a>
 
         <a href="#">

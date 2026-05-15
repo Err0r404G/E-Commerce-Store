@@ -146,6 +146,22 @@ class VendorController
         require __DIR__ . '/../../views/vendor/partials/settings.php';
     }
 
+    public function showCouponsAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $coupons = $this->users->getVendorCoupons((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/partials/coupons.php';
+    }
+
+    public function showOrdersAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $orders = $this->users->getVendorOrderItems((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/partials/orders.php';
+    }
+
     public function profileAction(): void
     {
         $result = $this->saveProfileFromRequest();
@@ -219,6 +235,63 @@ class VendorController
         }
 
         $this->jsonResponse(['success' => true, 'message' => 'Product saved.']);
+    }
+
+    public function couponAction(): void
+    {
+        $seller = $this->requireSeller();
+        $action = $_POST['coupon_action'] ?? 'save';
+
+        if ($action === 'toggle') {
+            $couponId = (int) ($_POST['coupon_id'] ?? 0);
+
+            if ($couponId <= 0) {
+                $this->jsonResponse(['success' => false, 'message' => 'Invalid coupon.'], 422);
+                return;
+            }
+
+            $updated = $this->users->toggleVendorCoupon((int) $seller['id'], $couponId);
+            $this->jsonResponse(['success' => $updated, 'message' => $updated ? 'Coupon status updated.' : 'Coupon update failed.'], $updated ? 200 : 422);
+            return;
+        }
+
+        $code = strtoupper(trim($_POST['code'] ?? ''));
+        $discountPct = (float) ($_POST['discount_pct'] ?? 0);
+        $maxUses = (int) ($_POST['max_uses'] ?? 0);
+        $validUntil = trim($_POST['valid_until'] ?? '');
+        $errors = [];
+
+        if ($code === '' || !preg_match('/^[A-Z0-9_-]{3,50}$/', $code)) {
+            $errors[] = 'Coupon code must be 3-50 characters using letters, numbers, dashes, or underscores.';
+        }
+
+        if ($discountPct <= 0 || $discountPct > 100) {
+            $errors[] = 'Discount percentage must be between 1 and 100.';
+        }
+
+        if ($maxUses <= 0) {
+            $errors[] = 'Maximum uses must be greater than 0.';
+        }
+
+        if ($validUntil === '' || !DateTime::createFromFormat('Y-m-d', $validUntil)) {
+            $errors[] = 'Please choose a valid date.';
+        }
+
+        if ($errors) {
+            $this->jsonResponse(['success' => false, 'message' => implode(' ', $errors)], 422);
+            return;
+        }
+
+        $saved = $this->users->saveVendorCoupon((int) $seller['id'], [
+            'coupon_id' => (int) ($_POST['coupon_id'] ?? 0),
+            'code' => $code,
+            'discount_pct' => $discountPct,
+            'max_uses' => $maxUses,
+            'valid_until' => $validUntil,
+            'is_active' => isset($_POST['is_active']) ? 1 : 0,
+        ]);
+
+        $this->jsonResponse(['success' => $saved, 'message' => $saved ? 'Coupon saved.' : 'Coupon save failed.'], $saved ? 200 : 422);
     }
 
     private function uploadVendorImage(array &$errors): ?string

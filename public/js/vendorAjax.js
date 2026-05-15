@@ -205,9 +205,111 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindCouponEvents() {
+        const form = document.getElementById("vendorCouponForm");
+        const resetButton = document.getElementById("vendorCouponReset");
+
+        function resetForm() {
+            if (!form) {
+                return;
+            }
+
+            form.reset();
+            document.getElementById("vendorCouponId").value = "";
+            document.getElementById("vendorCouponActive").checked = true;
+        }
+
+        if (resetButton) {
+            resetButton.addEventListener("click", resetForm);
+        }
+
+        document.querySelectorAll("[data-coupon-edit]").forEach(button => {
+            button.addEventListener("click", function () {
+                document.getElementById("vendorCouponId").value = this.dataset.couponId || "";
+                document.getElementById("vendorCouponCode").value = this.dataset.code || "";
+                document.getElementById("vendorCouponDiscount").value = this.dataset.discount || "";
+                document.getElementById("vendorCouponMaxUses").value = this.dataset.maxUses || "";
+                document.getElementById("vendorCouponValidUntil").value = this.dataset.validUntil || "";
+                document.getElementById("vendorCouponActive").checked = this.dataset.active === "1";
+                form.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+
+        document.querySelectorAll("[data-coupon-toggle]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("coupon_action", "toggle");
+                formData.append("coupon_id", this.dataset.couponId);
+
+                fetch("/E-Commerce-Store/index.php?page=vendorCouponAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Coupon update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=vendorCouponsAjax", document.querySelector("[data-vendor-page*='vendorCouponsAjax']"));
+                    })
+                    .catch(error => alert(error.message || "Coupon update failed."));
+            });
+        });
+
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const submitButton = form.querySelector("[type='submit']");
+            const formData = new FormData(form);
+
+            submitButton.disabled = true;
+
+            fetch("/E-Commerce-Store/index.php?page=vendorCouponAction", {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || "Coupon save failed.");
+                    }
+
+                    loadPage("/E-Commerce-Store/index.php?page=vendorCouponsAjax", document.querySelector("[data-vendor-page*='vendorCouponsAjax']"));
+                })
+                .catch(error => {
+                    alert(error.message || "Coupon save failed.");
+                    submitButton.disabled = false;
+                });
+        });
+    }
+
+    function bindOrderEvents() {
+        const statusFilter = document.getElementById("vendorOrderStatusFilter");
+
+        if (!statusFilter) {
+            return;
+        }
+
+        statusFilter.addEventListener("change", function () {
+            const status = this.value;
+
+            document.querySelectorAll("[data-vendor-order-row]").forEach(row => {
+                row.style.display = status === "" || row.dataset.status === status ? "" : "none";
+            });
+        });
+    }
+
     function bindLoadedPage() {
         bindInventoryEvents();
         bindSettingsEvents();
+        bindCouponEvents();
+        bindOrderEvents();
     }
 
     function loadPage(pageUrl, activeLink) {
