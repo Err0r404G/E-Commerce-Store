@@ -54,6 +54,40 @@ class UserModel
         return $seller ?: null;
     }
 
+    public function ensureSellerForVendor(int $userId): ?array
+    {
+        $seller = $this->findSellerByUserId($userId);
+
+        if ($seller) {
+            return $seller;
+        }
+
+        $stmt = $this->conn->prepare("SELECT id, name, is_active FROM users WHERE id = ? AND role = 'vendor' LIMIT 1");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $vendor = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$vendor || (int) $vendor['is_active'] !== 1) {
+            return null;
+        }
+
+        $shopName = trim((string) ($vendor['name'] ?? 'Vendor')) . "'s Store";
+        $description = 'Vendor storefront profile.';
+        $address = 'Not provided';
+        $isApproved = 1;
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO sellers (user_id, shop_name, shop_description, address, is_approved)
+             VALUES (?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("isssi", $userId, $shopName, $description, $address, $isApproved);
+        $created = $stmt->execute();
+        $stmt->close();
+
+        return $created ? $this->findSellerByUserId($userId) : null;
+    }
+
     public function getPlatformCategories(): array
     {
         $categories = [];
@@ -670,6 +704,14 @@ class UserModel
         }
 
         if (($data['role'] ?? '') === 'vendor') {
+            $shopName = trim((string) ($data['shop_name'] ?? ''));
+            $shopName = $shopName !== '' ? $shopName : $data['name'] . "'s Store";
+            $shopDescription = trim((string) ($data['shop_description'] ?? ''));
+            $shopDescription = $shopDescription !== '' ? $shopDescription : 'Vendor storefront profile.';
+            $shopLogoPath = $data['shop_logo_path'] ?? $data['profile_pic'] ?? null;
+            $shopAddress = trim((string) ($data['shop_address'] ?? ''));
+            $shopAddress = $shopAddress !== '' ? $shopAddress : 'Not provided';
+
             $sellerStmt = $this->conn->prepare(
                 "INSERT INTO sellers (user_id, shop_name, shop_description, shop_logo_path, address, is_approved)
                  VALUES (?, ?, ?, ?, ?, 0)"
@@ -678,10 +720,10 @@ class UserModel
             $sellerStmt->bind_param(
                 "issss",
                 $userId,
-                $data['shop_name'],
-                $data['shop_description'],
-                $data['shop_logo_path'],
-                $data['shop_address']
+                $shopName,
+                $shopDescription,
+                $shopLogoPath,
+                $shopAddress
             );
 
             $sellerCreated = $sellerStmt->execute();
