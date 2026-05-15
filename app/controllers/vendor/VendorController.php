@@ -162,6 +162,14 @@ class VendorController
         require __DIR__ . '/../../views/vendor/partials/orders.php';
     }
 
+    public function showReviewsAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $reviews = $this->users->getVendorReviews((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/partials/reviews.php';
+    }
+
     public function profileAction(): void
     {
         $result = $this->saveProfileFromRequest();
@@ -324,6 +332,26 @@ class VendorController
         }
 
         $this->jsonResponse(['success' => false, 'message' => 'Invalid order action.'], 422);
+    }
+
+    public function reviewAction(): void
+    {
+        $seller = $this->requireSeller();
+        $reviewId = (int) ($_POST['review_id'] ?? 0);
+        $reply = trim($_POST['seller_reply'] ?? '');
+
+        if ($reviewId <= 0) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid review.'], 422);
+            return;
+        }
+
+        if ($reply === '') {
+            $this->jsonResponse(['success' => false, 'message' => 'Please write a reply before saving.'], 422);
+            return;
+        }
+
+        $updated = $this->users->replyToVendorReview((int) $seller['id'], $reviewId, $reply);
+        $this->jsonResponse(['success' => $updated, 'message' => $updated ? 'Reply saved.' : 'Reply save failed.'], $updated ? 200 : 422);
     }
 
     private function uploadVendorImage(array &$errors): ?string

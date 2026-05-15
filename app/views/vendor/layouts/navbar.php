@@ -21,6 +21,11 @@
             <span>Promo Codes</span>
         </a>
 
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorReviewsAjax">
+            <i class="fa-regular fa-star"></i>
+            <span>Reviews</span>
+        </a>
+
         <a href="#">
             <i class="fa-regular fa-chart-bar"></i>
             <span>Analytics</span>
