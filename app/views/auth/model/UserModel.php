@@ -809,6 +809,99 @@ class UserModel
         return $updated;
     }
 
+    public function getDeliveryAgents(): array
+    {
+        $this->ensureDeliveryAgentColumns();
+
+        $agents = [];
+        $result = $this->conn->query(
+            "SELECT da.id, da.name, da.phone, da.vehicle_type, da.is_active, da.created_at,
+                    COUNT(CASE WHEN d.status IN ('assigned', 'picked_up', 'in_transit') THEN 1 END) AS active_deliveries_count
+             FROM delivery_agents da
+             LEFT JOIN delivery_assignments d ON d.agent_id = da.id
+             GROUP BY da.id, da.name, da.phone, da.vehicle_type, da.is_active, da.created_at
+             ORDER BY da.is_active DESC, da.created_at DESC, da.id DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $agents[] = $row;
+            }
+        }
+
+        return $agents;
+    }
+
+    public function saveDeliveryAgent(int $agentId, array $data): bool
+    {
+        $this->ensureDeliveryAgentColumns();
+
+        if ($agentId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE delivery_agents
+                 SET name = ?, phone = ?, vehicle_type = ?, is_active = ?
+                 WHERE id = ?"
+            );
+            $stmt->bind_param(
+                "sssii",
+                $data['name'],
+                $data['phone'],
+                $data['vehicle_type'],
+                $data['is_active'],
+                $agentId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO delivery_agents (user_id, name, phone, vehicle_type, is_active)
+                 VALUES (NULL, ?, ?, ?, ?)"
+            );
+            $stmt->bind_param(
+                "sssi",
+                $data['name'],
+                $data['phone'],
+                $data['vehicle_type'],
+                $data['is_active']
+            );
+        }
+
+        $saved = $stmt->execute();
+        $stmt->close();
+
+        return $saved;
+    }
+
+    public function toggleDeliveryAgent(int $agentId): bool
+    {
+        $this->ensureDeliveryAgentColumns();
+
+        $stmt = $this->conn->prepare(
+            "UPDATE delivery_agents
+             SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END
+             WHERE id = ?"
+        );
+        $stmt->bind_param("i", $agentId);
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
+    }
+
+    private function ensureDeliveryAgentColumns(): void
+    {
+        $nameColumn = $this->conn->query("SHOW COLUMNS FROM delivery_agents LIKE 'name'");
+
+        if (!$nameColumn || $nameColumn->num_rows === 0) {
+            $this->conn->query("ALTER TABLE delivery_agents ADD name varchar(100) NOT NULL DEFAULT 'Delivery Agent' AFTER user_id");
+        }
+
+        $userIdColumn = $this->conn->query("SHOW COLUMNS FROM delivery_agents LIKE 'user_id'");
+        $userId = $userIdColumn ? $userIdColumn->fetch_assoc() : null;
+
+        if ($userId && strtoupper((string) ($userId['Null'] ?? '')) === 'NO') {
+            $this->conn->query("ALTER TABLE delivery_agents MODIFY user_id int(11) DEFAULT NULL");
+        }
+    }
+
     public function create(array $data): bool
     {
         $this->conn->begin_transaction();
