@@ -54,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function bindCategoryManagementEvents() {
         const search = document.getElementById("categorySearch");
+        const modal = document.getElementById("categoryModal");
         const form = document.getElementById("categoryForm");
         const showFormButton = document.getElementById("showCategoryForm");
         const cancelFormButton = document.getElementById("cancelCategoryForm");
@@ -71,7 +72,20 @@ document.addEventListener("DOMContentLoaded", function () {
             form.reset();
             actionInput.value = "add";
             idInput.value = "";
-            form.hidden = true;
+            if (modal) {
+                modal.hidden = true;
+            }
+            document.body.classList.remove("modal-open");
+        }
+
+        function openForm() {
+            if (!form || !modal) {
+                return;
+            }
+
+            modal.hidden = false;
+            document.body.classList.add("modal-open");
+            nameInput.focus();
         }
 
         if (search) {
@@ -86,13 +100,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (showFormButton && form) {
             showFormButton.addEventListener("click", function () {
                 resetForm();
-                form.hidden = false;
-                nameInput.focus();
+                openForm();
             });
         }
 
         if (cancelFormButton) {
             cancelFormButton.addEventListener("click", resetForm);
+        }
+
+        if (modal) {
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) {
+                    resetForm();
+                }
+            });
         }
 
         document.querySelectorAll("[data-category-edit]").forEach(button => {
@@ -106,8 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 nameInput.value = this.dataset.categoryName || "";
                 descriptionInput.value = this.dataset.categoryDescription || "";
                 parentInput.value = this.dataset.parentId || "";
-                form.hidden = false;
-                nameInput.focus();
+                openForm();
             });
         });
 
@@ -172,6 +192,15 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
+
+    document.addEventListener("keydown", function (e) {
+        const modal = document.getElementById("categoryModal");
+
+        if (e.key === "Escape" && modal && !modal.hidden) {
+            modal.hidden = true;
+            document.body.classList.remove("modal-open");
+        }
+    });
 
     function loadPage(pageUrl, activeLink) {
         content.innerHTML = "<div class=\"admin-loading\">Loading...</div>";
