@@ -122,6 +122,13 @@ elseif ($page === 'vendorApprovalsAjax') {
     exit;
 }
 
+elseif ($page === 'adminDashboardAjax') {
+
+    requireRole('admin');
+    $admin->showDashboardHome();
+    exit;
+}
+
 elseif ($page === 'vendorApprovalAction') {
 
     $admin->vendorApprovalAction();

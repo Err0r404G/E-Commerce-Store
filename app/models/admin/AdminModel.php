@@ -11,14 +11,16 @@ class AdminModel
 
     public function getVendorApprovalData(): array
     {
+        $this->ensureSellerAccountColumns();
         $vendors = [];
         $result = $this->conn->query(
             "SELECT u.id, u.name, u.email, u.phone, u.is_active, u.created_at,
-                    s.shop_name, s.is_approved
+                    s.shop_name, s.is_approved, s.account_status, s.admin_note
              FROM users u
              LEFT JOIN sellers s ON s.user_id = u.id
              WHERE u.role = 'vendor'
-             ORDER BY u.is_active ASC, u.created_at DESC"
+             ORDER BY FIELD(COALESCE(s.account_status, 'pending'), 'pending', 'approved', 'suspended', 'rejected'),
+                      u.created_at DESC"
         );
 
         if ($result) {
@@ -30,26 +32,88 @@ class AdminModel
         $counts = [
             'pending' => 0,
             'approved' => 0,
+            'suspended' => 0,
+            'rejected' => 0,
             'total' => count($vendors),
         ];
 
         foreach ($vendors as $vendor) {
-            if ((int) $vendor['is_active'] === 1) {
-                $counts['approved']++;
-            } else {
-                $counts['pending']++;
+            $status = $vendor['account_status'] ?: ((int) $vendor['is_active'] === 1 ? 'approved' : 'pending');
+
+            if (isset($counts[$status])) {
+                $counts[$status]++;
             }
         }
 
         return [$vendors, $counts];
     }
 
-    public function setVendorApproval(int $vendorId, string $action): array
+    public function getDashboardMetrics(): array
     {
-        $isActive = $action === 'approve' ? 1 : 0;
-        $isApproved = $action === 'approve' ? 1 : 0;
+        $usersByRole = [
+            'admin' => 0,
+            'customer' => 0,
+            'vendor' => 0,
+            'delivery_manager' => 0,
+        ];
 
-        $stmt = $this->conn->prepare("SELECT is_active FROM users WHERE id = ? AND role = 'vendor' LIMIT 1");
+        $result = $this->conn->query("SELECT role, COUNT(*) AS total FROM users GROUP BY role");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $usersByRole[$row['role']] = (int) $row['total'];
+            }
+        }
+
+        $activeSellersResult = $this->conn->query(
+            "SELECT COUNT(*) AS total
+             FROM sellers s
+             INNER JOIN users u ON u.id = s.user_id
+             WHERE s.is_approved = 1 AND u.is_active = 1"
+        );
+        $activeSellers = (int) (($activeSellersResult ? $activeSellersResult->fetch_assoc() : null)['total'] ?? 0);
+
+        $ordersTodayResult = $this->conn->query(
+            "SELECT COUNT(*) AS total
+             FROM orders
+             WHERE DATE(created_at) = CURDATE()"
+        );
+        $ordersToday = (int) (($ordersTodayResult ? $ordersTodayResult->fetch_assoc() : null)['total'] ?? 0);
+
+        $monthlyRevenueResult = $this->conn->query(
+            "SELECT COALESCE(SUM(total_amount), 0) AS total
+             FROM orders
+             WHERE YEAR(created_at) = YEAR(CURDATE())
+               AND MONTH(created_at) = MONTH(CURDATE())"
+        );
+        $monthlyRevenue = (float) (($monthlyRevenueResult ? $monthlyRevenueResult->fetch_assoc() : null)['total'] ?? 0);
+
+        return [
+            'users_by_role' => $usersByRole,
+            'total_users' => array_sum($usersByRole),
+            'active_sellers' => $activeSellers,
+            'orders_today' => $ordersToday,
+            'monthly_revenue' => $monthlyRevenue,
+        ];
+    }
+
+    public function setVendorApproval(int $vendorId, string $action, ?string $reason = null): array
+    {
+        $this->ensureSellerAccountColumns();
+
+        $statusMap = [
+            'approve' => ['approved', 1, 1, 'Seller approved.'],
+            'reject' => ['rejected', 0, 0, 'Seller rejected.'],
+            'suspend' => ['suspended', 0, 0, 'Seller suspended.'],
+            'reactivate' => ['approved', 1, 1, 'Seller reactivated.'],
+        ];
+
+        if (!isset($statusMap[$action])) {
+            return ['success' => false, 'status' => 422, 'message' => 'Invalid seller action.'];
+        }
+
+        [$accountStatus, $isActive, $isApproved, $message] = $statusMap[$action];
+
+        $stmt = $this->conn->prepare("SELECT id, name, is_active FROM users WHERE id = ? AND role = 'vendor' LIMIT 1");
         $stmt->bind_param('i', $vendorId);
         $stmt->execute();
         $vendor = $stmt->get_result()->fetch_assoc();
@@ -59,27 +123,31 @@ class AdminModel
             return ['success' => false, 'status' => 404, 'message' => 'Vendor not found.'];
         }
 
-        if ((int) $vendor['is_active'] === $isActive) {
-            return [
-                'success' => true,
-                'message' => $action === 'approve' ? 'Vendor is already approved.' : 'Vendor is already rejected.',
-            ];
-        }
-
         $stmt = $this->conn->prepare("UPDATE users SET is_active = ? WHERE id = ? AND role = 'vendor'");
         $stmt->bind_param('ii', $isActive, $vendorId);
         $stmt->execute();
         $updated = $stmt->affected_rows >= 0;
         $stmt->close();
 
-        $stmt = $this->conn->prepare("UPDATE sellers SET is_approved = ? WHERE user_id = ?");
-        $stmt->bind_param('ii', $isApproved, $vendorId);
+        $shopName = trim((string) ($vendor['name'] ?? 'Vendor')) . "'s Store";
+        $shopDescription = 'Vendor storefront profile.';
+        $address = 'Not provided';
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO sellers (user_id, shop_name, shop_description, address, is_approved, account_status, admin_note)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                is_approved = VALUES(is_approved),
+                account_status = VALUES(account_status),
+                admin_note = VALUES(admin_note)"
+        );
+        $stmt->bind_param('isssiss', $vendorId, $shopName, $shopDescription, $address, $isApproved, $accountStatus, $reason);
         $stmt->execute();
         $stmt->close();
 
         return [
             'success' => $updated,
-            'message' => $action === 'approve' ? 'Vendor approved.' : 'Vendor rejected.',
+            'message' => $message,
         ];
     }
 
@@ -244,6 +312,29 @@ class AdminModel
         $row = $result ? $result->fetch_assoc() : null;
 
         return (int) ($row['total'] ?? 0);
+    }
+
+    private function ensureSellerAccountColumns(): void
+    {
+        $statusColumn = $this->conn->query("SHOW COLUMNS FROM sellers LIKE 'account_status'");
+        if (!$statusColumn || $statusColumn->num_rows === 0) {
+            $this->conn->query(
+                "ALTER TABLE sellers
+                 ADD account_status ENUM('pending','approved','rejected','suspended') NOT NULL DEFAULT 'pending' AFTER is_approved"
+            );
+            $this->conn->query(
+                "UPDATE sellers
+                 SET account_status = CASE
+                    WHEN is_approved = 1 THEN 'approved'
+                    ELSE 'pending'
+                 END"
+            );
+        }
+
+        $noteColumn = $this->conn->query("SHOW COLUMNS FROM sellers LIKE 'admin_note'");
+        if (!$noteColumn || $noteColumn->num_rows === 0) {
+            $this->conn->query("ALTER TABLE sellers ADD admin_note TEXT DEFAULT NULL AFTER account_status");
+        }
     }
 
     private function getProductsByCategory(): array
