@@ -96,6 +96,106 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindAgentEvents() {
+        const form = document.getElementById("deliveryAgentForm");
+        const message = document.getElementById("deliveryAgentMessage");
+        const resetButton = document.getElementById("deliveryAgentReset");
+        const agentsLink = document.querySelector("[data-delivery-page*='deliveryAgentsAjax']");
+
+        function resetForm() {
+            if (!form) {
+                return;
+            }
+
+            form.reset();
+            document.getElementById("deliveryAgentId").value = "";
+            document.getElementById("deliveryAgentActive").value = "1";
+        }
+
+        function reloadAgents() {
+            loadPage("/E-Commerce-Store/index.php?page=deliveryAgentsAjax", agentsLink);
+        }
+
+        if (resetButton) {
+            resetButton.addEventListener("click", resetForm);
+        }
+
+        document.querySelectorAll("[data-agent-edit]").forEach(button => {
+            button.addEventListener("click", function () {
+                document.getElementById("deliveryAgentId").value = this.dataset.agentId || "";
+                document.getElementById("deliveryAgentName").value = this.dataset.name || "";
+                document.getElementById("deliveryAgentPhone").value = this.dataset.phone || "";
+                document.getElementById("deliveryAgentVehicle").value = this.dataset.vehicleType || "";
+                document.getElementById("deliveryAgentActive").value = this.dataset.active === "1" ? "1" : "";
+                form.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+
+        document.querySelectorAll("[data-agent-toggle]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("agent_action", "toggle");
+                formData.append("agent_id", this.dataset.agentId);
+
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryAgentAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Agent status update failed.");
+                        }
+
+                        reloadAgents();
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Agent status update failed.", false);
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const submitButton = form.querySelector("[type='submit']");
+            const formData = new FormData(form);
+
+            submitButton.disabled = true;
+
+            fetch("/E-Commerce-Store/index.php?page=deliveryAgentAction", {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || "Delivery agent save failed.");
+                    }
+
+                    reloadAgents();
+                })
+                .catch(error => {
+                    showMessage(message, error.message || "Delivery agent save failed.", false);
+                    submitButton.disabled = false;
+                });
+        });
+    }
+
+    function bindLoadedPage() {
+        bindSettingsEvents();
+        bindAgentEvents();
+    }
+
     function loadPage(pageUrl, activeLink) {
         content.innerHTML = "<div class=\"admin-loading\">Loading...</div>";
 
@@ -115,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     activeLink.classList.add("active");
                 }
 
-                bindSettingsEvents();
+                bindLoadedPage();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

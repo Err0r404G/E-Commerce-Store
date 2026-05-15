@@ -6,7 +6,7 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'agents' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryAgentsAjax" class="<?= ($activeDeliveryPage ?? '') === 'agents' ? 'active' : '' ?>">
             <i class="fa-solid fa-people-carry-box"></i>
             <span>Manage Agents</span>
         </a>

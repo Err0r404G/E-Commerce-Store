@@ -25,6 +25,13 @@ class DeliveryManagerController
         require __DIR__ . '/../../views/deliveryManager/partials/settings.php';
     }
 
+    public function showAgentsAjax(): void
+    {
+        $agents = $this->users->getDeliveryAgents();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/agents.php';
+    }
+
     public function profileAction(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
@@ -109,6 +116,52 @@ class DeliveryManagerController
             'name' => $name,
             'profile_pic' => $imagePath ?? ($_SESSION['user']['profile_pic'] ?? null),
         ]);
+    }
+
+    public function agentAction(): void
+    {
+        $action = $_POST['agent_action'] ?? 'save';
+        $agentId = (int) ($_POST['agent_id'] ?? 0);
+
+        if ($action === 'toggle') {
+            if ($agentId <= 0) {
+                $this->jsonResponse(['success' => false, 'message' => 'Invalid delivery agent.'], 422);
+                return;
+            }
+
+            $updated = $this->users->toggleDeliveryAgent($agentId);
+            $this->jsonResponse([
+                'success' => $updated,
+                'message' => $updated ? 'Agent status updated.' : 'Agent status update failed.',
+            ], $updated ? 200 : 422);
+            return;
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $vehicleType = trim($_POST['vehicle_type'] ?? '');
+        $errors = [];
+
+        if ($name === '' || $phone === '' || $vehicleType === '') {
+            $errors[] = 'Please fill in name, phone, and vehicle type.';
+        }
+
+        if ($errors) {
+            $this->jsonResponse(['success' => false, 'message' => implode(' ', $errors)], 422);
+            return;
+        }
+
+        $saved = $this->users->saveDeliveryAgent($agentId, [
+            'name' => $name,
+            'phone' => $phone,
+            'vehicle_type' => $vehicleType,
+            'is_active' => ($_POST['is_active'] ?? '') === '1' ? 1 : 0,
+        ]);
+
+        $this->jsonResponse([
+            'success' => $saved,
+            'message' => $saved ? 'Delivery agent saved.' : 'Delivery agent save failed.',
+        ], $saved ? 200 : 422);
     }
 
     private function uploadProfileImage(array &$errors): ?string
