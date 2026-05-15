@@ -18,6 +18,16 @@
             <span>Category Management</span>
         </a>
 
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=adminCustomersAjax">
+            <i class="fa-solid fa-users"></i>
+            <span>Manage Customer</span>
+        </a>
+
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=adminDeliveryManagersAjax">
+            <i class="fa-solid fa-truck-fast"></i>
+            <span>Manage Delivery Manager</span>
+        </a>
+
         <a href="#" data-page="/E-Commerce-Store/index.php?page=adminDisputesAjax">
             <i class="fa-solid fa-gavel"></i>
             <span>Disputes</span>

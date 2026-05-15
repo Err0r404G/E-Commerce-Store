@@ -65,6 +65,8 @@
             </div>
         </div>
 
+        <p class="category-feedback" id="categoryFeedback" hidden></p>
+
         <table class="category-table">
             <thead>
                 <tr>
@@ -97,7 +99,14 @@
                         </td>
                         <td><?= number_format((int) $category['total_products']) ?></td>
                         <td><?= number_format((int) $category['sold_products']) ?></td>
-                        <td>
+                        <td class="category-actions-cell">
+                            <button class="add-subcategory" type="button"
+                                data-category-add-child
+                                data-parent-id="<?= $categoryId ?>"
+                                data-parent-name="<?= htmlspecialchars($categoryName) ?>"
+                                title="Add subcategory">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
                             <button class="edit-category" type="button"
                                 data-category-edit
                                 data-category-id="<?= $categoryId ?>"
@@ -106,7 +115,13 @@
                                 data-parent-id="">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button class="delete-category" type="button" data-category-delete data-category-id="<?= $categoryId ?>">
+                            <button class="delete-category" type="button"
+                                data-category-delete
+                                data-category-id="<?= $categoryId ?>"
+                                data-product-count="<?= (int) $category['total_products'] ?>"
+                                data-child-count="<?= count($children) ?>"
+                                title="<?= (int) $category['total_products'] > 0 ? 'Delete blocked: products exist in this category.' : (count($children) > 0 ? 'Delete blocked: this category has subcategories.' : 'Delete category') ?>"
+                                <?= ((int) $category['total_products'] > 0 || count($children) > 0) ? 'disabled' : '' ?>>
                                 <i class="fa-regular fa-trash-can"></i>
                             </button>
                         </td>
@@ -126,7 +141,7 @@
                             </td>
                             <td><?= number_format((int) $child['total_products']) ?></td>
                             <td><?= number_format((int) $child['sold_products']) ?></td>
-                            <td>
+                            <td class="category-actions-cell">
                                 <button class="edit-category" type="button"
                                     data-category-edit
                                     data-category-id="<?= $childId ?>"
@@ -135,7 +150,13 @@
                                     data-parent-id="<?= $categoryId ?>">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <button class="delete-category" type="button" data-category-delete data-category-id="<?= $childId ?>">
+                                <button class="delete-category" type="button"
+                                    data-category-delete
+                                    data-category-id="<?= $childId ?>"
+                                    data-product-count="<?= (int) $child['total_products'] ?>"
+                                    data-child-count="0"
+                                    title="<?= (int) $child['total_products'] > 0 ? 'Delete blocked: products exist in this category.' : 'Delete subcategory' ?>"
+                                    <?= ((int) $child['total_products'] > 0) ? 'disabled' : '' ?>>
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </td>
@@ -197,7 +218,7 @@
         <div class="category-modal" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
             <div class="category-modal-heading">
                 <h2 id="categoryModalTitle">Add New Category</h2>
-                <p>Define a new product classification for your store's hierarchy.</p>
+                <p id="categoryModalText">Define a new product classification for your store's hierarchy.</p>
             </div>
 
             <form class="category-form category-modal-form" id="categoryForm">
@@ -243,12 +264,31 @@
 
                 <div class="category-modal-actions">
                     <button class="modal-cancel-btn" id="cancelCategoryForm" type="button">Cancel</button>
-                    <button class="modal-create-btn" type="submit">
+                    <button class="modal-create-btn" id="categorySubmitButton" type="submit">
                         <i class="fa-regular fa-circle-plus"></i>
-                        Create Category
+                        <span>Create Category</span>
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="seller-action-modal-backdrop" id="categoryDeleteModal" hidden>
+        <div class="seller-action-modal" role="dialog" aria-modal="true" aria-labelledby="categoryDeleteTitle">
+            <div class="category-modal-heading">
+                <h2 id="categoryDeleteTitle">Delete Category</h2>
+                <p>Delete this category only when no products are assigned to it.</p>
+            </div>
+
+            <input type="hidden" id="categoryDeleteId">
+
+            <div class="category-modal-actions seller-action-buttons">
+                <button class="modal-cancel-btn" id="cancelCategoryDelete" type="button">Cancel</button>
+                <button class="modal-create-btn danger-action" id="confirmCategoryDelete" type="button">
+                    <i class="fa-regular fa-trash-can"></i>
+                    Delete
+                </button>
+            </div>
         </div>
     </div>
 
