@@ -13,7 +13,14 @@ class AdminController
 
     public function showDashboard(): void
     {
+        $dashboardMetrics = $this->adminModel->getDashboardMetrics();
         include __DIR__ . '/../../views/admin/AdminDashboard.php';
+    }
+
+    public function showDashboardHome(): void
+    {
+        $dashboardMetrics = $this->adminModel->getDashboardMetrics();
+        include __DIR__ . '/../../views/admin/AdminHome.php';
     }
 
     public function showVendorApprovals(): void
@@ -32,12 +39,18 @@ class AdminController
 
         $vendorId = (int) ($_POST['vendor_id'] ?? 0);
         $action = $_POST['action'] ?? '';
+        $reason = trim($_POST['reason'] ?? '');
+        $reason = $reason !== '' ? $reason : null;
 
-        if ($vendorId <= 0 || !in_array($action, ['approve', 'reject'], true)) {
+        if ($vendorId <= 0 || !in_array($action, ['approve', 'reject', 'suspend', 'reactivate'], true)) {
             $this->jsonResponse(['success' => false, 'message' => 'Invalid approval request.'], 422);
         }
 
-        $result = $this->adminModel->setVendorApproval($vendorId, $action);
+        if (in_array($action, ['reject', 'suspend'], true) && $reason === null) {
+            $this->jsonResponse(['success' => false, 'message' => 'Please provide a reason for this action.'], 422);
+        }
+
+        $result = $this->adminModel->setVendorApproval($vendorId, $action, $reason);
         $this->jsonResponse($result, (int) ($result['status'] ?? 200));
     }
 
