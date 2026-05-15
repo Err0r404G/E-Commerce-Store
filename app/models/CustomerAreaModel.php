@@ -21,6 +21,58 @@ class CustomerAreaModel
         return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    public function deliveryZone(int $id): ?array
+    {
+        $stmt = $this->conn->prepare("SELECT id, zone_name, delivery_fee, estimated_days FROM delivery_zones WHERE id = ? LIMIT 1");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $zone = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $zone ?: null;
+    }
+
+    public function customerProfile(int $customerId): ?array
+    {
+        $stmt = $this->conn->prepare("SELECT id, name, email, password_hash, phone, profile_pic FROM users WHERE id = ? AND role = 'customer' LIMIT 1");
+        $stmt->bind_param('i', $customerId);
+        $stmt->execute();
+        $profile = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $profile ?: null;
+    }
+
+    public function updateCustomerProfile(int $customerId, string $name, string $phone): bool
+    {
+        $stmt = $this->conn->prepare("UPDATE users SET name = ?, phone = ? WHERE id = ? AND role = 'customer'");
+        $stmt->bind_param('ssi', $name, $phone, $customerId);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        return $ok;
+    }
+
+    public function updateCustomerPassword(int $customerId, string $passwordHash): bool
+    {
+        $stmt = $this->conn->prepare("UPDATE users SET password_hash = ? WHERE id = ? AND role = 'customer'");
+        $stmt->bind_param('si', $passwordHash, $customerId);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        return $ok;
+    }
+
+    public function updateCustomerProfilePicture(int $customerId, string $path): bool
+    {
+        $stmt = $this->conn->prepare("UPDATE users SET profile_pic = ? WHERE id = ? AND role = 'customer'");
+        $stmt->bind_param('si', $path, $customerId);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        return $ok;
+    }
+
     public function products(array $filters = []): array
     {
         $sql = "SELECT p.*, c.name AS category_name, s.shop_name,
@@ -217,12 +269,37 @@ class CustomerAreaModel
             $clear->close();
         }
 
+        $isDefault = !empty($data['is_default']) ? 1 : 0;
+        $zoneId = $data['delivery_zone_id'] !== '' ? (int) $data['delivery_zone_id'] : null;
+
+        if (!empty($data['id'])) {
+            $stmt = $this->conn->prepare(
+                "UPDATE customer_addresses
+                 SET label = ?, recipient_name = ?, phone = ?, address_line = ?, city = ?, postal_code = ?, delivery_zone_id = ?, is_default = ?
+                 WHERE id = ? AND customer_id = ?"
+            );
+            $stmt->bind_param(
+                'ssssssiiii',
+                $data['label'],
+                $data['recipient_name'],
+                $data['phone'],
+                $data['address_line'],
+                $data['city'],
+                $data['postal_code'],
+                $zoneId,
+                $isDefault,
+                $data['id'],
+                $customerId
+            );
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+
         $stmt = $this->conn->prepare(
             "INSERT INTO customer_addresses (customer_id, label, recipient_name, phone, address_line, city, postal_code, delivery_zone_id, is_default)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
-        $isDefault = !empty($data['is_default']) ? 1 : 0;
-        $zoneId = $data['delivery_zone_id'] !== '' ? (int) $data['delivery_zone_id'] : null;
         $stmt->bind_param(
             'issssssii',
             $customerId,
@@ -239,6 +316,47 @@ class CustomerAreaModel
         $stmt->close();
 
         return $ok;
+    }
+
+    public function deleteAddress(int $customerId, int $addressId): bool
+    {
+        if (!$this->tableExists('customer_addresses')) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("DELETE FROM customer_addresses WHERE id = ? AND customer_id = ?");
+        $stmt->bind_param('ii', $addressId, $customerId);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        return $ok;
+    }
+
+    public function setDefaultAddress(int $customerId, int $addressId): bool
+    {
+        if (!$this->tableExists('customer_addresses')) {
+            return false;
+        }
+
+        $this->conn->begin_transaction();
+        try {
+            $clear = $this->conn->prepare("UPDATE customer_addresses SET is_default = 0 WHERE customer_id = ?");
+            $clear->bind_param('i', $customerId);
+            $clear->execute();
+            $clear->close();
+
+            $stmt = $this->conn->prepare("UPDATE customer_addresses SET is_default = 1 WHERE id = ? AND customer_id = ?");
+            $stmt->bind_param('ii', $addressId, $customerId);
+            $stmt->execute();
+            $ok = $stmt->affected_rows > 0;
+            $stmt->close();
+
+            $this->conn->commit();
+            return $ok;
+        } catch (Throwable $e) {
+            $this->conn->rollback();
+            throw $e;
+        }
     }
 
     public function orders(int $customerId): array
@@ -266,10 +384,14 @@ class CustomerAreaModel
     public function orderItems(int $orderId): array
     {
         $stmt = $this->conn->prepare(
-            "SELECT oi.*, p.name, p.primary_image_path, s.shop_name
+            "SELECT oi.*, p.name, p.primary_image_path, s.shop_name,
+                    rv.rating AS own_rating, rv.review_text AS own_review_text,
+                    rr.status AS return_status, rr.reason AS return_reason
              FROM order_items oi
              INNER JOIN products p ON p.id = oi.product_id
              INNER JOIN sellers s ON s.id = oi.seller_id
+             LEFT JOIN reviews rv ON rv.product_id = oi.product_id AND rv.order_id = oi.order_id
+             LEFT JOIN return_requests rr ON rr.order_item_id = oi.id
              WHERE oi.order_id = ?"
         );
         $stmt->bind_param('i', $orderId);
@@ -380,10 +502,29 @@ class CustomerAreaModel
 
     public function saveReview(int $customerId, array $data): bool
     {
+        if (!$this->canReviewProduct($customerId, (int) $data['order_id'], (int) $data['product_id'])) {
+            return false;
+        }
+
+        $existing = $this->conn->prepare(
+            "SELECT id FROM reviews WHERE product_id = ? AND order_id = ? AND customer_id = ? LIMIT 1"
+        );
+        $existing->bind_param('iii', $data['product_id'], $data['order_id'], $customerId);
+        $existing->execute();
+        $review = $existing->get_result()->fetch_assoc();
+        $existing->close();
+
+        if ($review) {
+            $stmt = $this->conn->prepare("UPDATE reviews SET rating = ?, review_text = ? WHERE id = ? AND customer_id = ?");
+            $stmt->bind_param('isii', $data['rating'], $data['review_text'], $review['id'], $customerId);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+
         $stmt = $this->conn->prepare(
             "INSERT INTO reviews (product_id, order_id, customer_id, rating, review_text)
-             VALUES (?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE rating = VALUES(rating), review_text = VALUES(review_text)"
+             VALUES (?, ?, ?, ?, ?)"
         );
         $stmt->bind_param('iiiis', $data['product_id'], $data['order_id'], $customerId, $data['rating'], $data['review_text']);
         $ok = $stmt->execute();
@@ -392,8 +533,36 @@ class CustomerAreaModel
         return $ok;
     }
 
+    public function deleteReview(int $customerId, int $productId, int $orderId): bool
+    {
+        $stmt = $this->conn->prepare("DELETE FROM reviews WHERE customer_id = ? AND product_id = ? AND order_id = ?");
+        $stmt->bind_param('iii', $customerId, $productId, $orderId);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        return $ok;
+    }
+
     public function requestReturn(int $customerId, int $orderId, int $orderItemId, string $reason): bool
     {
+        if (!$this->canRequestReturn($customerId, $orderId, $orderItemId)) {
+            return false;
+        }
+
+        $existing = $this->conn->prepare("SELECT id FROM return_requests WHERE order_item_id = ? AND customer_id = ? LIMIT 1");
+        $existing->bind_param('ii', $orderItemId, $customerId);
+        $existing->execute();
+        $request = $existing->get_result()->fetch_assoc();
+        $existing->close();
+
+        if ($request) {
+            $stmt = $this->conn->prepare("UPDATE return_requests SET reason = ?, status = 'pending' WHERE id = ? AND customer_id = ?");
+            $stmt->bind_param('sii', $reason, $request['id'], $customerId);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+
         $stmt = $this->conn->prepare(
             "INSERT INTO return_requests (order_id, order_item_id, customer_id, reason)
              VALUES (?, ?, ?, ?)"
@@ -450,5 +619,39 @@ class CustomerAreaModel
         $stmt->close();
 
         return $exists;
+    }
+
+    private function canReviewProduct(int $customerId, int $orderId, int $productId): bool
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT 1
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             WHERE o.id = ? AND o.customer_id = ? AND o.status = 'delivered' AND oi.product_id = ?
+             LIMIT 1"
+        );
+        $stmt->bind_param('iii', $orderId, $customerId, $productId);
+        $stmt->execute();
+        $ok = (bool) $stmt->get_result()->fetch_row();
+        $stmt->close();
+
+        return $ok;
+    }
+
+    private function canRequestReturn(int $customerId, int $orderId, int $orderItemId): bool
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT 1
+             FROM orders o
+             INNER JOIN order_items oi ON oi.order_id = o.id
+             WHERE o.id = ? AND o.customer_id = ? AND o.status = 'delivered' AND oi.id = ?
+             LIMIT 1"
+        );
+        $stmt->bind_param('iii', $orderId, $customerId, $orderItemId);
+        $stmt->execute();
+        $ok = (bool) $stmt->get_result()->fetch_row();
+        $stmt->close();
+
+        return $ok;
     }
 }
