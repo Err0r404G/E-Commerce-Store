@@ -291,16 +291,82 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function bindOrderEvents() {
         const statusFilter = document.getElementById("vendorOrderStatusFilter");
+        const search = document.getElementById("vendorOrderSearch");
 
-        if (!statusFilter) {
-            return;
-        }
-
-        statusFilter.addEventListener("change", function () {
-            const status = this.value;
+        function filterOrders() {
+            const status = statusFilter ? statusFilter.value : "";
+            const term = search ? search.value.trim().toLowerCase() : "";
 
             document.querySelectorAll("[data-vendor-order-row]").forEach(row => {
-                row.style.display = status === "" || row.dataset.status === status ? "" : "none";
+                const matchesStatus = status === "" || row.dataset.status === status;
+                const matchesSearch = term === "" || row.dataset.search.includes(term);
+                row.style.display = matchesStatus && matchesSearch ? "" : "none";
+            });
+        }
+
+        if (statusFilter) {
+            statusFilter.addEventListener("change", filterOrders);
+        }
+
+        if (search) {
+            search.addEventListener("input", filterOrders);
+        }
+
+        document.querySelectorAll("[data-order-confirm]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("order_action", "confirm");
+                formData.append("order_item_id", this.dataset.orderItemId);
+
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=vendorOrderAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Order update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=vendorOrdersAjax", document.querySelector("[data-vendor-page*='vendorOrdersAjax']"));
+                    })
+                    .catch(error => {
+                        alert(error.message || "Order update failed.");
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        document.querySelectorAll("[data-order-ship-form]").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+                formData.append("order_action", "ship");
+
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=vendorOrderAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Order ship failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=vendorOrdersAjax", document.querySelector("[data-vendor-page*='vendorOrdersAjax']"));
+                    })
+                    .catch(error => {
+                        alert(error.message || "Order ship failed.");
+                        submitButton.disabled = false;
+                    });
             });
         });
     }
