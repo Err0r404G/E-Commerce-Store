@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const form = document.getElementById("vendorProductForm");
         const resetButton = document.getElementById("vendorProductReset");
         const search = document.getElementById("vendorInventorySearch");
+        const additionalImages = document.getElementById("vendorAdditionalImages");
 
         function resetForm() {
             if (!form) {
@@ -122,6 +123,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (resetButton) {
             resetButton.addEventListener("click", resetForm);
+        }
+
+        if (additionalImages) {
+            additionalImages.addEventListener("change", function () {
+                if (this.files.length > 4) {
+                    alert("You can upload up to 4 additional images.");
+                    this.value = "";
+                }
+            });
         }
 
         document.querySelectorAll("[data-product-edit]").forEach(button => {

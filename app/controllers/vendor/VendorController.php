@@ -182,8 +182,10 @@ class VendorController
         }
 
         $imagePath = null;
+        $additionalImages = [];
         if (!$errors) {
             $imagePath = $this->uploadImage('product_image', 'products', $errors);
+            $additionalImages = $this->uploadMultipleImages('additional_images', 'products', 4, $errors);
         }
 
         if ($errors) {
@@ -191,7 +193,7 @@ class VendorController
             return;
         }
 
-        $saved = $this->users->saveVendorProduct((int) $seller['id'], [
+        $productId = $this->users->saveVendorProduct((int) $seller['id'], [
             'product_id' => (int) ($_POST['product_id'] ?? 0),
             'category_id' => $categoryId,
             'name' => $name,
@@ -202,7 +204,21 @@ class VendorController
             'is_available' => isset($_POST['is_available']) ? 1 : 0,
         ]);
 
-        $this->jsonResponse(['success' => $saved, 'message' => $saved ? 'Product saved.' : 'Product save failed.'], $saved ? 200 : 422);
+        if (!$productId) {
+            $this->jsonResponse(['success' => false, 'message' => 'Product save failed.'], 422);
+            return;
+        }
+
+        if ($additionalImages) {
+            $imagesSaved = $this->users->replaceProductImages((int) $seller['id'], $productId, $additionalImages);
+
+            if (!$imagesSaved) {
+                $this->jsonResponse(['success' => false, 'message' => 'Product saved, but additional images failed.'], 422);
+                return;
+            }
+        }
+
+        $this->jsonResponse(['success' => true, 'message' => 'Product saved.']);
     }
 
     private function uploadVendorImage(array &$errors): ?string
@@ -239,6 +255,72 @@ class VendorController
         $targetPath = $uploadDir . '/' . $fileName;
 
         if (!move_uploaded_file($_FILES[$fieldName]['tmp_name'], $targetPath)) {
+            $errors[] = 'Could not save uploaded image.';
+            return null;
+        }
+
+        return 'public/uploads/' . $folder . '/' . $fileName;
+    }
+
+    private function uploadMultipleImages(string $fieldName, string $folder, int $maxFiles, array &$errors): array
+    {
+        if (empty($_FILES[$fieldName]['name']) || !is_array($_FILES[$fieldName]['name'])) {
+            return [];
+        }
+
+        $names = array_filter($_FILES[$fieldName]['name'], static fn ($name) => $name !== '');
+
+        if (count($names) > $maxFiles) {
+            $errors[] = 'You can upload up to ' . $maxFiles . ' additional images.';
+            return [];
+        }
+
+        $paths = [];
+
+        foreach ($_FILES[$fieldName]['name'] as $index => $name) {
+            if ($name === '') {
+                continue;
+            }
+
+            $singleFile = [
+                'name' => $_FILES[$fieldName]['name'][$index],
+                'type' => $_FILES[$fieldName]['type'][$index],
+                'tmp_name' => $_FILES[$fieldName]['tmp_name'][$index],
+                'error' => $_FILES[$fieldName]['error'][$index],
+                'size' => $_FILES[$fieldName]['size'][$index],
+            ];
+
+            $paths[] = $this->saveUploadedFile($singleFile, $folder, $errors);
+        }
+
+        return array_values(array_filter($paths));
+    }
+
+    private function saveUploadedFile(array $file, string $folder, array &$errors): ?string
+    {
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $errors[] = 'Image upload failed.';
+            return null;
+        }
+
+        $allowedTypes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $mimeType = mime_content_type($file['tmp_name']);
+
+        if (!isset($allowedTypes[$mimeType])) {
+            $errors[] = 'Image must be JPG, PNG, or WEBP.';
+            return null;
+        }
+
+        $uploadDir = __DIR__ . '/../../../public/uploads/' . $folder;
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $fileName = uniqid(rtrim($folder, 's') . '_', true) . '.' . $allowedTypes[$mimeType];
+        $targetPath = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
             $errors[] = 'Could not save uploaded image.';
             return null;
         }
