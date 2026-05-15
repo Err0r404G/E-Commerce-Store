@@ -38,8 +38,14 @@
                 </label>
 
                 <label class="vendor-file-field">
-                    Product Image
+                    Primary Image
                     <input type="file" name="product_image" accept="image/jpeg,image/png,image/webp">
+                </label>
+
+                <label class="vendor-file-field">
+                    Additional Images
+                    <input type="file" name="additional_images[]" id="vendorAdditionalImages" accept="image/jpeg,image/png,image/webp" multiple>
+                    <span>Optional, up to 4 images</span>
                 </label>
 
                 <label class="vendor-check-label">

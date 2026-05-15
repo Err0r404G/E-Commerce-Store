@@ -91,7 +91,7 @@ class UserModel
         return $products;
     }
 
-    public function saveVendorProduct(int $sellerId, array $data): bool
+    public function saveVendorProduct(int $sellerId, array $data): ?int
     {
         $productId = (int) ($data['product_id'] ?? 0);
         $imagePath = $data['primary_image_path'] ?? null;
@@ -136,9 +136,49 @@ class UserModel
         }
 
         $saved = $stmt->execute();
+        $savedProductId = $productId > 0 ? $productId : (int) $this->conn->insert_id;
         $stmt->close();
 
-        return $saved;
+        return $saved ? $savedProductId : null;
+    }
+
+    public function replaceProductImages(int $sellerId, int $productId, array $imagePaths): bool
+    {
+        $this->conn->begin_transaction();
+
+        $stmt = $this->conn->prepare(
+            "DELETE pi FROM product_images pi
+             INNER JOIN products p ON p.id = pi.product_id
+             WHERE pi.product_id = ? AND p.seller_id = ?"
+        );
+        $stmt->bind_param("ii", $productId, $sellerId);
+        $deleted = $stmt->execute();
+        $stmt->close();
+
+        if (!$deleted) {
+            $this->conn->rollback();
+            return false;
+        }
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO product_images (product_id, image_path, display_order)
+             VALUES (?, ?, ?)"
+        );
+
+        foreach ($imagePaths as $displayOrder => $imagePath) {
+            $order = $displayOrder + 1;
+            $stmt->bind_param("isi", $productId, $imagePath, $order);
+
+            if (!$stmt->execute()) {
+                $stmt->close();
+                $this->conn->rollback();
+                return false;
+            }
+        }
+
+        $stmt->close();
+        $this->conn->commit();
+        return true;
     }
 
     public function deleteVendorProduct(int $sellerId, int $productId): bool
