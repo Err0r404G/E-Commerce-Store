@@ -151,6 +151,111 @@ class AdminModel
         ];
     }
 
+    public function getAccountManagementData(string $role): array
+    {
+        if (!in_array($role, ['customer', 'delivery_manager'], true)) {
+            return [[], ['active' => 0, 'inactive' => 0, 'total' => 0]];
+        }
+
+        $accounts = [];
+        $stmt = $this->conn->prepare(
+            "SELECT id, name, email, phone, is_active, created_at
+             FROM users
+             WHERE role = ?
+             ORDER BY is_active DESC, created_at DESC"
+        );
+        $stmt->bind_param('s', $role);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $accounts[] = $row;
+        }
+
+        $stmt->close();
+
+        $counts = [
+            'active' => 0,
+            'inactive' => 0,
+            'total' => count($accounts),
+        ];
+
+        foreach ($accounts as $account) {
+            if ((int) $account['is_active'] === 1) {
+                $counts['active']++;
+            } else {
+                $counts['inactive']++;
+            }
+        }
+
+        return [$accounts, $counts];
+    }
+
+    public function setAccountStatus(int $userId, string $role, string $action): array
+    {
+        if (!in_array($role, ['customer', 'delivery_manager'], true)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Invalid account type.'];
+        }
+
+        if (!in_array($action, ['deactivate', 'reactivate'], true)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Invalid account action.'];
+        }
+
+        $stmt = $this->conn->prepare("SELECT id FROM users WHERE id = ? AND role = ? LIMIT 1");
+        $stmt->bind_param('is', $userId, $role);
+        $stmt->execute();
+        $account = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$account) {
+            return ['success' => false, 'status' => 404, 'message' => 'Account not found.'];
+        }
+
+        $isActive = $action === 'reactivate' ? 1 : 0;
+        $stmt = $this->conn->prepare("UPDATE users SET is_active = ? WHERE id = ? AND role = ?");
+        $stmt->bind_param('iis', $isActive, $userId, $role);
+        $stmt->execute();
+        $success = $stmt->affected_rows >= 0;
+        $stmt->close();
+
+        return [
+            'success' => $success,
+            'message' => $action === 'reactivate' ? 'Account reactivated.' : 'Account deactivated.',
+        ];
+    }
+
+    public function createDeliveryManager(string $name, string $email, ?string $phone, string $password): array
+    {
+        $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $existing = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($existing) {
+            return ['success' => false, 'status' => 422, 'message' => 'An account already exists with this email.'];
+        }
+
+        $role = 'delivery_manager';
+        $profilePic = null;
+        $isActive = 1;
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $this->conn->prepare(
+            "INSERT INTO users (name, email, password_hash, phone, role, profile_pic, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param('ssssssi', $name, $email, $passwordHash, $phone, $role, $profilePic, $isActive);
+        $stmt->execute();
+        $success = $stmt->affected_rows === 1;
+        $stmt->close();
+
+        return [
+            'success' => $success,
+            'message' => $success ? 'Delivery manager created.' : 'Delivery manager could not be created.',
+        ];
+    }
+
     public function getCategoryManagementData(): array
     {
         $categories = [];
@@ -198,6 +303,10 @@ class AdminModel
 
     public function createCategory(string $name, ?string $description, ?int $parentId): array
     {
+        if ($parentId !== null && !$this->isRootCategory($parentId)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Subcategories can only be added under a main category.'];
+        }
+
         if ($this->categoryNameExists($name, $parentId)) {
             return ['success' => false, 'status' => 422, 'message' => 'Category already exists.'];
         }
@@ -213,8 +322,16 @@ class AdminModel
 
     public function updateCategory(int $categoryId, string $name, ?string $description, ?int $parentId): array
     {
+        if (!$this->categoryExists($categoryId)) {
+            return ['success' => false, 'status' => 404, 'message' => 'Category not found.'];
+        }
+
         if ($categoryId === $parentId) {
             return ['success' => false, 'status' => 422, 'message' => 'A category cannot be its own parent.'];
+        }
+
+        if ($parentId !== null && !$this->isRootCategory($parentId)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Subcategories can only be placed under a main category.'];
         }
 
         if ($this->categoryNameExists($name, $parentId, $categoryId)) {
@@ -232,6 +349,28 @@ class AdminModel
 
     public function deleteCategory(int $categoryId): array
     {
+        if (!$this->categoryExists($categoryId)) {
+            return ['success' => false, 'status' => 404, 'message' => 'Category not found.'];
+        }
+
+        $productCount = $this->countProductsInCategory($categoryId);
+        if ($productCount > 0) {
+            return [
+                'success' => false,
+                'status' => 409,
+                'message' => 'Delete blocked: this category has products assigned to it.',
+            ];
+        }
+
+        $childCount = $this->countChildCategories($categoryId);
+        if ($childCount > 0) {
+            return [
+                'success' => false,
+                'status' => 409,
+                'message' => 'Delete blocked: remove or rename its subcategories first.',
+            ];
+        }
+
         $stmt = $this->conn->prepare("DELETE FROM categories WHERE id = ?");
         $stmt->bind_param('i', $categoryId);
         $stmt->execute();
@@ -386,5 +525,49 @@ class AdminModel
         $stmt->close();
 
         return $exists;
+    }
+
+    private function categoryExists(int $categoryId): bool
+    {
+        $stmt = $this->conn->prepare("SELECT id FROM categories WHERE id = ? LIMIT 1");
+        $stmt->bind_param('i', $categoryId);
+        $stmt->execute();
+        $exists = (bool) $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $exists;
+    }
+
+    private function isRootCategory(int $categoryId): bool
+    {
+        $stmt = $this->conn->prepare("SELECT id FROM categories WHERE id = ? AND parent_id IS NULL LIMIT 1");
+        $stmt->bind_param('i', $categoryId);
+        $stmt->execute();
+        $exists = (bool) $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $exists;
+    }
+
+    private function countProductsInCategory(int $categoryId): int
+    {
+        $stmt = $this->conn->prepare("SELECT COUNT(*) AS total FROM products WHERE category_id = ?");
+        $stmt->bind_param('i', $categoryId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return (int) ($row['total'] ?? 0);
+    }
+
+    private function countChildCategories(int $categoryId): int
+    {
+        $stmt = $this->conn->prepare("SELECT COUNT(*) AS total FROM categories WHERE parent_id = ?");
+        $stmt->bind_param('i', $categoryId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return (int) ($row['total'] ?? 0);
     }
 }

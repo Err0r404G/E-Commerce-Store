@@ -106,6 +106,79 @@ class AdminController
         $this->jsonResponse(['success' => false, 'message' => 'Invalid category action.'], 422);
     }
 
+    public function showCustomerAccounts(): void
+    {
+        $role = 'customer';
+        $pageTitle = 'Manage Customers';
+        $pageDescription = 'Search, view, deactivate, and reactivate customer accounts.';
+        [$accounts, $accountCounts] = $this->adminModel->getAccountManagementData($role);
+        include __DIR__ . '/../../views/admin/AccountManagement.php';
+    }
+
+    public function showDeliveryManagerAccounts(): void
+    {
+        $role = 'delivery_manager';
+        $pageTitle = 'Manage Delivery Managers';
+        $pageDescription = 'Search, view, deactivate, and reactivate delivery manager accounts.';
+        [$accounts, $accountCounts] = $this->adminModel->getAccountManagementData($role);
+        include __DIR__ . '/../../views/admin/AccountManagement.php';
+    }
+
+    public function accountAction(): void
+    {
+        $this->jsonHeader();
+
+        if (!$this->isAdmin()) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized request.'], 403);
+        }
+
+        $userId = (int) ($_POST['user_id'] ?? 0);
+        $role = $_POST['role'] ?? '';
+        $action = $_POST['action'] ?? '';
+
+        if ($userId <= 0 || !in_array($role, ['customer', 'delivery_manager'], true)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid account request.'], 422);
+        }
+
+        $result = $this->adminModel->setAccountStatus($userId, $role, $action);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
+    public function createDeliveryManagerAction(): void
+    {
+        $this->jsonHeader();
+
+        if (!$this->isAdmin()) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized request.'], 403);
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+        $phone = $phone !== '' ? $phone : null;
+
+        if ($name === '' || $email === '' || $password === '' || $confirmPassword === '') {
+            $this->jsonResponse(['success' => false, 'message' => 'Please fill in all required fields.'], 422);
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Please enter a valid email address.'], 422);
+        }
+
+        if (strlen($password) < 6) {
+            $this->jsonResponse(['success' => false, 'message' => 'Password must be at least 6 characters.'], 422);
+        }
+
+        if ($password !== $confirmPassword) {
+            $this->jsonResponse(['success' => false, 'message' => 'Password and confirm password do not match.'], 422);
+        }
+
+        $result = $this->adminModel->createDeliveryManager($name, $email, $phone, $password);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
     public function showDisputes(): void
     {
         [$disputes, $disputeCounts] = $this->adminModel->getDisputeManagementData();
