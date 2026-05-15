@@ -294,6 +294,38 @@ class VendorController
         $this->jsonResponse(['success' => $saved, 'message' => $saved ? 'Coupon saved.' : 'Coupon save failed.'], $saved ? 200 : 422);
     }
 
+    public function orderAction(): void
+    {
+        $seller = $this->requireSeller();
+        $action = $_POST['order_action'] ?? '';
+        $orderItemId = (int) ($_POST['order_item_id'] ?? 0);
+        $trackingNote = trim($_POST['tracking_note'] ?? '');
+
+        if ($orderItemId <= 0) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid order item.'], 422);
+            return;
+        }
+
+        if ($action === 'confirm') {
+            $updated = $this->users->updateVendorOrderItemStatus((int) $seller['id'], $orderItemId, 'confirmed', null);
+            $this->jsonResponse(['success' => $updated, 'message' => $updated ? 'Order item marked as processing.' : 'Order item update failed.'], $updated ? 200 : 422);
+            return;
+        }
+
+        if ($action === 'ship') {
+            if ($trackingNote === '') {
+                $this->jsonResponse(['success' => false, 'message' => 'Please add a tracking note before marking as shipped.'], 422);
+                return;
+            }
+
+            $updated = $this->users->updateVendorOrderItemStatus((int) $seller['id'], $orderItemId, 'shipped', $trackingNote);
+            $this->jsonResponse(['success' => $updated, 'message' => $updated ? 'Order item marked as shipped.' : 'Order item update failed.'], $updated ? 200 : 422);
+            return;
+        }
+
+        $this->jsonResponse(['success' => false, 'message' => 'Invalid order action.'], 422);
+    }
+
     private function uploadVendorImage(array &$errors): ?string
     {
         return $this->uploadImage('profile_pic', 'profiles', $errors);

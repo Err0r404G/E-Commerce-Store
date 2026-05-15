@@ -224,6 +224,13 @@ elseif ($page === 'vendorCouponAction') {
     exit;
 }
 
+elseif ($page === 'vendorOrderAction') {
+
+    requireRole('vendor');
+    $vendor->orderAction();
+    exit;
+}
+
 elseif ($page === 'deliveryDashboard') {
 
     includeViewOrShowMissing(__DIR__ . '/app/views/delivery_manager/deliveryDashboard.php', 'Delivery Dashboard');
