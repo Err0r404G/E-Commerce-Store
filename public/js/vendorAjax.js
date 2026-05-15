@@ -454,6 +454,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindEarningsEvents() {
+        const periodSelect = document.getElementById("vendorEarningsPeriod");
+
+        if (!periodSelect) {
+            return;
+        }
+
+        periodSelect.addEventListener("change", function () {
+            document.querySelectorAll("[data-earnings-period]").forEach(panel => {
+                panel.hidden = panel.dataset.earningsPeriod !== this.value;
+            });
+        });
+    }
+
     function bindLoadedPage() {
         bindInventoryEvents();
         bindSettingsEvents();
@@ -461,6 +475,7 @@ document.addEventListener("DOMContentLoaded", function () {
         bindOrderEvents();
         bindReviewEvents();
         bindAnalyticsEvents();
+        bindEarningsEvents();
     }
 
     function loadPage(pageUrl, activeLink) {
