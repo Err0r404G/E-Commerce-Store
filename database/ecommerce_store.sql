@@ -163,7 +163,8 @@ CREATE TABLE `order_items` (
   `seller_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
-  `item_status` enum('pending','confirmed','shipped','delivered') DEFAULT 'pending'
+  `item_status` enum('pending','confirmed','shipped','delivered') DEFAULT 'pending',
+  `tracking_note` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

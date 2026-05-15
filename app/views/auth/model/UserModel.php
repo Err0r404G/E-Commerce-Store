@@ -270,9 +270,11 @@ class UserModel
 
     public function getVendorOrderItems(int $sellerId): array
     {
+        $this->ensureOrderItemTrackingNoteColumn();
+
         $orders = [];
         $stmt = $this->conn->prepare(
-            "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status,
+            "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status, oi.tracking_note,
                     p.name AS product_name, o.shipping_address, o.payment_method, o.created_at,
                     u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
              FROM order_items oi
@@ -292,6 +294,33 @@ class UserModel
 
         $stmt->close();
         return $orders;
+    }
+
+    public function updateVendorOrderItemStatus(int $sellerId, int $orderItemId, string $status, ?string $trackingNote = null): bool
+    {
+        $this->ensureOrderItemTrackingNoteColumn();
+
+        $stmt = $this->conn->prepare(
+            "UPDATE order_items
+             SET item_status = ?, tracking_note = ?
+             WHERE id = ? AND seller_id = ?"
+        );
+        $stmt->bind_param("ssii", $status, $trackingNote, $orderItemId, $sellerId);
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
+    }
+
+    private function ensureOrderItemTrackingNoteColumn(): void
+    {
+        $result = $this->conn->query("SHOW COLUMNS FROM order_items LIKE 'tracking_note'");
+
+        if ($result && $result->num_rows > 0) {
+            return;
+        }
+
+        $this->conn->query("ALTER TABLE order_items ADD tracking_note text DEFAULT NULL AFTER item_status");
     }
 
     public function emailExistsForAnotherUser(string $email, int $userId): bool
