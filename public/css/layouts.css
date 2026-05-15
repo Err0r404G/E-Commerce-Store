@@ -28,6 +28,21 @@ body {
     z-index: 10;
 }
 
+.admin-body {
+    --admin-header-height: 56px;
+    background: #faf8fc;
+    padding-top: var(--admin-header-height);
+}
+
+.admin-navbar {
+    height: var(--admin-header-height);
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+
 /* VENDOR APPBAR */
 .vendor-appbar {
     display: flex;
@@ -980,6 +995,11 @@ body {
     background: #faf8fc;
 }
 
+.admin-body .admin-layout {
+    display: block;
+    min-height: calc(100vh - var(--admin-header-height));
+}
+
 /* SIDEBAR */
 .admin-sidebar {
     width: 220px;
@@ -992,6 +1012,15 @@ body {
     justify-content: space-between;
 
     padding: 26px 14px;
+}
+
+.admin-body .admin-sidebar {
+    bottom: 0;
+    left: 0;
+    min-height: 0;
+    position: fixed;
+    top: var(--admin-header-height);
+    z-index: 900;
 }
 
 /* BRAND */
@@ -1114,6 +1143,12 @@ body {
     padding: 44px 56px 64px;
 }
 
+.admin-body .admin-content {
+    margin-left: 220px;
+    min-height: calc(100vh - var(--admin-header-height));
+    width: calc(100% - 220px);
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .admin-sidebar {
@@ -1135,6 +1170,11 @@ body {
 
     .admin-content {
         padding: 28px 18px 44px;
+    }
+
+    .admin-body .admin-content {
+        margin-left: 72px;
+        width: calc(100% - 72px);
     }
 }
 .admin-main {
