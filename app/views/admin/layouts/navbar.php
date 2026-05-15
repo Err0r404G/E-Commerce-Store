@@ -23,6 +23,11 @@
             <span>Manage Product</span>
         </a>
 
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=orderManagementAjax">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Orders</span>
+        </a>
+
         <a href="#" data-page="/E-Commerce-Store/index.php?page=adminCustomersAjax">
             <i class="fa-solid fa-users"></i>
             <span>Manage Customer</span>

@@ -2299,6 +2299,50 @@ body {
     margin-top: 3px;
 }
 
+.order-tools {
+    max-width: 760px;
+}
+
+.order-date-input {
+    min-width: 148px;
+}
+
+.order-date-filter {
+    color: #52607c;
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 4px;
+}
+
+.order-table small {
+    color: #596070;
+    display: block;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.order-status.pending,
+.order-status.confirmed,
+.order-status.processing,
+.order-status.shipped {
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+}
+
+.order-status.delivered {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+}
+
+.order-status.cancelled,
+.order-status.return_requested,
+.order-status.returned {
+    background: rgba(239, 68, 68, 0.13);
+    color: #b91c1c;
+}
+
 .empty-cell,
 .admin-loading,
 .admin-error {
