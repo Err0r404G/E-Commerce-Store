@@ -9,10 +9,12 @@ session_start();
 
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/app/controllers/AuthController.php';
+require_once __DIR__ . '/app/controllers/AdminController.php';
 
 $page = $_GET['page'] ?? 'home';
 
 $auth = new AuthController($conn);
+$admin = new AdminController($conn);
 
 function dashboardUrlForRole(string $role): string
 {
@@ -85,8 +87,32 @@ elseif ($page === 'logout') {
 elseif ($page === 'adminDashboard') {
 
     requireRole('admin');
-    include __DIR__ . '/app/views/admin/AdminDashboard.php';
+    $admin->showDashboard();
     exit;
+}
+
+elseif ($page === 'vendorApprovalsAjax') {
+
+    requireRole('admin');
+    $admin->showVendorApprovals();
+    exit;
+}
+
+elseif ($page === 'vendorApprovalAction') {
+
+    $admin->vendorApprovalAction();
+}
+
+elseif ($page === 'categoryManagementAjax') {
+
+    requireRole('admin');
+    $admin->showCategoryManagement();
+    exit;
+}
+
+elseif ($page === 'categoryAction') {
+
+    $admin->categoryAction();
 }
 
 elseif ($page === 'customerDashboard') {

@@ -72,6 +72,7 @@ class AuthController
             'role' => $role,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'profile_pic' => $profilePath,
+            'is_active' => $role === 'vendor' ? 0 : 1,
         ]);
 
         if (!$created) {
@@ -79,7 +80,9 @@ class AuthController
             return;
         }
 
-        $_SESSION['success'] = 'Account created successfully. Please log in.';
+        $_SESSION['success'] = $role === 'vendor'
+            ? 'Vendor account submitted. Please wait for admin approval before logging in.'
+            : 'Account created successfully. Please log in.';
         header('Location: /E-Commerce-Store/index.php?page=login');
         exit;
     }
