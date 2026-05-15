@@ -42,7 +42,7 @@ include __DIR__ . '/../layouts/adminHeader.php';
                 <span>Category Management</span>
             </a>
 
-            <a href="#">
+            <a href="#" data-page="/E-Commerce-Store/index.php?page=adminDisputesAjax">
                 <i class="fa-solid fa-gavel"></i>
                 <span>Disputes</span>
             </a>
@@ -84,6 +84,6 @@ include __DIR__ . '/../layouts/adminHeader.php';
 </main>
 
 </section>
-<script src="/E-Commerce-Store/public/js/adminAjax.js?v=category-pagination-1"></script>
+<script src="/E-Commerce-Store/public/js/adminAjax.js?v=admin-dispute-1"></script>
 </body>
 </html>

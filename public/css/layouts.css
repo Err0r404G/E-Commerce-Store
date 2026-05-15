@@ -2139,3 +2139,291 @@ body.modal-open {
         padding-right: 0;
     }
 }
+
+.dispute-page {
+    padding: 30px 34px;
+}
+
+.dispute-header h1 {
+    font-size: 38px;
+    color: #202331;
+    margin-bottom: 10px;
+}
+
+.dispute-header p {
+    color: #4f5565;
+    font-size: 17px;
+    line-height: 1.5;
+}
+
+.dispute-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin: 34px 0;
+}
+
+.dispute-tools {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+}
+
+.dispute-stat-card {
+    height: 86px;
+    background: #fff;
+    border: 1px solid #d4d6dd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 26px;
+}
+
+.dispute-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.dispute-icon.urgent {
+    background: #ffd4cf;
+    color: #e12222;
+}
+
+.dispute-icon.progress {
+    background: #cfe3ff;
+    color: #365c87;
+}
+
+.dispute-icon.resolved {
+    background: #e1e1e4;
+    color: #202331;
+}
+
+.dispute-stat-card p {
+    color: #596783;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dispute-stat-card h2 {
+    color: #202331;
+    font-size: 26px;
+    margin-top: 3px;
+}
+
+.dispute-content {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    background: #fff;
+    border: 1px solid #d4d6dd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dispute-table-box {
+    overflow-x: auto;
+}
+
+.dispute-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dispute-table th,
+.dispute-table td {
+    border-bottom: 1px solid #d4d6dd;
+    padding: 20px 24px;
+    text-align: left;
+    color: #202331;
+}
+
+.dispute-table th {
+    background: #fbf8fc;
+    color: #596783;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.dispute-table td small {
+    display: block;
+    color: #42506b;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.dispute-table tr[data-dispute-row] {
+    cursor: pointer;
+}
+
+.dispute-table tr[data-dispute-row].active td,
+.dispute-table tr[data-dispute-row]:hover td {
+    background: #fbf8fc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+.status-badge.urgent {
+    background: #ffd8d3;
+    color: #e12222;
+}
+
+.status-badge.progress {
+    background: #cfe3ff;
+    color: #425f82;
+}
+
+.status-badge.resolved {
+    background: #dedee2;
+    color: #333;
+}
+
+.dispute-detail {
+    border-left: 1px solid #d4d6dd;
+    padding: 28px 24px;
+}
+
+.detail-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.detail-title h2 {
+    font-size: 26px;
+    color: #202331;
+}
+
+.detail-title i {
+    font-size: 22px;
+    color: #42506b;
+}
+
+.selected-case {
+    margin-top: 28px;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    padding: 16px;
+    background: #fbf8fc;
+}
+
+.selected-case p {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #596783;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.selected-case h4 {
+    color: #172344;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.case-timeline {
+    margin-top: 26px;
+}
+
+.case-timeline h4 {
+    color: #596783;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 15px;
+    width: 2px;
+    height: 38px;
+    background: #cfd3dc;
+}
+
+.timeline-item:last-child::before {
+    display: none;
+}
+
+.timeline-item span {
+    width: 12px;
+    height: 12px;
+    background: #cfd3dc;
+    border-radius: 50%;
+    margin-top: 4px;
+    z-index: 1;
+}
+
+.timeline-item.active span {
+    background: #172344;
+}
+
+.timeline-item strong {
+    color: #202331;
+    font-size: 13px;
+}
+
+.timeline-item p {
+    color: #596783;
+    font-size: 12px;
+}
+
+.detail-actions {
+    border-top: 1px solid #d4d6dd;
+    margin-top: 18px;
+    padding-top: 24px;
+    display: grid;
+    gap: 12px;
+}
+
+.dispute-note-input {
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #202331;
+    font: inherit;
+    min-height: 88px;
+    padding: 12px;
+    resize: vertical;
+}
+
+.detail-actions button {
+    height: 40px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.refund-btn {
+    background: #172344;
+    color: white;
+    border: none;
+}
+
+.deny-btn {
+    background: #fff;
+    color: #e12222;
+    border: 1px solid #e12222;
+}
+
+.info-btn {
+    background: #fff;
+    color: #202331;
+    border: 1px solid #8d929d;
+}
