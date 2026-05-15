@@ -220,6 +220,20 @@ elseif ($page === 'platformCouponAction') {
     exit;
 }
 
+elseif ($page === 'adminSettingsAjax') {
+
+    requireRole('admin');
+    $admin->showSettings();
+    exit;
+}
+
+elseif ($page === 'adminSettingsAction') {
+
+    requireRole('admin');
+    $admin->settingsAction();
+    exit;
+}
+
 elseif ($page === 'disputeAction') {
 
     $admin->disputeAction();

@@ -53,6 +53,11 @@
             <span>Platform Reports</span>
         </a>
 
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=adminSettingsAjax">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </a>
+
     </nav>
 
     <!-- USER -->
@@ -60,12 +65,16 @@
 
         <div class="user-info">
 
-            <div class="user-icon">
-                <i class="fa-regular fa-user"></i>
+            <div class="user-icon" id="adminSidebarAvatar">
+                <?php if (!empty($_SESSION['user']['profile_pic'])): ?>
+                    <img src="/E-Commerce-Store/<?= htmlspecialchars($_SESSION['user']['profile_pic']) ?>" alt="">
+                <?php else: ?>
+                    <i class="fa-regular fa-user"></i>
+                <?php endif; ?>
             </div>
 
             <div>
-                <h4><?= htmlspecialchars($adminName ?? 'Admin') ?></h4>
+                <h4 id="adminSidebarName"><?= htmlspecialchars($adminName ?? 'Admin') ?></h4>
                 <p><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $adminRole ?? 'admin'))) ?></p>
             </div>
 

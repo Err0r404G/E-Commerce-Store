@@ -222,6 +222,100 @@ class AdminController
         include __DIR__ . '/../../views/admin/PlatformCoupons.php';
     }
 
+    public function showSettings(): void
+    {
+        $adminId = (int) ($_SESSION['user']['id'] ?? 0);
+        $profile = $this->adminModel->getAdminProfile($adminId);
+
+        if (!$profile) {
+            http_response_code(404);
+            echo '<p class="admin-error">Admin profile not found.</p>';
+            return;
+        }
+
+        include __DIR__ . '/../../views/admin/AdminSettings.php';
+    }
+
+    public function settingsAction(): void
+    {
+        $this->jsonHeader();
+
+        if (!$this->isAdmin()) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized request.'], 403);
+        }
+
+        $adminId = (int) ($_SESSION['user']['id'] ?? 0);
+        $profile = $this->adminModel->getAdminProfile($adminId);
+
+        if (!$profile) {
+            $this->jsonResponse(['success' => false, 'message' => 'Admin profile not found.'], 404);
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+        $errors = [];
+
+        if ($name === '') {
+            $errors[] = 'Full name is required.';
+        }
+
+        $passwordHash = null;
+        $wantsPasswordChange = $currentPassword !== '' || $newPassword !== '' || $confirmPassword !== '';
+
+        if ($wantsPasswordChange) {
+            if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
+                $errors[] = 'Fill in current password, new password, and confirm password to change password.';
+            } elseif (!password_verify($currentPassword, $profile['password_hash'])) {
+                $errors[] = 'Current password is incorrect.';
+            } elseif (strlen($newPassword) < 6) {
+                $errors[] = 'New password must be at least 6 characters.';
+            } elseif ($newPassword !== $confirmPassword) {
+                $errors[] = 'New password and confirm password do not match.';
+            } else {
+                $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            }
+        }
+
+        $imagePath = null;
+
+        if (!$errors) {
+            $imagePath = $this->uploadAdminImage($errors);
+        }
+
+        if ($errors) {
+            $this->jsonResponse(['success' => false, 'message' => implode(' ', $errors)], 422);
+        }
+
+        $result = $this->adminModel->updateAdminProfile($adminId, [
+            'name' => $name,
+            'phone' => $phone !== '' ? $phone : null,
+            'profile_pic' => $imagePath,
+            'password_hash' => $passwordHash,
+        ]);
+
+        if (!$result['success']) {
+            $this->jsonResponse($result, (int) ($result['status'] ?? 422));
+        }
+
+        $_SESSION['user']['name'] = $name;
+        $_SESSION['user']['phone'] = $phone !== '' ? $phone : null;
+
+        if ($imagePath !== null) {
+            $_SESSION['user']['profile_pic'] = $imagePath;
+        }
+
+        $this->jsonResponse([
+            'success' => true,
+            'message' => 'Settings updated successfully.',
+            'name' => $name,
+            'phone' => $phone !== '' ? $phone : null,
+            'profile_pic' => $imagePath ?? ($_SESSION['user']['profile_pic'] ?? null),
+        ]);
+    }
+
     public function platformCouponAction(): void
     {
         $this->jsonHeader();
@@ -324,5 +418,41 @@ class AdminController
         unset($payload['status']);
         echo json_encode($payload);
         exit;
+    }
+
+    private function uploadAdminImage(array &$errors): ?string
+    {
+        if (empty($_FILES['profile_pic']['name'])) {
+            return null;
+        }
+
+        if ($_FILES['profile_pic']['error'] !== UPLOAD_ERR_OK) {
+            $errors[] = 'Image upload failed.';
+            return null;
+        }
+
+        $allowedTypes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $mimeType = mime_content_type($_FILES['profile_pic']['tmp_name']);
+
+        if (!isset($allowedTypes[$mimeType])) {
+            $errors[] = 'Image must be JPG, PNG, or WEBP.';
+            return null;
+        }
+
+        $uploadDir = __DIR__ . '/../../../public/uploads/profiles';
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $fileName = uniqid('admin_', true) . '.' . $allowedTypes[$mimeType];
+        $targetPath = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file($_FILES['profile_pic']['tmp_name'], $targetPath)) {
+            $errors[] = 'Could not save uploaded image.';
+            return null;
+        }
+
+        return 'public/uploads/profiles/' . $fileName;
     }
 }

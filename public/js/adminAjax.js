@@ -11,6 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function showMessage(element, message, isSuccess) {
+        if (!element) {
+            return;
+        }
+
+        element.hidden = false;
+        element.textContent = message;
+        element.classList.toggle("auth-message-success", isSuccess);
+        element.classList.toggle("auth-message-error", !isSuccess);
+    }
+
     function bindVendorApprovalEvents() {
         const search = document.getElementById("vendorApprovalSearch");
         const modal = document.getElementById("sellerActionModal");
@@ -712,6 +723,83 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function bindAdminSettingsEvents() {
+        const form = document.getElementById("adminSettingsForm");
+        const message = document.getElementById("adminSettingsMessage");
+        const imageInput = document.getElementById("adminProfileImageInput");
+        const imagePreview = document.getElementById("adminProfileImagePreview");
+
+        if (imageInput && imagePreview) {
+            imageInput.addEventListener("change", function () {
+                const file = imageInput.files[0];
+
+                if (!file) {
+                    return;
+                }
+
+                const imageUrl = URL.createObjectURL(file);
+                imagePreview.innerHTML = "";
+
+                const image = document.createElement("img");
+                image.src = imageUrl;
+                image.alt = "";
+                image.onload = () => URL.revokeObjectURL(imageUrl);
+                imagePreview.appendChild(image);
+            });
+        }
+
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const submitButton = form.querySelector("[type='submit']");
+            const formData = new FormData(form);
+
+            submitButton.disabled = true;
+
+            fetch(form.action, {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    showMessage(message, data.message || "Settings updated.", Boolean(data.success));
+
+                    if (!data.success) {
+                        throw new Error(data.message || "Settings update failed.");
+                    }
+
+                    const sidebarName = document.getElementById("adminSidebarName");
+                    const sidebarAvatar = document.getElementById("adminSidebarAvatar");
+
+                    if (sidebarName && data.name) {
+                        sidebarName.textContent = data.name;
+                    }
+
+                    if (sidebarAvatar && data.profile_pic) {
+                        sidebarAvatar.innerHTML = "";
+                        const image = document.createElement("img");
+                        image.src = `/E-Commerce-Store/${data.profile_pic}`;
+                        image.alt = "";
+                        sidebarAvatar.appendChild(image);
+                    }
+
+                    form.querySelectorAll("input[type='password']").forEach(input => {
+                        input.value = "";
+                    });
+                })
+                .catch(error => {
+                    showMessage(message, error.message || "Settings update failed.", false);
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                });
+        });
+    }
+
     function bindAccountManagementEvents() {
         const search = document.getElementById("accountSearch");
         const feedback = document.getElementById("accountFeedback");
@@ -1015,6 +1103,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 bindOrderManagementEvents();
                 bindDisputeEvents();
                 bindPlatformCouponEvents();
+                bindAdminSettingsEvents();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

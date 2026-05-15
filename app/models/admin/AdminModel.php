@@ -696,6 +696,63 @@ class AdminModel
         return ['success' => $success, 'message' => $success ? 'Platform coupon status updated.' : 'Platform coupon not found.'];
     }
 
+    public function getAdminProfile(int $adminId): ?array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT id, name, email, phone, password_hash, role, profile_pic
+             FROM users
+             WHERE id = ? AND role = 'admin'
+             LIMIT 1"
+        );
+        $stmt->bind_param('i', $adminId);
+        $stmt->execute();
+        $profile = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $profile ?: null;
+    }
+
+    public function updateAdminProfile(int $adminId, array $data): array
+    {
+        $profilePic = $data['profile_pic'] ?? null;
+        $passwordHash = $data['password_hash'] ?? null;
+
+        if ($profilePic !== null && $passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?, profile_pic = ?, password_hash = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('ssssi', $data['name'], $data['phone'], $profilePic, $passwordHash, $adminId);
+        } elseif ($profilePic !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?, profile_pic = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('sssi', $data['name'], $data['phone'], $profilePic, $adminId);
+        } elseif ($passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?, password_hash = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('sssi', $data['name'], $data['phone'], $passwordHash, $adminId);
+        } else {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, phone = ?
+                 WHERE id = ? AND role = 'admin'"
+            );
+            $stmt->bind_param('ssi', $data['name'], $data['phone'], $adminId);
+        }
+
+        $success = $stmt->execute();
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $success ? 'Settings updated successfully.' : 'Settings update failed.'];
+    }
+
     private function countSellersWithProducts(): int
     {
         $result = $this->conn->query("SELECT COUNT(DISTINCT seller_id) AS total FROM products");
