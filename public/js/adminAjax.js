@@ -791,6 +791,48 @@ document.addEventListener("DOMContentLoaded", function () {
         filterProducts();
     }
 
+    function bindOrderManagementEvents() {
+        const search = document.getElementById("orderSearch");
+        const statusFilter = document.getElementById("orderStatusFilter");
+        const sellerFilter = document.getElementById("orderSellerFilter");
+        const customerFilter = document.getElementById("orderCustomerFilter");
+        const countText = document.getElementById("orderCountText");
+
+        function filterOrders() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            const status = statusFilter ? statusFilter.value : "";
+            const sellerId = sellerFilter ? sellerFilter.value : "";
+            const customerId = customerFilter ? customerFilter.value : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-order-row]").forEach(row => {
+                const matchesSearch = row.dataset.search.includes(term);
+                const matchesStatus = status === "" || row.dataset.status === status;
+                const matchesSeller = sellerId === "" || row.dataset.sellerIds.includes(`,${sellerId},`);
+                const matchesCustomer = customerId === "" || row.dataset.customerId === customerId;
+                const isVisible = matchesSearch && matchesStatus && matchesSeller && matchesCustomer;
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} order${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        [search, statusFilter, sellerFilter, customerFilter].forEach(control => {
+            if (control) {
+                control.addEventListener("input", filterOrders);
+                control.addEventListener("change", filterOrders);
+            }
+        });
+
+        filterOrders();
+    }
+
     document.addEventListener("keydown", function (e) {
         const modal = document.getElementById("categoryModal");
         const sellerModal = document.getElementById("sellerActionModal");
@@ -838,6 +880,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 bindCategoryManagementEvents();
                 bindAccountManagementEvents();
                 bindProductManagementEvents();
+                bindOrderManagementEvents();
                 bindDisputeEvents();
             })
             .catch(error => {

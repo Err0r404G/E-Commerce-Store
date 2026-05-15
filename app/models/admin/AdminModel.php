@@ -392,6 +392,84 @@ class AdminModel
         ];
     }
 
+    public function getOrderManagementData(): array
+    {
+        $orders = [];
+        $result = $this->conn->query(
+            "SELECT o.id, o.customer_id, o.shipping_address, o.payment_method, o.subtotal,
+                    o.discount_amount, o.total_amount, o.status, o.created_at,
+                    customer.name AS customer_name,
+                    customer.email AS customer_email,
+                    COUNT(oi.id) AS item_count,
+                    COALESCE(SUM(oi.quantity), 0) AS total_quantity,
+                    GROUP_CONCAT(DISTINCT s.id ORDER BY s.shop_name SEPARATOR ',') AS seller_ids,
+                    GROUP_CONCAT(DISTINCT COALESCE(s.shop_name, seller_user.name, 'Unknown seller') ORDER BY s.shop_name SEPARATOR ', ') AS seller_names
+             FROM orders o
+             LEFT JOIN users customer ON customer.id = o.customer_id
+             LEFT JOIN order_items oi ON oi.order_id = o.id
+             LEFT JOIN sellers s ON s.id = oi.seller_id
+             LEFT JOIN users seller_user ON seller_user.id = s.user_id
+             GROUP BY o.id, o.customer_id, o.shipping_address, o.payment_method, o.subtotal,
+                      o.discount_amount, o.total_amount, o.status, o.created_at,
+                      customer.name, customer.email
+             ORDER BY o.created_at DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $orders[] = $row;
+            }
+        }
+
+        $sellers = [];
+        $sellerResult = $this->conn->query(
+            "SELECT DISTINCT s.id, s.shop_name, u.name AS seller_name
+             FROM sellers s
+             INNER JOIN order_items oi ON oi.seller_id = s.id
+             LEFT JOIN users u ON u.id = s.user_id
+             ORDER BY s.shop_name ASC"
+        );
+        if ($sellerResult) {
+            while ($row = $sellerResult->fetch_assoc()) {
+                $sellers[] = $row;
+            }
+        }
+
+        $customers = [];
+        $customerResult = $this->conn->query(
+            "SELECT DISTINCT u.id, u.name, u.email
+             FROM users u
+             INNER JOIN orders o ON o.customer_id = u.id
+             ORDER BY u.name ASC"
+        );
+        if ($customerResult) {
+            while ($row = $customerResult->fetch_assoc()) {
+                $customers[] = $row;
+            }
+        }
+
+        $stats = [
+            'total' => count($orders),
+            'pending' => 0,
+            'processing' => 0,
+            'delivered' => 0,
+            'cancelled' => 0,
+            'revenue' => 0.0,
+        ];
+
+        foreach ($orders as $order) {
+            $status = (string) ($order['status'] ?? '');
+            if (in_array($status, ['pending', 'confirmed', 'processing', 'shipped'], true)) {
+                $stats['processing']++;
+            } elseif (isset($stats[$status])) {
+                $stats[$status]++;
+            }
+            $stats['revenue'] += (float) ($order['total_amount'] ?? 0);
+        }
+
+        return [$orders, $sellers, $customers, $stats];
+    }
+
     public function createCategory(string $name, ?string $description, ?int $parentId): array
     {
         if ($parentId !== null && !$this->isRootCategory($parentId)) {

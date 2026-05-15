@@ -158,6 +158,13 @@ elseif ($page === 'adminProductAction') {
     $admin->productAction();
 }
 
+elseif ($page === 'orderManagementAjax') {
+
+    requireRole('admin');
+    $admin->showOrderManagement();
+    exit;
+}
+
 elseif ($page === 'adminCustomersAjax') {
 
     requireRole('admin');

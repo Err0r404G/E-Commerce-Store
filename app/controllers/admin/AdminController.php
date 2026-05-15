@@ -131,6 +131,12 @@ class AdminController
         $this->jsonResponse($result, (int) ($result['status'] ?? 200));
     }
 
+    public function showOrderManagement(): void
+    {
+        [$orders, $sellers, $customers, $orderStats] = $this->adminModel->getOrderManagementData();
+        include __DIR__ . '/../../views/admin/OrderManagement.php';
+    }
+
     public function showCustomerAccounts(): void
     {
         $role = 'customer';
