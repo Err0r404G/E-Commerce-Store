@@ -440,6 +440,56 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindReturnEvents() {
+        const search = document.getElementById("vendorReturnSearch");
+        const returnsLink = document.querySelector("[data-vendor-page*='vendorReturnsAjax']");
+
+        if (search) {
+            search.addEventListener("input", function () {
+                const term = this.value.trim().toLowerCase();
+
+                document.querySelectorAll("[data-vendor-return-card]").forEach(card => {
+                    card.style.display = term === "" || card.dataset.search.includes(term) ? "" : "none";
+                });
+            });
+        }
+
+        document.querySelectorAll("[data-return-action-form]").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitter = e.submitter;
+                const formData = new FormData(form);
+                formData.append("return_action", submitter ? submitter.value : "");
+
+                if (submitter) {
+                    submitter.disabled = true;
+                }
+
+                fetch("/E-Commerce-Store/index.php?page=vendorReturnAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Return request update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=vendorReturnsAjax", returnsLink);
+                    })
+                    .catch(error => {
+                        alert(error.message || "Return request update failed.");
+
+                        if (submitter) {
+                            submitter.disabled = false;
+                        }
+                    });
+            });
+        });
+    }
+
     function bindAnalyticsEvents() {
         const periodSelect = document.getElementById("vendorAnalyticsPeriod");
 
@@ -473,6 +523,7 @@ document.addEventListener("DOMContentLoaded", function () {
         bindSettingsEvents();
         bindCouponEvents();
         bindOrderEvents();
+        bindReturnEvents();
         bindReviewEvents();
         bindAnalyticsEvents();
         bindEarningsEvents();

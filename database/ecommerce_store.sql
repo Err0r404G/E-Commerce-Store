@@ -212,6 +212,8 @@ CREATE TABLE `return_requests` (
   `customer_id` int(11) NOT NULL,
   `reason` text DEFAULT NULL,
   `status` enum('pending','approved','rejected','completed') DEFAULT 'pending',
+  `vendor_response_reason` text DEFAULT NULL,
+  `responded_at` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

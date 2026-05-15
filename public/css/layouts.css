@@ -1666,6 +1666,134 @@ body {
     font-weight: 700;
 }
 
+.vendor-returns-page {
+    margin: 0 auto;
+    max-width: 1180px;
+}
+
+.vendor-returns-panel {
+    margin-top: 34px;
+}
+
+.vendor-return-search {
+    width: 260px;
+}
+
+.vendor-return-list {
+    display: grid;
+    gap: 16px;
+}
+
+.vendor-return-card {
+    border: 1px solid #e2e5eb;
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.vendor-return-main {
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.vendor-return-main h3 {
+    color: #172344;
+    font-size: 16px;
+    margin: 10px 0 6px;
+}
+
+.vendor-return-main p,
+.vendor-return-customer span,
+.vendor-return-customer small,
+.vendor-return-reasons p {
+    color: #596783;
+    font-size: 13px;
+    margin: 0;
+}
+
+.vendor-return-customer {
+    display: grid;
+    gap: 4px;
+    min-width: 190px;
+    text-align: right;
+}
+
+.vendor-return-customer strong,
+.vendor-return-reasons strong {
+    color: #172344;
+    font-size: 13px;
+}
+
+.vendor-return-reasons {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.vendor-return-reasons div {
+    background: #f8fafc;
+    border-left: 3px solid #172344;
+    border-radius: 4px;
+    padding: 12px;
+}
+
+.vendor-return-form {
+    display: grid;
+    gap: 10px;
+}
+
+.vendor-return-form textarea {
+    background: #fbf9fd;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #1f2937;
+    font: inherit;
+    min-height: 82px;
+    padding: 12px;
+    resize: vertical;
+}
+
+.vendor-return-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.vendor-return-actions button {
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+    height: 34px;
+    padding: 0 14px;
+}
+
+.vendor-return-approve {
+    background: #15803d;
+}
+
+.vendor-return-reject {
+    background: #dc2626;
+}
+
+.return-status.approved {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+}
+
+.return-status.rejected {
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+}
+
+.return-status.completed {
+    background: rgba(79, 70, 229, 0.14);
+    color: #4338ca;
+}
+
 .vendor-reviews-page {
     margin: 0 auto;
     max-width: 1180px;
