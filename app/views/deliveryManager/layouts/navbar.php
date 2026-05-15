@@ -11,7 +11,7 @@
             <span>Manage Agents</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'zones' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryZonesAjax" class="<?= ($activeDeliveryPage ?? '') === 'zones' ? 'active' : '' ?>">
             <i class="fa-solid fa-map-location-dot"></i>
             <span>Manage Zones</span>
         </a>

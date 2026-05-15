@@ -191,9 +191,107 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindZoneEvents() {
+        const form = document.getElementById("deliveryZoneForm");
+        const message = document.getElementById("deliveryZoneMessage");
+        const resetButton = document.getElementById("deliveryZoneReset");
+        const zonesLink = document.querySelector("[data-delivery-page*='deliveryZonesAjax']");
+
+        function resetForm() {
+            if (!form) {
+                return;
+            }
+
+            form.reset();
+            document.getElementById("deliveryZoneId").value = "";
+        }
+
+        function reloadZones() {
+            loadPage("/E-Commerce-Store/index.php?page=deliveryZonesAjax", zonesLink);
+        }
+
+        if (resetButton) {
+            resetButton.addEventListener("click", resetForm);
+        }
+
+        document.querySelectorAll("[data-zone-edit]").forEach(button => {
+            button.addEventListener("click", function () {
+                document.getElementById("deliveryZoneId").value = this.dataset.zoneId || "";
+                document.getElementById("deliveryZoneName").value = this.dataset.zoneName || "";
+                document.getElementById("deliveryZoneFee").value = this.dataset.deliveryFee || "";
+                document.getElementById("deliveryZoneDays").value = this.dataset.estimatedDays || "";
+                form.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+
+        document.querySelectorAll("[data-zone-delete]").forEach(button => {
+            button.addEventListener("click", function () {
+                if (!confirm("Delete this delivery zone?")) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append("zone_action", "delete");
+                formData.append("zone_id", this.dataset.zoneId);
+
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryZoneAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Delivery zone delete failed.");
+                        }
+
+                        reloadZones();
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Delivery zone delete failed.", false);
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const submitButton = form.querySelector("[type='submit']");
+            const formData = new FormData(form);
+
+            submitButton.disabled = true;
+
+            fetch("/E-Commerce-Store/index.php?page=deliveryZoneAction", {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || "Delivery zone save failed.");
+                    }
+
+                    reloadZones();
+                })
+                .catch(error => {
+                    showMessage(message, error.message || "Delivery zone save failed.", false);
+                    submitButton.disabled = false;
+                });
+        });
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
+        bindZoneEvents();
     }
 
     function loadPage(pageUrl, activeLink) {
