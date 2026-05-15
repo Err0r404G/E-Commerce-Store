@@ -216,6 +216,72 @@ class AdminController
         include __DIR__ . '/../../views/admin/AdminDispute.php';
     }
 
+    public function showPlatformCoupons(): void
+    {
+        $coupons = $this->adminModel->getPlatformCoupons();
+        include __DIR__ . '/../../views/admin/PlatformCoupons.php';
+    }
+
+    public function platformCouponAction(): void
+    {
+        $this->jsonHeader();
+
+        if (!$this->isAdmin()) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized request.'], 403);
+        }
+
+        $action = $_POST['coupon_action'] ?? 'save';
+
+        if ($action === 'toggle') {
+            $couponId = (int) ($_POST['coupon_id'] ?? 0);
+
+            if ($couponId <= 0) {
+                $this->jsonResponse(['success' => false, 'message' => 'Invalid coupon.'], 422);
+            }
+
+            $result = $this->adminModel->togglePlatformCoupon($couponId);
+            $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+        }
+
+        $code = strtoupper(trim($_POST['code'] ?? ''));
+        $discountPct = (float) ($_POST['discount_pct'] ?? 0);
+        $maxUses = (int) ($_POST['max_uses'] ?? 0);
+        $validUntil = trim($_POST['valid_until'] ?? '');
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        $errors = [];
+
+        if (!preg_match('/^[A-Z0-9_-]{3,50}$/', $code)) {
+            $errors[] = 'Coupon code must be 3-50 characters using letters, numbers, dashes, or underscores.';
+        }
+
+        if ($discountPct <= 0 || $discountPct > 100) {
+            $errors[] = 'Discount percentage must be between 1 and 100.';
+        }
+
+        if ($maxUses <= 0) {
+            $errors[] = 'Maximum uses must be at least 1.';
+        }
+
+        if ($validUntil === '' || strtotime($validUntil) === false) {
+            $errors[] = 'Valid until date is required.';
+        }
+
+        if ($errors) {
+            $this->jsonResponse(['success' => false, 'message' => implode(' ', $errors)], 422);
+        }
+
+        $result = $this->adminModel->savePlatformCoupon([
+            'coupon_id' => (int) ($_POST['coupon_id'] ?? 0),
+            'code' => $code,
+            'discount_pct' => $discountPct,
+            'max_uses' => $maxUses,
+            'valid_until' => $validUntil,
+            'is_active' => $isActive,
+        ]);
+
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
     public function disputeAction(): void
     {
         $this->jsonHeader();

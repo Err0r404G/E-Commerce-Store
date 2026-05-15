@@ -614,12 +614,112 @@ class AdminModel
         return ['success' => $success, 'message' => $status === 'resolved' ? 'Dispute resolved.' : 'Dispute reopened.'];
     }
 
+    public function getPlatformCoupons(): array
+    {
+        $this->ensurePlatformCouponsTable();
+        $coupons = [];
+        $result = $this->conn->query(
+            "SELECT id, code, discount_pct, max_uses, uses_count, valid_until, is_active, created_at
+             FROM platform_coupons
+             ORDER BY is_active DESC, valid_until DESC, id DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $coupons[] = $row;
+            }
+        }
+
+        return $coupons;
+    }
+
+    public function savePlatformCoupon(array $data): array
+    {
+        $this->ensurePlatformCouponsTable();
+        $couponId = (int) ($data['coupon_id'] ?? 0);
+
+        if ($couponId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE platform_coupons
+                 SET code = ?, discount_pct = ?, max_uses = ?, valid_until = ?, is_active = ?
+                 WHERE id = ?"
+            );
+            $stmt->bind_param(
+                'sdisii',
+                $data['code'],
+                $data['discount_pct'],
+                $data['max_uses'],
+                $data['valid_until'],
+                $data['is_active'],
+                $couponId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO platform_coupons (code, discount_pct, max_uses, valid_until, is_active)
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            $stmt->bind_param(
+                'sdisi',
+                $data['code'],
+                $data['discount_pct'],
+                $data['max_uses'],
+                $data['valid_until'],
+                $data['is_active']
+            );
+        }
+
+        try {
+            $success = $stmt->execute();
+        } catch (mysqli_sql_exception $e) {
+            $stmt->close();
+            return ['success' => false, 'status' => 422, 'message' => 'Coupon code already exists.'];
+        }
+
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $success ? 'Platform coupon saved.' : 'Platform coupon could not be saved.'];
+    }
+
+    public function togglePlatformCoupon(int $couponId): array
+    {
+        $this->ensurePlatformCouponsTable();
+        $stmt = $this->conn->prepare(
+            "UPDATE platform_coupons
+             SET is_active = IF(is_active = 1, 0, 1)
+             WHERE id = ?"
+        );
+        $stmt->bind_param('i', $couponId);
+        $stmt->execute();
+        $success = $stmt->affected_rows > 0;
+        $stmt->close();
+
+        return ['success' => $success, 'message' => $success ? 'Platform coupon status updated.' : 'Platform coupon not found.'];
+    }
+
     private function countSellersWithProducts(): int
     {
         $result = $this->conn->query("SELECT COUNT(DISTINCT seller_id) AS total FROM products");
         $row = $result ? $result->fetch_assoc() : null;
 
         return (int) ($row['total'] ?? 0);
+    }
+
+    private function ensurePlatformCouponsTable(): void
+    {
+        $this->conn->query(
+            "CREATE TABLE IF NOT EXISTS platform_coupons (
+                id int(11) NOT NULL AUTO_INCREMENT,
+                code varchar(50) NOT NULL,
+                discount_pct decimal(5,2) NOT NULL,
+                max_uses int(11) DEFAULT 100,
+                uses_count int(11) DEFAULT 0,
+                valid_until date NOT NULL,
+                is_active tinyint(1) DEFAULT 1,
+                created_at datetime DEFAULT current_timestamp(),
+                PRIMARY KEY (id),
+                UNIQUE KEY code (code)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+        );
     }
 
     private function ensureSellerAccountColumns(): void

@@ -610,6 +610,108 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function bindPlatformCouponEvents() {
+        const form = document.getElementById("platformCouponForm");
+        const resetButton = document.getElementById("platformCouponReset");
+        const feedback = document.getElementById("platformCouponFeedback");
+
+        function setFeedback(message, type = "error") {
+            if (!feedback) {
+                return;
+            }
+
+            feedback.textContent = message;
+            feedback.className = `category-feedback ${type}`;
+            feedback.hidden = message === "";
+        }
+
+        function resetForm() {
+            if (!form) {
+                return;
+            }
+
+            form.reset();
+            document.getElementById("platformCouponId").value = "";
+            document.getElementById("platformCouponActive").checked = true;
+            setFeedback("");
+        }
+
+        if (resetButton) {
+            resetButton.addEventListener("click", resetForm);
+        }
+
+        document.querySelectorAll("[data-platform-coupon-edit]").forEach(button => {
+            button.addEventListener("click", function () {
+                document.getElementById("platformCouponId").value = this.dataset.couponId || "";
+                document.getElementById("platformCouponCode").value = this.dataset.code || "";
+                document.getElementById("platformCouponDiscount").value = this.dataset.discount || "";
+                document.getElementById("platformCouponMaxUses").value = this.dataset.maxUses || "";
+                document.getElementById("platformCouponValidUntil").value = this.dataset.validUntil || "";
+                document.getElementById("platformCouponActive").checked = this.dataset.active === "1";
+                setFeedback("");
+                document.getElementById("platformCouponCode").focus();
+            });
+        });
+
+        document.querySelectorAll("[data-platform-coupon-toggle]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("coupon_action", "toggle");
+                formData.append("coupon_id", this.dataset.couponId || "");
+
+                setFeedback("");
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=platformCouponAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Coupon update failed.");
+                        }
+
+                        loadActivePage();
+                    })
+                    .catch(error => {
+                        setFeedback(error.message || "Coupon update failed.");
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+                setFeedback("");
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=platformCouponAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || "Coupon save failed.");
+                        }
+
+                        loadActivePage();
+                    })
+                    .catch(error => {
+                        setFeedback(error.message || "Coupon save failed.");
+                        submitButton.disabled = false;
+                    });
+            });
+        }
+    }
+
     function bindAccountManagementEvents() {
         const search = document.getElementById("accountSearch");
         const feedback = document.getElementById("accountFeedback");
@@ -912,6 +1014,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 bindProductManagementEvents();
                 bindOrderManagementEvents();
                 bindDisputeEvents();
+                bindPlatformCouponEvents();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

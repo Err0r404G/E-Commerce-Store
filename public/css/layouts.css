@@ -1716,6 +1716,15 @@ body {
     color: #64748b;
 }
 
+.platform-coupons-page .vendor-profile-panel h2 {
+    color: #202331;
+}
+
+.platform-coupons-page .vendor-product-table td:nth-child(2) {
+    color: #596783;
+    font-weight: 700;
+}
+
 .vendor-orders-page {
     margin: 0 auto;
     max-width: 1280px;

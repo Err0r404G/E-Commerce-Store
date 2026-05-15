@@ -43,6 +43,11 @@
             <span>Disputes</span>
         </a>
 
+        <a href="#" data-page="/E-Commerce-Store/index.php?page=platformCouponsAjax">
+            <i class="fa-solid fa-ticket"></i>
+            <span>Platform Coupons</span>
+        </a>
+
         <a href="#">
             <i class="fa-solid fa-chart-column"></i>
             <span>Platform Reports</span>

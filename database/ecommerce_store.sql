@@ -153,6 +153,23 @@ CREATE TABLE `orders` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `platform_coupons`
+--
+
+CREATE TABLE `platform_coupons` (
+  `id` int(11) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `discount_pct` decimal(5,2) NOT NULL,
+  `max_uses` int(11) DEFAULT 100,
+  `uses_count` int(11) DEFAULT 0,
+  `valid_until` date NOT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `order_items`
 --
 
@@ -357,6 +374,13 @@ ALTER TABLE `orders`
   ADD KEY `idx_orders_customer` (`customer_id`);
 
 --
+-- Indexes for table `platform_coupons`
+--
+ALTER TABLE `platform_coupons`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
+
+--
 -- Indexes for table `order_items`
 --
 ALTER TABLE `order_items`
@@ -465,6 +489,12 @@ ALTER TABLE `disputes`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `platform_coupons`
+--
+ALTER TABLE `platform_coupons`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

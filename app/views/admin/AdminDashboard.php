@@ -29,6 +29,6 @@ include __DIR__ . '/layouts/header.php';
 
 </main>
 </section>
-<script src="/E-Commerce-Store/public/js/adminAjax.js?v=order-date-removed-1"></script>
+<script src="/E-Commerce-Store/public/js/adminAjax.js?v=platform-coupons-1"></script>
 </body>
 </html>

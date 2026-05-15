@@ -206,6 +206,20 @@ elseif ($page === 'adminDisputesAjax') {
     exit;
 }
 
+elseif ($page === 'platformCouponsAjax') {
+
+    requireRole('admin');
+    $admin->showPlatformCoupons();
+    exit;
+}
+
+elseif ($page === 'platformCouponAction') {
+
+    requireRole('admin');
+    $admin->platformCouponAction();
+    exit;
+}
+
 elseif ($page === 'disputeAction') {
 
     $admin->disputeAction();
