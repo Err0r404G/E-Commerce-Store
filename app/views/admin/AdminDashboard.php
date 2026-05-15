@@ -17,75 +17,17 @@ $currentUser = $_SESSION['user'];
 $adminName = $currentUser['name'];
 $adminRole = $currentUser['role'];
 
-include __DIR__ . '/../layouts/adminHeader.php';
+include __DIR__ . '/layouts/header.php';
 ?>
-
-<link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css">
 
 <section class="admin-layout">
 
-    <aside class="admin-sidebar">
+    <?php include __DIR__ . '/layouts/navbar.php'; ?>
 
-        <!-- MENU -->
-        <nav class="admin-menu">
+<main class="admin-content" id="adminContent">
 
-            <a href="#" class="active">
-                <i class="fa-solid fa-table-cells-large"></i>
-                <span>Dashboard</span>
-            </a>
-
-            <a href="#">
-                <i class="fa-solid fa-user-check"></i>
-                <span>Vendor Approvals</span>
-            </a>
-
-            <a href="#">
-                <i class="fa-solid fa-shapes"></i>
-                <span>Category Management</span>
-            </a>
-
-            <a href="#">
-                <i class="fa-solid fa-gavel"></i>
-                <span>Disputes</span>
-            </a>
-
-            <a href="#">
-                <i class="fa-solid fa-chart-column"></i>
-                <span>Platform Reports</span>
-            </a>
-
-        </nav>
-
-        <!-- USER -->
-        <div class="admin-user-box">
-
-            <div class="user-info">
-
-                <div class="user-icon">
-                    <i class="fa-regular fa-user"></i>
-                </div>
-
-                <div>
-                    <h4><?= htmlspecialchars($adminName) ?></h4>
-                    <p><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $adminRole))) ?></p>
-                </div>
-
-            </div>
-
-            <a href="/E-Commerce-Store/index.php?page=logout" class="logout">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span>Log Out</span>
-            </a>
-
-        </div>
-
-    </aside>
-
-    <main class="admin-content">
-
-    </main>
-
+</main>
 </section>
-
+<script src="/E-Commerce-Store/public/js/adminAjax.js?v=admin-dispute-1"></script>
 </body>
 </html>
