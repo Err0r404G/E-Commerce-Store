@@ -6,7 +6,7 @@
     <title>NexusCommerce</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css?v=category-pagination-2">
+    <link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css?v=admin-dispute-1">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
