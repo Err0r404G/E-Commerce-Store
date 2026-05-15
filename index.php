@@ -1,11 +1,13 @@
 <?php
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/E-Commerce-Store',
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/E-Commerce-Store',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
 
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/app/views/auth/control/AuthController.php';
@@ -27,6 +29,10 @@ function dashboardUrlForRole(string $role): string
 
     if ($role === 'vendor') {
         return '/E-Commerce-Store/index.php?page=vendorDashboard';
+    }
+
+    if ($role === 'customer') {
+        return '/E-Commerce-Store/customer.php';
     }
 
     return '/E-Commerce-Store/index.php';
@@ -120,6 +126,13 @@ elseif ($page === 'vendorApprovalsAjax') {
     exit;
 }
 
+elseif ($page === 'adminDashboardAjax') {
+
+    requireRole('admin');
+    $admin->showDashboardHome();
+    exit;
+}
+
 elseif ($page === 'vendorApprovalAction') {
 
     $admin->vendorApprovalAction();
@@ -135,6 +148,49 @@ elseif ($page === 'categoryManagementAjax') {
 elseif ($page === 'categoryAction') {
 
     $admin->categoryAction();
+}
+
+elseif ($page === 'productManagementAjax') {
+
+    requireRole('admin');
+    $admin->showProductManagement();
+    exit;
+}
+
+elseif ($page === 'adminProductAction') {
+
+    $admin->productAction();
+}
+
+elseif ($page === 'orderManagementAjax') {
+
+    requireRole('admin');
+    $admin->showOrderManagement();
+    exit;
+}
+
+elseif ($page === 'adminCustomersAjax') {
+
+    requireRole('admin');
+    $admin->showCustomerAccounts();
+    exit;
+}
+
+elseif ($page === 'adminDeliveryManagersAjax') {
+
+    requireRole('admin');
+    $admin->showDeliveryManagerAccounts();
+    exit;
+}
+
+elseif ($page === 'adminAccountAction') {
+
+    $admin->accountAction();
+}
+
+elseif ($page === 'createDeliveryManagerAction') {
+
+    $admin->createDeliveryManagerAction();
 }
 
 elseif ($page === 'adminDisputesAjax') {
