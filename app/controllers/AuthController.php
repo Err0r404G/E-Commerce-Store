@@ -190,6 +190,10 @@ class AuthController
             return '/E-Commerce-Store/index.php?page=vendorDashboard';
         }
 
+        if ($role === 'customer') {
+            return '/E-Commerce-Store/customer.php';
+        }
+
         return '/E-Commerce-Store/index.php';
     }
 }

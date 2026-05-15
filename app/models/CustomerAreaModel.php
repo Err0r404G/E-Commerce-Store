@@ -438,7 +438,12 @@ class CustomerAreaModel
 
     private function tableExists(string $table): bool
     {
-        $stmt = $this->conn->prepare("SHOW TABLES LIKE ?");
+        $stmt = $this->conn->prepare(
+            "SELECT 1
+             FROM information_schema.tables
+             WHERE table_schema = DATABASE() AND table_name = ?
+             LIMIT 1"
+        );
         $stmt->bind_param('s', $table);
         $stmt->execute();
         $exists = (bool) $stmt->get_result()->fetch_row();
