@@ -2216,9 +2216,48 @@ body {
     resize: vertical;
 }
 
+.seller-action-form input {
+    border: 1px solid #cfd2dc;
+    border-radius: 4px;
+    color: #202331;
+    font: inherit;
+    height: 38px;
+    outline: none;
+    padding: 0 12px;
+}
+
 .seller-action-buttons {
     margin-top: 18px;
     padding-right: 0;
+}
+
+.account-create-modal {
+    width: min(100%, 560px);
+}
+
+.account-create-form {
+    display: grid;
+    gap: 14px;
+}
+
+.account-management-page .page-header p,
+.account-subtitle {
+    color: #596070;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.account-stats-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.account-table td {
+    vertical-align: middle;
+}
+
+.account-table .approve-btn,
+.account-table .reject-btn {
+    min-width: 108px;
 }
 
 .empty-cell,
@@ -2361,7 +2400,8 @@ body {
 
 .category-form button:disabled,
 .edit-category:disabled,
-.delete-category:disabled {
+.delete-category:disabled,
+.add-subcategory:disabled {
     cursor: wait;
     opacity: 0.65;
 }
@@ -2442,6 +2482,23 @@ body {
 .category-summary-header h2 {
     font-size: 22px;
     color: #172344;
+}
+
+.category-feedback {
+    border-top: 1px solid #d4d6dd;
+    color: #92400e;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px 20px;
+}
+
+.category-feedback.error {
+    background: #fff7ed;
+}
+
+.category-feedback.success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
 }
 
 .summary-actions {
@@ -2612,8 +2669,13 @@ body {
     vertical-align: middle;
 }
 
+.category-actions-cell {
+    white-space: nowrap;
+}
+
 .edit-category,
-.delete-category {
+.delete-category,
+.add-subcategory {
     border: none;
     background: transparent;
     font-size: 16px;
@@ -2625,8 +2687,17 @@ body {
     color: #172344;
 }
 
+.add-subcategory {
+    color: #15803d;
+}
+
 .delete-category {
     color: #e00000;
+}
+
+.delete-category:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
 }
 
 .category-products-card {
@@ -2954,6 +3025,11 @@ body.modal-open {
 .modal-create-btn:disabled {
     cursor: wait;
     opacity: 0.65;
+}
+
+.modal-create-btn.danger-action {
+    background: #b91c1c;
+    border-color: #b91c1c;
 }
 
 .seller-action-modal-backdrop {
