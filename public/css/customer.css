@@ -351,6 +351,20 @@ input, select, textarea, button {
     gap: 12px;
 }
 
+.compact-form {
+    margin-top: 16px;
+}
+
+.address-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.address-form textarea,
+.address-form .check-row,
+.address-form button {
+    grid-column: 1 / -1;
+}
+
 .filter-panel label, .purchase-form label {
     color: var(--muted);
     font-size: 13px;
@@ -532,6 +546,23 @@ textarea {
     background: #f7faff;
 }
 
+.address-card details {
+    margin-top: 14px;
+}
+
+.address-card summary {
+    cursor: pointer;
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.address-actions, .confirmation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
 .cart-list {
     display: grid;
     gap: 16px;
@@ -659,6 +690,10 @@ th {
     margin-top: 10px;
 }
 
+.review-delete-form {
+    margin-top: 8px;
+}
+
 .profile-card {
     text-align: center;
 }
@@ -674,6 +709,11 @@ th {
     color: #fff;
     font-size: 42px;
     font-weight: 800;
+}
+
+.image-avatar {
+    display: block;
+    object-fit: cover;
 }
 
 .customer-footer {
@@ -750,8 +790,14 @@ th {
         grid-template-columns: 1fr;
     }
 
-    .inline-form {
+    .inline-form, .address-form {
         grid-template-columns: 1fr;
+    }
+
+    .address-form textarea,
+    .address-form .check-row,
+    .address-form button {
+        grid-column: auto;
     }
 
     .customer-footer {
