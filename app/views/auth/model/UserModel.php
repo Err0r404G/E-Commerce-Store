@@ -42,6 +42,23 @@ class UserModel
         return $profile ?: null;
     }
 
+    public function findDeliveryManagerProfile(int $userId): ?array
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT id, name, email, phone, password_hash, role, profile_pic
+             FROM users
+             WHERE id = ? AND role = 'delivery_manager'
+             LIMIT 1"
+        );
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+
+        $profile = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $profile ?: null;
+    }
+
     public function findSellerByUserId(int $userId): ?array
     {
         $stmt = $this->conn->prepare("SELECT * FROM sellers WHERE user_id = ? LIMIT 1");
@@ -749,6 +766,47 @@ class UserModel
 
         $this->conn->commit();
         return true;
+    }
+
+    public function updateDeliveryManagerProfile(int $userId, array $data): bool
+    {
+        $profilePic = $data['profile_pic'] ?? null;
+        $passwordHash = $data['password_hash'] ?? null;
+
+        if ($profilePic !== null && $passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?, profile_pic = ?, password_hash = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("sssssi", $data['name'], $data['email'], $data['phone'], $profilePic, $passwordHash, $userId);
+        } elseif ($profilePic !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?, profile_pic = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("ssssi", $data['name'], $data['email'], $data['phone'], $profilePic, $userId);
+        } elseif ($passwordHash !== null) {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?, password_hash = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("ssssi", $data['name'], $data['email'], $data['phone'], $passwordHash, $userId);
+        } else {
+            $stmt = $this->conn->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, phone = ?
+                 WHERE id = ? AND role = 'delivery_manager'"
+            );
+            $stmt->bind_param("sssi", $data['name'], $data['email'], $data['phone'], $userId);
+        }
+
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
     }
 
     public function create(array $data): bool

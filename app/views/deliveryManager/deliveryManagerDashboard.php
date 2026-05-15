@@ -25,7 +25,7 @@ include __DIR__ . '/layouts/header.php';
 <section class="admin-layout delivery-manager-layout">
     <?php include __DIR__ . '/layouts/navbar.php'; ?>
 
-    <main class="admin-content delivery-manager-content">
+    <main class="admin-content delivery-manager-content" id="deliveryManagerContent">
         <section class="delivery-manager-dashboard-page">
             <div class="page-header">
                 <h1>Delivery Dashboard</h1>
@@ -91,4 +91,5 @@ include __DIR__ . '/layouts/header.php';
     </main>
 </section>
 
+<script src="/E-Commerce-Store/public/js/deliveryManagerAjax.js?v=delivery-manager-ajax-1"></script>
 <?php include __DIR__ . '/layouts/footer.php'; ?>
