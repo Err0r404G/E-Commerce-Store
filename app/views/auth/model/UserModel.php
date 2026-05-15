@@ -191,6 +191,109 @@ class UserModel
         return $deleted;
     }
 
+    public function getVendorCoupons(int $sellerId): array
+    {
+        $coupons = [];
+        $stmt = $this->conn->prepare(
+            "SELECT id, code, discount_pct, max_uses, uses_count, valid_until, is_active
+             FROM coupons
+             WHERE seller_id = ?
+             ORDER BY valid_until DESC, id DESC"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $coupons[] = $row;
+        }
+
+        $stmt->close();
+        return $coupons;
+    }
+
+    public function saveVendorCoupon(int $sellerId, array $data): bool
+    {
+        $couponId = (int) ($data['coupon_id'] ?? 0);
+
+        if ($couponId > 0) {
+            $stmt = $this->conn->prepare(
+                "UPDATE coupons
+                 SET code = ?, discount_pct = ?, max_uses = ?, valid_until = ?, is_active = ?
+                 WHERE id = ? AND seller_id = ?"
+            );
+            $stmt->bind_param(
+                "sdisiii",
+                $data['code'],
+                $data['discount_pct'],
+                $data['max_uses'],
+                $data['valid_until'],
+                $data['is_active'],
+                $couponId,
+                $sellerId
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO coupons (seller_id, code, discount_pct, max_uses, valid_until, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->bind_param(
+                "isdisi",
+                $sellerId,
+                $data['code'],
+                $data['discount_pct'],
+                $data['max_uses'],
+                $data['valid_until'],
+                $data['is_active']
+            );
+        }
+
+        $saved = $stmt->execute();
+        $stmt->close();
+
+        return $saved;
+    }
+
+    public function toggleVendorCoupon(int $sellerId, int $couponId): bool
+    {
+        $stmt = $this->conn->prepare(
+            "UPDATE coupons
+             SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END
+             WHERE id = ? AND seller_id = ?"
+        );
+        $stmt->bind_param("ii", $couponId, $sellerId);
+        $updated = $stmt->execute();
+        $stmt->close();
+
+        return $updated;
+    }
+
+    public function getVendorOrderItems(int $sellerId): array
+    {
+        $orders = [];
+        $stmt = $this->conn->prepare(
+            "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status,
+                    p.name AS product_name, o.shipping_address, o.payment_method, o.created_at,
+                    u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+             FROM order_items oi
+             INNER JOIN products p ON p.id = oi.product_id
+             INNER JOIN orders o ON o.id = oi.order_id
+             INNER JOIN users u ON u.id = o.customer_id
+             WHERE oi.seller_id = ?
+             ORDER BY o.created_at DESC, oi.id DESC"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+
+        $stmt->close();
+        return $orders;
+    }
+
     public function emailExistsForAnotherUser(string $email, int $userId): bool
     {
         $stmt = $this->conn->prepare("SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1");
