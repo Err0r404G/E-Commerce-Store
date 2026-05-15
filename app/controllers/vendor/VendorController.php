@@ -14,6 +14,7 @@ class VendorController
     public function showProfile(array $errors = [], array $success = [], ?array $profileOverride = null): void
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);
+        $this->users->ensureSellerForVendor($vendorId);
         $profile = $profileOverride ?? $this->users->findVendorProfile($vendorId);
 
         if (!$profile) {
@@ -27,6 +28,7 @@ class VendorController
     public function updateProfile(): void
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);
+        $this->users->ensureSellerForVendor($vendorId);
         $profile = $this->users->findVendorProfile($vendorId);
 
         if (!$profile) {
@@ -133,6 +135,7 @@ class VendorController
     public function showSettingsAjax(): void
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);
+        $this->users->ensureSellerForVendor($vendorId);
         $profile = $this->users->findVendorProfile($vendorId);
         $errors = [];
         $success = [];
@@ -480,6 +483,7 @@ class VendorController
     private function saveProfileFromRequest(): array
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);
+        $this->users->ensureSellerForVendor($vendorId);
         $profile = $this->users->findVendorProfile($vendorId);
 
         if (!$profile) {
@@ -570,11 +574,11 @@ class VendorController
     private function requireSeller(): array
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);
-        $seller = $this->users->findSellerByUserId($vendorId);
+        $seller = $this->users->ensureSellerForVendor($vendorId);
 
         if (!$seller) {
             http_response_code(403);
-            exit('Seller profile not found.');
+            exit('<p class="admin-error">Seller profile not found. Please contact admin support.</p>');
         }
 
         return $seller;
