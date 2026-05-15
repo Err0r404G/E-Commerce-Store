@@ -20,8 +20,6 @@ $adminRole = $currentUser['role'];
 include __DIR__ . '/../layouts/adminHeader.php';
 ?>
 
-<link rel="stylesheet" href="/E-Commerce-Store/public/css/layouts.css">
-
 <section class="admin-layout">
 
     <aside class="admin-sidebar">
@@ -34,12 +32,12 @@ include __DIR__ . '/../layouts/adminHeader.php';
                 <span>Dashboard</span>
             </a>
 
-            <a href="#">
+            <a href="#" data-page="/E-Commerce-Store/index.php?page=vendorApprovalsAjax">
                 <i class="fa-solid fa-user-check"></i>
                 <span>Vendor Approvals</span>
             </a>
 
-            <a href="#">
+            <a href="#" data-page="/E-Commerce-Store/index.php?page=categoryManagementAjax">
                 <i class="fa-solid fa-shapes"></i>
                 <span>Category Management</span>
             </a>
@@ -81,11 +79,11 @@ include __DIR__ . '/../layouts/adminHeader.php';
 
     </aside>
 
-    <main class="admin-content">
+<main class="admin-content" id="adminContent">
 
-    </main>
+</main>
 
 </section>
-
+<script src="/E-Commerce-Store/public/js/adminAjax.js"></script>
 </body>
 </html>
