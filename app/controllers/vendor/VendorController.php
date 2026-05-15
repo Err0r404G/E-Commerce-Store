@@ -169,6 +169,14 @@ class VendorController
         require __DIR__ . '/../../views/vendor/partials/orders.php';
     }
 
+    public function showReturnsAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $returnRequests = $this->users->getVendorReturnRequests((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/partials/returns.php';
+    }
+
     public function showReviewsAjax(): void
     {
         $seller = $this->requireSeller();
@@ -355,6 +363,32 @@ class VendorController
         }
 
         $this->jsonResponse(['success' => false, 'message' => 'Invalid order action.'], 422);
+    }
+
+    public function returnAction(): void
+    {
+        $seller = $this->requireSeller();
+        $action = $_POST['return_action'] ?? '';
+        $returnRequestId = (int) ($_POST['return_request_id'] ?? 0);
+        $reason = trim($_POST['vendor_response_reason'] ?? '');
+
+        if ($returnRequestId <= 0 || !in_array($action, ['approve', 'reject'], true)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid return request.'], 422);
+            return;
+        }
+
+        if ($reason === '') {
+            $this->jsonResponse(['success' => false, 'message' => 'Please add a reason for this decision.'], 422);
+            return;
+        }
+
+        $status = $action === 'approve' ? 'approved' : 'rejected';
+        $updated = $this->users->updateVendorReturnRequest((int) $seller['id'], $returnRequestId, $status, $reason);
+        $message = $updated
+            ? 'Return request ' . $status . '.'
+            : 'Return request could not be updated.';
+
+        $this->jsonResponse(['success' => $updated, 'message' => $message], $updated ? 200 : 422);
     }
 
     public function reviewAction(): void

@@ -325,6 +325,57 @@ class UserModel
         return $updated;
     }
 
+    public function getVendorReturnRequests(int $sellerId): array
+    {
+        $this->ensureReturnRequestResponseColumns();
+
+        $requests = [];
+        $stmt = $this->conn->prepare(
+            "SELECT rr.id AS return_request_id, rr.order_id, rr.order_item_id, rr.customer_id,
+                    rr.reason AS customer_reason, rr.status, rr.vendor_response_reason, rr.responded_at, rr.created_at,
+                    oi.quantity, oi.unit_price, oi.item_status,
+                    p.name AS product_name,
+                    u.name AS customer_name, u.email AS customer_email
+             FROM return_requests rr
+             INNER JOIN order_items oi ON oi.id = rr.order_item_id
+             INNER JOIN products p ON p.id = oi.product_id
+             INNER JOIN users u ON u.id = rr.customer_id
+             WHERE oi.seller_id = ?
+             ORDER BY FIELD(rr.status, 'pending', 'approved', 'rejected', 'completed'), rr.created_at DESC, rr.id DESC"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $requests[] = $row;
+        }
+
+        $stmt->close();
+        return $requests;
+    }
+
+    public function updateVendorReturnRequest(int $sellerId, int $returnRequestId, string $status, string $vendorReason): bool
+    {
+        $this->ensureReturnRequestResponseColumns();
+
+        if (!in_array($status, ['approved', 'rejected'], true)) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare(
+            "UPDATE return_requests rr
+             INNER JOIN order_items oi ON oi.id = rr.order_item_id
+             SET rr.status = ?, rr.vendor_response_reason = ?, rr.responded_at = NOW()
+             WHERE rr.id = ? AND oi.seller_id = ? AND rr.status = 'pending'"
+        );
+        $stmt->bind_param("ssii", $status, $vendorReason, $returnRequestId, $sellerId);
+        $updated = $stmt->execute() && $stmt->affected_rows > 0;
+        $stmt->close();
+
+        return $updated;
+    }
+
     public function getVendorReviews(int $sellerId): array
     {
         $reviews = [];
@@ -561,6 +612,21 @@ class UserModel
         }
 
         $this->conn->query("ALTER TABLE order_items ADD tracking_note text DEFAULT NULL AFTER item_status");
+    }
+
+    private function ensureReturnRequestResponseColumns(): void
+    {
+        $reasonColumn = $this->conn->query("SHOW COLUMNS FROM return_requests LIKE 'vendor_response_reason'");
+
+        if (!$reasonColumn || $reasonColumn->num_rows === 0) {
+            $this->conn->query("ALTER TABLE return_requests ADD vendor_response_reason text DEFAULT NULL AFTER status");
+        }
+
+        $respondedAtColumn = $this->conn->query("SHOW COLUMNS FROM return_requests LIKE 'responded_at'");
+
+        if (!$respondedAtColumn || $respondedAtColumn->num_rows === 0) {
+            $this->conn->query("ALTER TABLE return_requests ADD responded_at datetime DEFAULT NULL AFTER vendor_response_reason");
+        }
     }
 
     public function emailExistsForAnotherUser(string $email, int $userId): bool

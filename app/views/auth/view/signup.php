@@ -127,14 +127,7 @@ include __DIR__ . '/../../layouts/header.php';
     const vendorFields = document.getElementById('vendorFields');
     const profileUploadLabel = document.getElementById('profileUploadLabel');
 
-    function syncVendorFields() {
-        const isVendor = vendorRadio.checked;
-        vendorFields.hidden = !isVendor;
-        profileUploadLabel.textContent = isVendor ? 'SHOP LOGO' : 'PROFILE PICTURE';
-        vendorFields.querySelectorAll('input, textarea').forEach((field) => {
-            field.required = isVendor;
-        });
-    }
+   
 
     vendorRadio.addEventListener('change', syncVendorFields);
     customerRadio.addEventListener('change', syncVendorFields);

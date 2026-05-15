@@ -16,6 +16,11 @@
             <span>Orders</span>
         </a>
 
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorReturnsAjax">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Returns</span>
+        </a>
+
         <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorCouponsAjax">
             <i class="fa-solid fa-ticket"></i>
             <span>Promo Codes</span>
