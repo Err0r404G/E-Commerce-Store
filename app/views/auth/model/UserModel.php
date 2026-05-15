@@ -352,6 +352,103 @@ class UserModel
         return $updated;
     }
 
+    public function getVendorAnalytics(int $sellerId): array
+    {
+        $summary = [
+            'total_revenue' => 0,
+            'order_volume' => 0,
+            'average_order_value' => 0,
+        ];
+
+        $stmt = $this->conn->prepare(
+            "SELECT COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_revenue,
+                    COUNT(DISTINCT oi.order_id) AS order_volume
+             FROM order_items oi
+             WHERE oi.seller_id = ?"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($row) {
+            $summary['total_revenue'] = (float) $row['total_revenue'];
+            $summary['order_volume'] = (int) $row['order_volume'];
+            $summary['average_order_value'] = $summary['order_volume'] > 0
+                ? $summary['total_revenue'] / $summary['order_volume']
+                : 0;
+        }
+
+        $topProducts = [];
+        $stmt = $this->conn->prepare(
+            "SELECT p.name, SUM(oi.quantity) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue
+             FROM order_items oi
+             INNER JOIN products p ON p.id = oi.product_id
+             WHERE oi.seller_id = ?
+             GROUP BY p.id, p.name
+             ORDER BY units_sold DESC, revenue DESC
+             LIMIT 5"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $topProducts[] = $row;
+        }
+        $stmt->close();
+
+        return [
+            'summary' => $summary,
+            'top_products' => $topProducts,
+            'periods' => [
+                'day' => $this->getVendorAnalyticsPeriod($sellerId, 'day'),
+                'week' => $this->getVendorAnalyticsPeriod($sellerId, 'week'),
+                'month' => $this->getVendorAnalyticsPeriod($sellerId, 'month'),
+            ],
+        ];
+    }
+
+    private function getVendorAnalyticsPeriod(int $sellerId, string $period): array
+    {
+        $formats = [
+            'day' => "%Y-%m-%d",
+            'week' => "%x-W%v",
+            'month' => "%Y-%m",
+        ];
+        $format = $formats[$period] ?? $formats['day'];
+        $rows = [];
+
+        $stmt = $this->conn->prepare(
+            "SELECT DATE_FORMAT(o.created_at, '$format') AS period_label,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue,
+                    COUNT(DISTINCT oi.order_id) AS order_volume
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             WHERE oi.seller_id = ?
+             GROUP BY period_label
+             ORDER BY period_label DESC
+             LIMIT 12"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $orderVolume = (int) $row['order_volume'];
+            $revenue = (float) $row['revenue'];
+            $rows[] = [
+                'period_label' => $row['period_label'],
+                'revenue' => $revenue,
+                'order_volume' => $orderVolume,
+                'average_order_value' => $orderVolume > 0 ? $revenue / $orderVolume : 0,
+            ];
+        }
+
+        $stmt->close();
+        return $rows;
+    }
+
     private function ensureOrderItemTrackingNoteColumn(): void
     {
         $result = $this->conn->query("SHOW COLUMNS FROM order_items LIKE 'tracking_note'");

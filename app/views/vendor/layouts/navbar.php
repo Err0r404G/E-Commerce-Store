@@ -26,7 +26,7 @@
             <span>Reviews</span>
         </a>
 
-        <a href="#">
+        <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorAnalyticsAjax">
             <i class="fa-regular fa-chart-bar"></i>
             <span>Analytics</span>
         </a>

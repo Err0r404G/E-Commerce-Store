@@ -414,12 +414,27 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindAnalyticsEvents() {
+        const periodSelect = document.getElementById("vendorAnalyticsPeriod");
+
+        if (!periodSelect) {
+            return;
+        }
+
+        periodSelect.addEventListener("change", function () {
+            document.querySelectorAll("[data-analytics-period]").forEach(panel => {
+                panel.hidden = panel.dataset.analyticsPeriod !== this.value;
+            });
+        });
+    }
+
     function bindLoadedPage() {
         bindInventoryEvents();
         bindSettingsEvents();
         bindCouponEvents();
         bindOrderEvents();
         bindReviewEvents();
+        bindAnalyticsEvents();
     }
 
     function loadPage(pageUrl, activeLink) {
