@@ -51,6 +51,8 @@ class AdminModel
 
     public function getDashboardMetrics(): array
     {
+        $this->ensurePlatformCouponsTable();
+
         $usersByRole = [
             'admin' => 0,
             'customer' => 0,
@@ -88,12 +90,33 @@ class AdminModel
         );
         $monthlyRevenue = (float) (($monthlyRevenueResult ? $monthlyRevenueResult->fetch_assoc() : null)['total'] ?? 0);
 
+        $totalCategories = $this->countRows('categories');
+        $totalProducts = $this->countRows('products');
+        $activeProducts = $this->countRows('products', "is_available = 1");
+        $lowStockProducts = $this->countRows('products', "stock_qty <= 5");
+        $unresolvedDisputes = $this->countRows('disputes', "status <> 'resolved'");
+        $activeCoupons = $this->countRows(
+            'platform_coupons',
+            "is_active = 1 AND valid_until >= CURDATE() AND uses_count < max_uses"
+        );
+
+        $reportSummary = $this->getReportSalesSummary(date('Y-m-01'), date('Y-m-d', strtotime('first day of next month')));
+        $deliverySummary = $this->getDeliveryPerformanceOverview(date('Y-m-01'), date('Y-m-d', strtotime('first day of next month')));
+
         return [
             'users_by_role' => $usersByRole,
             'total_users' => array_sum($usersByRole),
             'active_sellers' => $activeSellers,
             'orders_today' => $ordersToday,
             'monthly_revenue' => $monthlyRevenue,
+            'total_categories' => $totalCategories,
+            'total_products' => $totalProducts,
+            'active_products' => $activeProducts,
+            'low_stock_products' => $lowStockProducts,
+            'unresolved_disputes' => $unresolvedDisputes,
+            'active_coupons' => $activeCoupons,
+            'report_summary' => $reportSummary,
+            'delivery_summary' => $deliverySummary,
         ];
     }
 
@@ -940,6 +963,26 @@ class AdminModel
     private function countSellersWithProducts(): int
     {
         $result = $this->conn->query("SELECT COUNT(DISTINCT seller_id) AS total FROM products");
+        $row = $result ? $result->fetch_assoc() : null;
+
+        return (int) ($row['total'] ?? 0);
+    }
+
+    private function countRows(string $table, string $where = ''): int
+    {
+        $allowedTables = ['categories', 'products', 'disputes', 'platform_coupons'];
+
+        if (!in_array($table, $allowedTables, true)) {
+            return 0;
+        }
+
+        $sql = "SELECT COUNT(*) AS total FROM {$table}";
+
+        if ($where !== '') {
+            $sql .= " WHERE {$where}";
+        }
+
+        $result = $this->conn->query($sql);
         $row = $result ? $result->fetch_assoc() : null;
 
         return (int) ($row['total'] ?? 0);
