@@ -79,7 +79,7 @@
                                 <td><?= htmlspecialchars(date('M d, Y', strtotime($coupon['valid_until']))) ?></td>
                                 <td>
                                     <span class="approval-status <?= (int) $coupon['is_active'] === 1 ? 'approved' : 'pending' ?>">
-                                        <?= (int) $coupon['is_active'] === 1 ? 'Active' : 'Inactive' ?>
+                                         <?= (int) $coupon['is_active'] === 1 ? 'Active' : 'Inactive' ?>
                                     </span>
                                 </td>
                                 <td>
