@@ -70,9 +70,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const sidebarName = document.getElementById("deliverySidebarName");
                     const sidebarLogo = document.getElementById("deliverySidebarLogo");
+                    const settingsProfileName = document.getElementById("deliverySettingsProfileName");
 
                     if (sidebarName && data.name) {
                         sidebarName.textContent = data.name;
+                    }
+
+                    if (settingsProfileName && data.name) {
+                        settingsProfileName.textContent = data.name;
                     }
 
                     if (sidebarLogo && data.profile_pic) {

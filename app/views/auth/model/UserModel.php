@@ -45,7 +45,7 @@ class UserModel
     public function findDeliveryManagerProfile(int $userId): ?array
     {
         $stmt = $this->conn->prepare(
-            "SELECT id, name, email, phone, password_hash, role, profile_pic
+            "SELECT id, name, email, phone, password_hash, role, profile_pic, is_active, created_at
              FROM users
              WHERE id = ? AND role = 'delivery_manager'
              LIMIT 1"

@@ -1694,6 +1694,12 @@ body {
     width: 100%;
 }
 
+.vendor-profile-grid input:disabled {
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
 .vendor-profile-grid input[type="file"] {
     background: transparent;
     border: none;
