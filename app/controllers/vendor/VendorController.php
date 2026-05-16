@@ -11,6 +11,14 @@ class VendorController
         $this->users = new UserModel($conn);
     }
 
+    public function showDashboard(): void
+    {
+        $seller = $this->requireSeller();
+        $dashboardMetrics = $this->users->getVendorDashboardMetrics((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/view/vendor_home_page_screen.php';
+    }
+
     public function showProfile(array $errors = [], array $success = [], ?array $profileOverride = null): void
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);

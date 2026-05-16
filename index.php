@@ -255,7 +255,7 @@ elseif ($page === 'customerDashboard') {
 elseif ($page === 'vendorDashboard') {
 
     requireRole('vendor');
-    includeViewOrShowMissing(__DIR__ . '/app/views/vendor/view/vendor_home_page_screen.php', 'Vendor Dashboard');
+    $vendor->showDashboard();
     exit;
 }
 
