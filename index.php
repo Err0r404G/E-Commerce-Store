@@ -426,6 +426,20 @@ elseif ($page === 'deliveryFailedDeliveriesAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryHistoryAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showDeliveryHistoryAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryAgentReportAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showAgentReportAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');

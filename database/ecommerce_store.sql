@@ -93,6 +93,7 @@ CREATE TABLE `delivery_assignments` (
   `delivery_zone` varchar(100) DEFAULT NULL,
   `failed_reason` text DEFAULT NULL,
   `failed_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
   `failure_resolution` enum('open','reassigned','customer_notified') NOT NULL DEFAULT 'open',
   `customer_notified_at` datetime DEFAULT NULL,
   `customer_notification_note` text DEFAULT NULL,

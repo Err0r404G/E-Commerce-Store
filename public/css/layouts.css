@@ -2863,6 +2863,19 @@ body {
     vertical-align: top;
 }
 
+.delivery-history-table td {
+    vertical-align: top;
+}
+
+.delivery-history-table strong,
+.delivery-history-table small {
+    display: block;
+}
+
+.delivery-history-table strong {
+    margin-bottom: 4px;
+}
+
 .failed-delivery-inline-form {
     display: grid;
     gap: 8px;

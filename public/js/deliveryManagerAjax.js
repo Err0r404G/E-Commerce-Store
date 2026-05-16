@@ -514,6 +514,64 @@ document.addEventListener("DOMContentLoaded", function () {
         filterFailedDeliveries();
     }
 
+    function bindDeliveryHistoryEvents() {
+        const search = document.getElementById("deliveryHistorySearch");
+        const countText = document.getElementById("deliveryHistoryCountText");
+
+        function filterDeliveryHistory() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-delivery-history-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} deliver${visibleCount === 1 ? "y" : "ies"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterDeliveryHistory);
+        }
+
+        filterDeliveryHistory();
+    }
+
+    function bindAgentReportEvents() {
+        const search = document.getElementById("agentReportSearch");
+        const countText = document.getElementById("agentReportCountText");
+
+        function filterAgentReport() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-agent-report-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} agent${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterAgentReport);
+        }
+
+        filterAgentReport();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
@@ -522,6 +580,8 @@ document.addEventListener("DOMContentLoaded", function () {
         bindAssignAgentEvents();
         bindActiveDeliveryEvents();
         bindFailedDeliveryEvents();
+        bindDeliveryHistoryEvents();
+        bindAgentReportEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

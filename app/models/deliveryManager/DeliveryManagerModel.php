@@ -245,6 +245,149 @@ class DeliveryManagerModel
         ];
     }
 
+    public function getDeliveryHistoryData(): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
+        $deliveries = [];
+        $result = $this->conn->query(
+            "SELECT da.id AS assignment_id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
+                    da.completed_at, da.failed_reason, da.failed_at, da.failure_resolution,
+                    da.customer_notified_at, da.customer_notification_note, da.retry_of_assignment_id,
+                    TIMESTAMPDIFF(MINUTE, da.assigned_at, COALESCE(da.completed_at, da.failed_at, NOW())) AS handling_minutes,
+                    o.shipping_address, o.payment_method, o.subtotal, o.discount_amount, o.total_amount, o.created_at AS order_created_at,
+                    customer.name AS customer_name,
+                    customer.email AS customer_email,
+                    customer.phone AS customer_phone,
+                    agent.name AS agent_name,
+                    agent.phone AS agent_phone,
+                    agent.vehicle_type,
+                    COUNT(oi.id) AS item_count,
+                    COALESCE(SUM(oi.quantity), 0) AS total_quantity,
+                    GROUP_CONCAT(DISTINCT COALESCE(s.shop_name, seller_user.name, 'Unknown seller') ORDER BY s.shop_name SEPARATOR ', ') AS seller_names,
+                    GROUP_CONCAT(DISTINCT NULLIF(oi.tracking_note, '') ORDER BY oi.id SEPARATOR ' | ') AS tracking_notes
+             FROM delivery_assignments da
+             INNER JOIN orders o ON o.id = da.order_id
+             LEFT JOIN users customer ON customer.id = o.customer_id
+             LEFT JOIN delivery_agents agent ON agent.id = da.agent_id
+             LEFT JOIN order_items oi ON oi.order_id = o.id
+             LEFT JOIN sellers s ON s.id = oi.seller_id
+             LEFT JOIN users seller_user ON seller_user.id = s.user_id
+             WHERE da.status IN ('delivered', 'failed')
+             GROUP BY da.id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
+                      da.completed_at, da.failed_reason, da.failed_at, da.failure_resolution,
+                      da.customer_notified_at, da.customer_notification_note, da.retry_of_assignment_id,
+                      o.shipping_address, o.payment_method, o.subtotal, o.discount_amount, o.total_amount, o.created_at,
+                      customer.name, customer.email, customer.phone, agent.name, agent.phone, agent.vehicle_type
+             ORDER BY COALESCE(da.completed_at, da.failed_at, da.assigned_at) DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $deliveries[] = $row;
+            }
+        }
+
+        $stats = [
+            'total' => count($deliveries),
+            'delivered' => 0,
+            'failed' => 0,
+            'notified' => 0,
+        ];
+
+        foreach ($deliveries as $delivery) {
+            $status = (string) ($delivery['status'] ?? '');
+
+            if (isset($stats[$status])) {
+                $stats[$status]++;
+            }
+
+            if (!empty($delivery['customer_notified_at'])) {
+                $stats['notified']++;
+            }
+        }
+
+        return [$deliveries, $stats];
+    }
+
+    public function getAgentReportData(): array
+    {
+        $this->ensureDeliveryAgentColumns();
+        $this->ensureDeliveryFailureColumns();
+
+        $agents = [];
+        $result = $this->conn->query(
+            "SELECT da.id, da.name, da.phone, da.vehicle_type, da.is_active,
+                    COUNT(assignments.id) AS total_assignments,
+                    SUM(CASE WHEN assignments.status = 'delivered' THEN 1 ELSE 0 END) AS completed_deliveries,
+                    SUM(CASE WHEN assignments.status = 'failed' THEN 1 ELSE 0 END) AS failed_deliveries,
+                    SUM(CASE WHEN assignments.status IN ('assigned', 'picked_up', 'in_transit') THEN 1 ELSE 0 END) AS active_deliveries,
+                    AVG(
+                        CASE
+                            WHEN assignments.status = 'delivered'
+                            THEN TIMESTAMPDIFF(MINUTE, assignments.assigned_at, COALESCE(assignments.completed_at, assignments.assigned_at))
+                            ELSE NULL
+                        END
+                    ) AS average_delivery_minutes,
+                    MAX(assignments.assigned_at) AS last_assignment_at,
+                    MAX(COALESCE(assignments.completed_at, assignments.failed_at, assignments.assigned_at)) AS last_activity_at
+             FROM delivery_agents da
+             LEFT JOIN delivery_assignments assignments ON assignments.agent_id = da.id
+             GROUP BY da.id, da.name, da.phone, da.vehicle_type, da.is_active
+             ORDER BY completed_deliveries DESC, failed_deliveries ASC, da.name ASC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $total = (int) ($row['total_assignments'] ?? 0);
+                $failed = (int) ($row['failed_deliveries'] ?? 0);
+                $completed = (int) ($row['completed_deliveries'] ?? 0);
+
+                $row['total_assignments'] = $total;
+                $row['completed_deliveries'] = $completed;
+                $row['failed_deliveries'] = $failed;
+                $row['active_deliveries'] = (int) ($row['active_deliveries'] ?? 0);
+                $row['average_delivery_minutes'] = $row['average_delivery_minutes'] !== null ? (float) $row['average_delivery_minutes'] : null;
+                $row['failed_delivery_rate'] = $total > 0 ? round(($failed / $total) * 100, 2) : 0.0;
+
+                $agents[] = $row;
+            }
+        }
+
+        $stats = [
+            'agents' => count($agents),
+            'completed' => 0,
+            'failed' => 0,
+            'average_delivery_minutes' => null,
+            'failed_delivery_rate' => 0.0,
+        ];
+
+        $totalAssignments = 0;
+        $averageMinutesTotal = 0.0;
+        $averageMinutesCount = 0;
+
+        foreach ($agents as $agent) {
+            $stats['completed'] += (int) $agent['completed_deliveries'];
+            $stats['failed'] += (int) $agent['failed_deliveries'];
+            $totalAssignments += (int) $agent['total_assignments'];
+
+            if ($agent['average_delivery_minutes'] !== null) {
+                $averageMinutesTotal += (float) $agent['average_delivery_minutes'];
+                $averageMinutesCount++;
+            }
+        }
+
+        if ($averageMinutesCount > 0) {
+            $stats['average_delivery_minutes'] = $averageMinutesTotal / $averageMinutesCount;
+        }
+
+        if ($totalAssignments > 0) {
+            $stats['failed_delivery_rate'] = round(($stats['failed'] / $totalAssignments) * 100, 2);
+        }
+
+        return [$agents, $stats];
+    }
+
     public function updateDeliveryStatus(int $assignmentId, string $nextStatus, ?string $failedReason = null): array
     {
         $this->ensureDeliveryFailureColumns();
@@ -298,6 +441,9 @@ class DeliveryManagerModel
                      WHERE id = ?"
                 );
                 $statusStmt->bind_param('sssi', $nextStatus, $failedReason, $resolution, $assignmentId);
+            } elseif ($nextStatus === 'delivered') {
+                $statusStmt = $this->conn->prepare("UPDATE delivery_assignments SET status = ?, completed_at = NOW() WHERE id = ?");
+                $statusStmt->bind_param('si', $nextStatus, $assignmentId);
             } else {
                 $statusStmt = $this->conn->prepare("UPDATE delivery_assignments SET status = ? WHERE id = ?");
                 $statusStmt->bind_param('si', $nextStatus, $assignmentId);
@@ -590,7 +736,8 @@ class DeliveryManagerModel
         $columns = [
             'failed_reason' => "ALTER TABLE delivery_assignments ADD failed_reason text DEFAULT NULL AFTER delivery_zone",
             'failed_at' => "ALTER TABLE delivery_assignments ADD failed_at datetime DEFAULT NULL AFTER failed_reason",
-            'failure_resolution' => "ALTER TABLE delivery_assignments ADD failure_resolution enum('open','reassigned','customer_notified') NOT NULL DEFAULT 'open' AFTER failed_at",
+            'completed_at' => "ALTER TABLE delivery_assignments ADD completed_at datetime DEFAULT NULL AFTER failed_at",
+            'failure_resolution' => "ALTER TABLE delivery_assignments ADD failure_resolution enum('open','reassigned','customer_notified') NOT NULL DEFAULT 'open' AFTER completed_at",
             'customer_notified_at' => "ALTER TABLE delivery_assignments ADD customer_notified_at datetime DEFAULT NULL AFTER failure_resolution",
             'customer_notification_note' => "ALTER TABLE delivery_assignments ADD customer_notification_note text DEFAULT NULL AFTER customer_notified_at",
             'retry_of_assignment_id' => "ALTER TABLE delivery_assignments ADD retry_of_assignment_id int(11) DEFAULT NULL AFTER customer_notification_note",

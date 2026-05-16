@@ -36,12 +36,12 @@
             <span>Failed Deliveries</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'history' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryHistoryAjax" class="<?= ($activeDeliveryPage ?? '') === 'history' ? 'active' : '' ?>">
             <i class="fa-solid fa-clock-rotate-left"></i>
             <span>Delivery History</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'agent_reports' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryAgentReportAjax" class="<?= ($activeDeliveryPage ?? '') === 'agent_reports' ? 'active' : '' ?>">
             <i class="fa-regular fa-chart-bar"></i>
             <span>Agent Report</span>
         </a>

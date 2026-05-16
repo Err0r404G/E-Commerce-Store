@@ -70,6 +70,20 @@ class DeliveryManagerController
         require __DIR__ . '/../../views/deliveryManager/partials/failed_deliveries.php';
     }
 
+    public function showDeliveryHistoryAjax(): void
+    {
+        [$historyDeliveries, $historyStats] = $this->deliveryModel->getDeliveryHistoryData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/delivery_history.php';
+    }
+
+    public function showAgentReportAjax(): void
+    {
+        [$agentReports, $agentReportStats] = $this->deliveryModel->getAgentReportData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/agent_report.php';
+    }
+
     public function profileAction(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
