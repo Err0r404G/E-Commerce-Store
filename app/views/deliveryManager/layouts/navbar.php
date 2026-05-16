@@ -26,7 +26,7 @@
             <span>Assign Agent</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'active_deliveries' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryActiveDeliveriesAjax" class="<?= ($activeDeliveryPage ?? '') === 'active_deliveries' ? 'active' : '' ?>">
             <i class="fa-solid fa-truck-fast"></i>
             <span>Active Deliveries</span>
         </a>

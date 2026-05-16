@@ -136,6 +136,126 @@ class DeliveryManagerModel
         ];
     }
 
+    public function getActiveDeliveriesData(): array
+    {
+        $deliveries = [];
+        $result = $this->conn->query(
+            "SELECT da.id AS assignment_id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
+                    TIMESTAMPDIFF(MINUTE, da.assigned_at, NOW()) AS minutes_since_assignment,
+                    o.shipping_address, o.payment_method, o.total_amount,
+                    customer.name AS customer_name,
+                    customer.email AS customer_email,
+                    agent.name AS agent_name,
+                    agent.phone AS agent_phone,
+                    agent.vehicle_type,
+                    COUNT(oi.id) AS item_count,
+                    COALESCE(SUM(oi.quantity), 0) AS total_quantity
+             FROM delivery_assignments da
+             INNER JOIN orders o ON o.id = da.order_id
+             LEFT JOIN users customer ON customer.id = o.customer_id
+             LEFT JOIN delivery_agents agent ON agent.id = da.agent_id
+             LEFT JOIN order_items oi ON oi.order_id = o.id
+             WHERE da.status IN ('assigned', 'picked_up', 'in_transit')
+             GROUP BY da.id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
+                      o.shipping_address, o.payment_method, o.total_amount,
+                      customer.name, customer.email, agent.name, agent.phone, agent.vehicle_type
+             ORDER BY da.assigned_at ASC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $deliveries[] = $row;
+            }
+        }
+
+        $stats = [
+            'active' => count($deliveries),
+            'assigned' => 0,
+            'picked_up' => 0,
+            'in_transit' => 0,
+        ];
+
+        foreach ($deliveries as $delivery) {
+            $status = (string) ($delivery['status'] ?? '');
+
+            if (isset($stats[$status])) {
+                $stats[$status]++;
+            }
+        }
+
+        return [$deliveries, $stats];
+    }
+
+    public function updateDeliveryStatus(int $assignmentId, string $nextStatus): array
+    {
+        $allowedStatuses = ['picked_up', 'in_transit', 'delivered', 'failed'];
+
+        if ($assignmentId <= 0 || !in_array($nextStatus, $allowedStatuses, true)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Invalid delivery status update.'];
+        }
+
+        $stmt = $this->conn->prepare(
+            "SELECT da.id, da.order_id, da.status
+             FROM delivery_assignments da
+             WHERE da.id = ?
+             LIMIT 1"
+        );
+        $stmt->bind_param('i', $assignmentId);
+        $stmt->execute();
+        $assignment = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$assignment) {
+            return ['success' => false, 'status' => 404, 'message' => 'Delivery assignment not found.'];
+        }
+
+        $currentStatus = (string) ($assignment['status'] ?? '');
+        $validTransitions = [
+            'assigned' => ['picked_up'],
+            'picked_up' => ['in_transit'],
+            'in_transit' => ['delivered', 'failed'],
+        ];
+
+        if (!in_array($nextStatus, $validTransitions[$currentStatus] ?? [], true)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Delivery status cannot move to the selected step.'];
+        }
+
+        $this->conn->begin_transaction();
+
+        try {
+            $statusStmt = $this->conn->prepare("UPDATE delivery_assignments SET status = ? WHERE id = ?");
+            $statusStmt->bind_param('si', $nextStatus, $assignmentId);
+            $statusStmt->execute();
+            $success = $statusStmt->affected_rows >= 0;
+            $statusStmt->close();
+
+            if ($nextStatus === 'delivered') {
+                $orderId = (int) $assignment['order_id'];
+                $deliveredStatus = 'delivered';
+
+                $orderStmt = $this->conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
+                $orderStmt->bind_param('si', $deliveredStatus, $orderId);
+                $orderStmt->execute();
+                $orderStmt->close();
+
+                $itemStmt = $this->conn->prepare("UPDATE order_items SET item_status = ? WHERE order_id = ?");
+                $itemStmt->bind_param('si', $deliveredStatus, $orderId);
+                $itemStmt->execute();
+                $itemStmt->close();
+            }
+
+            $this->conn->commit();
+        } catch (mysqli_sql_exception $e) {
+            $this->conn->rollback();
+            return ['success' => false, 'status' => 422, 'message' => 'Delivery status could not be updated.'];
+        }
+
+        return [
+            'success' => $success,
+            'message' => 'Delivery status updated.',
+        ];
+    }
+
     private function getAvailableAgents(): array
     {
         $this->ensureDeliveryAgentColumns();

@@ -380,12 +380,74 @@ document.addEventListener("DOMContentLoaded", function () {
         filterAssignments();
     }
 
+    function bindActiveDeliveryEvents() {
+        const search = document.getElementById("activeDeliverySearch");
+        const countText = document.getElementById("activeDeliveryCountText");
+        const message = document.getElementById("deliveryStatusMessage");
+        const activeLink = document.querySelector("[data-delivery-page*='deliveryActiveDeliveriesAjax']");
+
+        function filterActiveDeliveries() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-active-delivery-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} deliver${visibleCount === 1 ? "y" : "ies"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterActiveDeliveries);
+        }
+
+        document.querySelectorAll("[data-delivery-status-action]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("assignment_id", this.dataset.assignmentId);
+                formData.append("next_status", this.dataset.nextStatus);
+
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryStatusAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        showMessage(message, data.message || "Delivery status updated.", Boolean(data.success));
+
+                        if (!data.success) {
+                            throw new Error(data.message || "Delivery status update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=deliveryActiveDeliveriesAjax", activeLink);
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Delivery status update failed.", false);
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        filterActiveDeliveries();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
         bindZoneEvents();
         bindReadyDispatchEvents();
         bindAssignAgentEvents();
+        bindActiveDeliveryEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

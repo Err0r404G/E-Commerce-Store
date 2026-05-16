@@ -56,6 +56,13 @@ class DeliveryManagerController
         require __DIR__ . '/../../views/deliveryManager/partials/assign_agent.php';
     }
 
+    public function showActiveDeliveriesAjax(): void
+    {
+        [$deliveries, $deliveryStats] = $this->deliveryModel->getActiveDeliveriesData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/active_deliveries.php';
+    }
+
     public function profileAction(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
@@ -249,6 +256,15 @@ class DeliveryManagerController
         $deliveryZone = $deliveryZone !== '' ? $deliveryZone : null;
 
         $result = $this->deliveryModel->assignAgentToOrder($orderId, $agentId, $deliveryZone);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
+    public function deliveryStatusAction(): void
+    {
+        $assignmentId = (int) ($_POST['assignment_id'] ?? 0);
+        $nextStatus = trim($_POST['next_status'] ?? '');
+
+        $result = $this->deliveryModel->updateDeliveryStatus($assignmentId, $nextStatus);
         $this->jsonResponse($result, (int) ($result['status'] ?? 200));
     }
 

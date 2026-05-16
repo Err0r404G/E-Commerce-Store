@@ -412,6 +412,13 @@ elseif ($page === 'deliveryAssignAgentAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryActiveDeliveriesAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showActiveDeliveriesAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');
@@ -437,6 +444,13 @@ elseif ($page === 'deliveryAssignAgentAction') {
 
     requireRole('delivery_manager');
     $deliveryManager->assignAgentAction();
+    exit;
+}
+
+elseif ($page === 'deliveryStatusAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->deliveryStatusAction();
     exit;
 }
 
