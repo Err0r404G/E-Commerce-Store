@@ -1966,11 +1966,29 @@ body {
 
 .vendor-orders-page {
     margin: 0 auto;
-    max-width: 1280px;
+    max-width: none;
+    width: 100%;
 }
 
 .vendor-orders-panel {
     margin-top: 34px;
+    padding-left: 28px;
+    padding-right: 28px;
+}
+
+.vendor-body .admin-content:has(.vendor-orders-page) {
+    padding-left: 32px;
+    padding-right: 32px;
+}
+
+.vendor-orders-panel .table-wrapper {
+    overflow-x: visible;
+}
+
+.vendor-orders-table th,
+.vendor-orders-table td {
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 .vendor-orders-page .page-header {
