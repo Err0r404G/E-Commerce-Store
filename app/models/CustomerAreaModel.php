@@ -387,7 +387,19 @@ class CustomerAreaModel
 
     public function orders(int $customerId): array
     {
-        $stmt = $this->conn->prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC");
+        $stmt = $this->conn->prepare(
+            "SELECT o.*,
+                    COUNT(rr.id) AS return_request_count,
+                    SUM(CASE WHEN rr.status = 'pending' THEN 1 ELSE 0 END) AS pending_return_count,
+                    SUM(CASE WHEN rr.status = 'approved' THEN 1 ELSE 0 END) AS approved_return_count,
+                    SUM(CASE WHEN rr.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_return_count,
+                    SUM(CASE WHEN rr.status = 'completed' THEN 1 ELSE 0 END) AS completed_return_count
+             FROM orders o
+             LEFT JOIN return_requests rr ON rr.order_id = o.id AND rr.customer_id = o.customer_id
+             WHERE o.customer_id = ?
+             GROUP BY o.id
+             ORDER BY o.created_at DESC"
+        );
         $stmt->bind_param('i', $customerId);
         $stmt->execute();
         $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -412,7 +424,10 @@ class CustomerAreaModel
         $stmt = $this->conn->prepare(
             "SELECT oi.*, p.name, p.primary_image_path, s.shop_name,
                     rv.rating AS own_rating, rv.review_text AS own_review_text,
-                    rr.status AS return_status, rr.reason AS return_reason
+                    rr.status AS return_status,
+                    rr.reason AS return_reason,
+                    rr.vendor_response_reason AS return_vendor_reason,
+                    rr.responded_at AS return_responded_at
              FROM order_items oi
              INNER JOIN products p ON p.id = oi.product_id
              INNER JOIN sellers s ON s.id = oi.seller_id
@@ -599,11 +614,7 @@ class CustomerAreaModel
         $existing->close();
 
         if ($request) {
-            $stmt = $this->conn->prepare("UPDATE return_requests SET reason = ?, status = 'pending' WHERE id = ? AND customer_id = ?");
-            $stmt->bind_param('sii', $reason, $request['id'], $customerId);
-            $ok = $stmt->execute();
-            $stmt->close();
-            return $ok;
+            return false;
         }
 
         $stmt = $this->conn->prepare(
@@ -724,7 +735,9 @@ class CustomerAreaModel
             "SELECT 1
              FROM orders o
              INNER JOIN order_items oi ON oi.order_id = o.id
+             LEFT JOIN return_requests rr ON rr.order_item_id = oi.id AND rr.customer_id = o.customer_id
              WHERE o.id = ? AND o.customer_id = ? AND o.status = 'delivered' AND oi.id = ?
+               AND rr.id IS NULL
              LIMIT 1"
         );
         $stmt->bind_param('iii', $orderId, $customerId, $orderItemId);

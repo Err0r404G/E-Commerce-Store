@@ -42,15 +42,22 @@
                                     <button class="danger-button" type="submit">Delete Review</button>
                                 </form>
                             <?php endif; ?>
-                            <form method="post" class="inline-form">
-                                <input type="hidden" name="customer_action" value="request_return">
-                                <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
-                                <input type="hidden" name="order_item_id" value="<?= (int) $item['id'] ?>">
-                                <input name="reason" placeholder="Return reason">
-                                <button class="ghost-button dark" type="submit">Request Return</button>
-                            </form>
                             <?php if (!empty($item['return_status'])): ?>
-                                <p class="helper-text">Return: <?= e(ucwords($item['return_status'])) ?><?= $item['return_reason'] ? ' - ' . e($item['return_reason']) : '' ?></p>
+                                <p class="helper-text">
+                                    Return: <?= e(ucwords(str_replace('_', ' ', $item['return_status']))) ?>
+                                    <?= $item['return_reason'] ? ' - ' . e($item['return_reason']) : '' ?>
+                                    <?php if (!empty($item['return_vendor_reason'])): ?>
+                                        <br>Vendor response: <?= e($item['return_vendor_reason']) ?>
+                                    <?php endif; ?>
+                                </p>
+                            <?php else: ?>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="customer_action" value="request_return">
+                                    <input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>">
+                                    <input type="hidden" name="order_item_id" value="<?= (int) $item['id'] ?>">
+                                    <input name="reason" placeholder="Return reason">
+                                    <button class="ghost-button dark" type="submit">Request Return</button>
+                                </form>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>

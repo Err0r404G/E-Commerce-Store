@@ -15,10 +15,14 @@
             <a class="primary-button" href="<?= customerUrl('marketplace') ?>">Browse Products</a>
         </header>
 
+        <?php
+        $returnRequestCount = array_sum(array_map(fn($order) => (int) ($order['return_request_count'] ?? 0), $orders));
+        $approvedReturnCount = array_sum(array_map(fn($order) => (int) ($order['approved_return_count'] ?? 0), $orders));
+        ?>
         <div class="metric-grid">
             <div class="metric-card"><span><?= count($orders) ?></span><p>Total orders</p></div>
             <div class="metric-card"><span><?= count(array_filter($orders, fn($o) => !in_array($o['status'], ['delivered', 'cancelled', 'returned'], true))) ?></span><p>Active orders</p></div>
-            <div class="metric-card"><span><?= count($wishlist) ?></span><p>Wishlist items</p></div>
+            <div class="metric-card"><span><?= (int) $returnRequestCount ?></span><p>Return requests<?= $approvedReturnCount > 0 ? ' (' . (int) $approvedReturnCount . ' approved)' : '' ?></p></div>
             <div class="metric-card"><span><?= (int) $cartCount ?></span><p>Cart quantity</p></div>
         </div>
 

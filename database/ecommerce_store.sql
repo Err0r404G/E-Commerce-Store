@@ -71,7 +71,8 @@ CREATE TABLE `coupons` (
 
 CREATE TABLE `delivery_agents` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL DEFAULT 'Delivery Agent',
   `vehicle_type` varchar(50) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
@@ -308,7 +309,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `phone`, `role`, `p
 (7, 'SAKIB SADMAN', 's7222@gmail.com', '$2y$10$i7uv512zgpvPY8zVL8kXme/CMACYaPM8u.FkpiO7416JQAHn2Qq.C', '+8801788960006', 'customer', NULL, 1, '2026-05-15 02:30:56'),
 (8, 'SELLER', 'seller@store.com', '$2y$10$BXixd2MHi6OiBvPqoATRe./2QpNMPrAi6MzbJpMS7UUw7Qx.ykvfm', '123', 'vendor', NULL, 1, '2026-05-15 03:42:06'),
 (9, 'CUSTOMER', 'customer@store.com', '$2y$10$JVB6dnbUEVs5qv6JR3bw8uBvZZrd86.E9YY8mApuDf3YbK8yeMqki', '12345', 'customer', NULL, 1, '2026-05-15 04:00:10'),
-(10, 'FRY', 'fry@store.com', '$2y$10$9VZb3ZY6ZFP9M5k5p7JGQuVyFZhZv6YJOdpQfR/JrtHBmIgtM2jI6', '016017012', 'vendor', 'public/uploads/profiles/profile_6a065007632267.83091479.png', 1, '2026-05-15 04:43:19');
+(10, 'FRY', 'fry@store.com', '$2y$10$9VZb3ZY6ZFP9M5k5p7JGQuVyFZhZv6YJOdpQfR/JrtHBmIgtM2jI6', '016017012', 'vendor', 'public/uploads/profiles/profile_6a065007632267.83091479.png', 1, '2026-05-15 04:43:19'),
+(11, 'Delivery Manager', 'delivery@store.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '12345', 'delivery_manager', NULL, 1, '2026-05-15 04:45:00');
 
 -- --------------------------------------------------------
 
@@ -573,7 +575,7 @@ ALTER TABLE `sellers`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `customer_addresses`

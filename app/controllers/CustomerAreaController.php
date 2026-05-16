@@ -396,7 +396,7 @@ class CustomerAreaController
             $this->redirect('order&id=' . $orderId);
         }
         $ok = $this->model->requestReturn($this->customerId(), $orderId, $itemId, $reason);
-        $this->flash($ok ? 'Return request submitted.' : 'Only delivered order items can be returned.');
+        $this->flash($ok ? 'Return request submitted.' : 'This item already has a return request or cannot be returned.');
         $this->redirect('order&id=' . $orderId);
     }
 

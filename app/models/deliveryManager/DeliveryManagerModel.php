@@ -175,6 +175,8 @@ class DeliveryManagerModel
 
     public function getActiveDeliveriesData(): array
     {
+        $this->ensureDeliveryAgentColumns();
+
         $deliveries = [];
         $result = $this->conn->query(
             "SELECT da.id AS assignment_id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
@@ -225,6 +227,7 @@ class DeliveryManagerModel
 
     public function getFailedDeliveriesData(): array
     {
+        $this->ensureDeliveryAgentColumns();
         $this->ensureDeliveryFailureColumns();
 
         $deliveries = [];
@@ -284,6 +287,7 @@ class DeliveryManagerModel
 
     public function getDeliveryHistoryData(): array
     {
+        $this->ensureDeliveryAgentColumns();
         $this->ensureDeliveryFailureColumns();
 
         $deliveries = [];
