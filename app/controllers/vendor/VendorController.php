@@ -15,6 +15,7 @@ class VendorController
     {
         $seller = $this->requireSeller();
         $dashboardMetrics = $this->users->getVendorDashboardMetrics((int) $seller['id']);
+        $vendorNotifications = $this->users->getVendorNotificationCounts((int) $seller['id']);
 
         require __DIR__ . '/../../views/vendor/view/vendor_home_page_screen.php';
     }
@@ -29,6 +30,11 @@ class VendorController
             header('Location: /E-Commerce-Store/index.php?page=login');
             exit;
         }
+
+        $seller = $this->users->ensureSellerForVendor($vendorId);
+        $vendorNotifications = $seller
+            ? $this->users->getVendorNotificationCounts((int) $seller['id'])
+            : ['orders' => 0, 'returns' => 0, 'reviews' => 0, 'total' => 0];
 
         require __DIR__ . '/../../views/vendor/view/vendor_profile.php';
     }
@@ -155,6 +161,15 @@ class VendorController
         }
 
         require __DIR__ . '/../../views/vendor/partials/settings.php';
+    }
+
+    public function showNotificationCountsAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $this->jsonResponse([
+            'success' => true,
+            'notifications' => $this->users->getVendorNotificationCounts((int) $seller['id']),
+        ]);
     }
 
     public function showCouponsAjax(): void

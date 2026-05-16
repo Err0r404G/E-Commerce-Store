@@ -18,6 +18,32 @@ document.addEventListener("DOMContentLoaded", function () {
         element.classList.toggle("auth-message-error", !isSuccess);
     }
 
+    function updateVendorNotifications() {
+        const badge = document.getElementById("vendorNotificationBadge");
+        const count = document.getElementById("vendorNotificationCount");
+
+        if (!badge || !count) {
+            return;
+        }
+
+        fetch("/E-Commerce-Store/index.php?page=vendorNotificationsAjax", { credentials: "same-origin" })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success || !data.notifications) {
+                    return;
+                }
+
+                const notifications = data.notifications;
+                const total = Number(notifications.total || 0);
+
+                badge.hidden = total <= 0;
+                count.textContent = total > 99 ? "99+" : String(total);
+                badge.title = `${notifications.orders || 0} new orders, ${notifications.returns || 0} return requests, ${notifications.reviews || 0} new reviews`;
+                badge.setAttribute("aria-label", `${total} vendor notifications`);
+            })
+            .catch(() => {});
+    }
+
     function bindSettingsEvents() {
         const form = document.getElementById("vendorSettingsForm");
         const message = document.getElementById("vendorSettingsMessage");
@@ -605,6 +631,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 bindLoadedPage();
+                updateVendorNotifications();
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";
@@ -618,4 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
             loadPage(this.dataset.vendorPage, this);
         });
     });
+
+    updateVendorNotifications();
+    window.setInterval(updateVendorNotifications, 30000);
 });
