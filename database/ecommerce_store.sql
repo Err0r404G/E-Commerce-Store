@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 15, 2026 at 12:49 PM
+-- Generation Time: May 16, 2026 at 07:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -71,12 +71,23 @@ CREATE TABLE `coupons` (
 
 CREATE TABLE `delivery_agents` (
   `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL DEFAULT 'Delivery Agent',
   `vehicle_type` varchar(50) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `delivery_agents`
+--
+
+INSERT INTO `delivery_agents` (`id`, `user_id`, `name`, `vehicle_type`, `phone`, `is_active`, `created_at`) VALUES
+(1, NULL, 'KUDDUS', 'Bike', '2646', 1, '2026-05-16 02:14:25'),
+(2, NULL, 'MOFIS', 'Car', '1231', 1, '2026-05-16 02:14:40'),
+(3, NULL, 'KAMAL', 'Van', '6545', 1, '2026-05-16 02:14:49'),
+(4, NULL, 'ROFIQUE', 'Bicycle', '9878', 1, '2026-05-16 02:15:02');
 
 -- --------------------------------------------------------
 
@@ -157,6 +168,38 @@ CREATE TABLE `orders` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `customer_id`, `shipping_address`, `payment_method`, `subtotal`, `discount_amount`, `total_amount`, `status`, `coupon_id`, `created_at`) VALUES
+(1, 9, 's\nDelivery zone: Dhaka City (2 day estimate)', 'cod', 211.00, 0.00, 271.00, 'pending', NULL, '2026-05-16 01:13:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `order_items`
+--
+
+CREATE TABLE `order_items` (
+  `id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `seller_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `item_status` enum('pending','confirmed','shipped','delivered') DEFAULT 'pending',
+  `tracking_note` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_items`
+--
+
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `seller_id`, `quantity`, `unit_price`, `item_status`, `tracking_note`) VALUES
+(1, 1, 1, 1, 1, 100.00, 'confirmed', NULL),
+(2, 1, 2, 1, 1, 111.00, 'shipped', 'working');
+
 -- --------------------------------------------------------
 
 --
@@ -177,23 +220,6 @@ CREATE TABLE `platform_coupons` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `order_items`
---
-
-CREATE TABLE `order_items` (
-  `id` int(11) NOT NULL,
-  `order_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  `seller_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `unit_price` decimal(10,2) NOT NULL,
-  `item_status` enum('pending','confirmed','shipped','delivered') DEFAULT 'pending',
-  `tracking_note` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `products`
 --
 
@@ -209,6 +235,15 @@ CREATE TABLE `products` (
   `is_available` tinyint(1) DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `seller_id`, `category_id`, `name`, `description`, `price`, `stock_qty`, `primary_image_path`, `is_available`, `created_at`) VALUES
+(1, 1, 6, 'KOLOM', 'WRITING INSTUMENT', 100.00, 99, 'public/uploads/products/product_6a076ffa28a8f1.80492478.jpg', 1, '2026-05-16 01:11:54'),
+(2, 1, 3, 'KHATA', 'aaa', 111.00, 21, 'public/uploads/products/product_6a07703b25d7d3.38440774.png', 1, '2026-05-16 01:12:59'),
+(3, 1, 2, 'random', 'aaa', 55.00, 32, 'public/uploads/products/product_6a07704a2e2211.88191982.png', 1, '2026-05-16 01:13:14');
 
 -- --------------------------------------------------------
 
@@ -272,9 +307,18 @@ CREATE TABLE `sellers` (
   `shop_logo_path` varchar(255) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `is_approved` tinyint(1) DEFAULT 0,
+  `account_status` enum('pending','approved','rejected','suspended') NOT NULL DEFAULT 'pending',
+  `admin_note` text DEFAULT NULL,
   `commission_rate` decimal(5,2) DEFAULT 10.00,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sellers`
+--
+
+INSERT INTO `sellers` (`id`, `user_id`, `shop_name`, `shop_description`, `shop_logo_path`, `address`, `is_approved`, `account_status`, `admin_note`, `commission_rate`, `created_at`) VALUES
+(1, 8, 'SELLER\'s Store', 'Vendor storefront profile.', NULL, 'Not provided', 1, 'pending', NULL, 10.00, '2026-05-16 01:10:56');
 
 -- --------------------------------------------------------
 
@@ -308,7 +352,8 @@ INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `phone`, `role`, `p
 (7, 'SAKIB SADMAN', 's7222@gmail.com', '$2y$10$i7uv512zgpvPY8zVL8kXme/CMACYaPM8u.FkpiO7416JQAHn2Qq.C', '+8801788960006', 'customer', NULL, 1, '2026-05-15 02:30:56'),
 (8, 'SELLER', 'seller@store.com', '$2y$10$BXixd2MHi6OiBvPqoATRe./2QpNMPrAi6MzbJpMS7UUw7Qx.ykvfm', '123', 'vendor', NULL, 1, '2026-05-15 03:42:06'),
 (9, 'CUSTOMER', 'customer@store.com', '$2y$10$JVB6dnbUEVs5qv6JR3bw8uBvZZrd86.E9YY8mApuDf3YbK8yeMqki', '12345', 'customer', NULL, 1, '2026-05-15 04:00:10'),
-(10, 'FRY', 'fry@store.com', '$2y$10$9VZb3ZY6ZFP9M5k5p7JGQuVyFZhZv6YJOdpQfR/JrtHBmIgtM2jI6', '016017012', 'vendor', 'public/uploads/profiles/profile_6a065007632267.83091479.png', 1, '2026-05-15 04:43:19');
+(10, 'FRY', 'fry@store.com', '$2y$10$9VZb3ZY6ZFP9M5k5p7JGQuVyFZhZv6YJOdpQfR/JrtHBmIgtM2jI6', '016017012', 'vendor', 'public/uploads/profiles/profile_6a065007632267.83091479.png', 1, '2026-05-15 04:43:19'),
+(11, 'Digu Vai', 'manager@store.com', '$2y$10$XEnqKTWLpCpFDcasPLFdHekB1CffdidxScnAlIq/nQWIHFhpba412', '123', 'delivery_manager', 'public/uploads/profiles/profile_6a0777298dee20.29897176.jpg', 1, '2026-05-15 22:27:50');
 
 -- --------------------------------------------------------
 
@@ -355,8 +400,7 @@ ALTER TABLE `delivery_agents`
 ALTER TABLE `delivery_assignments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_delivery_assignment_order` (`order_id`),
-  ADD KEY `fk_delivery_assignment_agent` (`agent_id`),
-  ADD KEY `fk_delivery_assignment_retry` (`retry_of_assignment_id`);
+  ADD KEY `fk_delivery_assignment_agent` (`agent_id`);
 
 --
 -- Indexes for table `delivery_zones`
@@ -382,13 +426,6 @@ ALTER TABLE `orders`
   ADD KEY `idx_orders_customer` (`customer_id`);
 
 --
--- Indexes for table `platform_coupons`
---
-ALTER TABLE `platform_coupons`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `code` (`code`);
-
---
 -- Indexes for table `order_items`
 --
 ALTER TABLE `order_items`
@@ -396,6 +433,13 @@ ALTER TABLE `order_items`
   ADD KEY `fk_order_item_order` (`order_id`),
   ADD KEY `fk_order_item_product` (`product_id`),
   ADD KEY `fk_order_item_seller` (`seller_id`);
+
+--
+-- Indexes for table `platform_coupons`
+--
+ALTER TABLE `platform_coupons`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
 
 --
 -- Indexes for table `products`
@@ -473,7 +517,7 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT for table `delivery_agents`
 --
 ALTER TABLE `delivery_agents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `delivery_assignments`
@@ -497,7 +541,13 @@ ALTER TABLE `disputes`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `order_items`
+--
+ALTER TABLE `order_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `platform_coupons`
@@ -506,16 +556,10 @@ ALTER TABLE `platform_coupons`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `order_items`
---
-ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `product_images`
@@ -539,13 +583,13 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT for table `sellers`
 --
 ALTER TABLE `sellers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `wishlists`
@@ -580,8 +624,7 @@ ALTER TABLE `delivery_agents`
 --
 ALTER TABLE `delivery_assignments`
   ADD CONSTRAINT `fk_delivery_assignment_agent` FOREIGN KEY (`agent_id`) REFERENCES `delivery_agents` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_delivery_assignment_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_delivery_assignment_retry` FOREIGN KEY (`retry_of_assignment_id`) REFERENCES `delivery_assignments` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_delivery_assignment_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `disputes`
