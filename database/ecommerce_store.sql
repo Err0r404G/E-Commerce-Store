@@ -90,7 +90,13 @@ CREATE TABLE `delivery_assignments` (
   `agent_id` int(11) NOT NULL,
   `assigned_at` datetime DEFAULT current_timestamp(),
   `status` enum('assigned','picked_up','in_transit','delivered','failed') DEFAULT 'assigned',
-  `delivery_zone` varchar(100) DEFAULT NULL
+  `delivery_zone` varchar(100) DEFAULT NULL,
+  `failed_reason` text DEFAULT NULL,
+  `failed_at` datetime DEFAULT NULL,
+  `failure_resolution` enum('open','reassigned','customer_notified') NOT NULL DEFAULT 'open',
+  `customer_notified_at` datetime DEFAULT NULL,
+  `customer_notification_note` text DEFAULT NULL,
+  `retry_of_assignment_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -348,7 +354,8 @@ ALTER TABLE `delivery_agents`
 ALTER TABLE `delivery_assignments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_delivery_assignment_order` (`order_id`),
-  ADD KEY `fk_delivery_assignment_agent` (`agent_id`);
+  ADD KEY `fk_delivery_assignment_agent` (`agent_id`),
+  ADD KEY `fk_delivery_assignment_retry` (`retry_of_assignment_id`);
 
 --
 -- Indexes for table `delivery_zones`
@@ -572,7 +579,8 @@ ALTER TABLE `delivery_agents`
 --
 ALTER TABLE `delivery_assignments`
   ADD CONSTRAINT `fk_delivery_assignment_agent` FOREIGN KEY (`agent_id`) REFERENCES `delivery_agents` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_delivery_assignment_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_delivery_assignment_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_delivery_assignment_retry` FOREIGN KEY (`retry_of_assignment_id`) REFERENCES `delivery_assignments` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `disputes`

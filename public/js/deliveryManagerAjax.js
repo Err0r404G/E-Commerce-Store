@@ -414,6 +414,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append("assignment_id", this.dataset.assignmentId);
                 formData.append("next_status", this.dataset.nextStatus);
 
+                if (this.dataset.nextStatus === "failed") {
+                    const reason = prompt("Why did this delivery fail?");
+
+                    if (!reason || !reason.trim()) {
+                        showMessage(message, "Please provide a failure reason.", false);
+                        return;
+                    }
+
+                    formData.append("failed_reason", reason.trim());
+                }
+
                 this.disabled = true;
 
                 fetch("/E-Commerce-Store/index.php?page=deliveryStatusAction", {
@@ -441,6 +452,68 @@ document.addEventListener("DOMContentLoaded", function () {
         filterActiveDeliveries();
     }
 
+    function bindFailedDeliveryEvents() {
+        const search = document.getElementById("failedDeliverySearch");
+        const countText = document.getElementById("failedDeliveryCountText");
+        const message = document.getElementById("failedDeliveryMessage");
+        const failedLink = document.querySelector("[data-delivery-page*='deliveryFailedDeliveriesAjax']");
+
+        function filterFailedDeliveries() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-failed-delivery-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} failed deliver${visibleCount === 1 ? "y" : "ies"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterFailedDeliveries);
+        }
+
+        document.querySelectorAll("[data-failed-delivery-form]").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryFailedAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        showMessage(message, data.message || "Failed delivery updated.", Boolean(data.success));
+
+                        if (!data.success) {
+                            throw new Error(data.message || "Failed delivery update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=deliveryFailedDeliveriesAjax", failedLink);
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Failed delivery update failed.", false);
+                        submitButton.disabled = false;
+                    });
+            });
+        });
+
+        filterFailedDeliveries();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
@@ -448,6 +521,7 @@ document.addEventListener("DOMContentLoaded", function () {
         bindReadyDispatchEvents();
         bindAssignAgentEvents();
         bindActiveDeliveryEvents();
+        bindFailedDeliveryEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

@@ -31,7 +31,7 @@
             <span>Active Deliveries</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'failed_deliveries' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryFailedDeliveriesAjax" class="<?= ($activeDeliveryPage ?? '') === 'failed_deliveries' ? 'active' : '' ?>">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span>Failed Deliveries</span>
         </a>

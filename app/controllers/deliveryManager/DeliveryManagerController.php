@@ -63,6 +63,13 @@ class DeliveryManagerController
         require __DIR__ . '/../../views/deliveryManager/partials/active_deliveries.php';
     }
 
+    public function showFailedDeliveriesAjax(): void
+    {
+        $failedDeliveryData = $this->deliveryModel->getFailedDeliveriesData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/failed_deliveries.php';
+    }
+
     public function profileAction(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
@@ -263,9 +270,32 @@ class DeliveryManagerController
     {
         $assignmentId = (int) ($_POST['assignment_id'] ?? 0);
         $nextStatus = trim($_POST['next_status'] ?? '');
+        $failedReason = trim($_POST['failed_reason'] ?? '');
 
-        $result = $this->deliveryModel->updateDeliveryStatus($assignmentId, $nextStatus);
+        $result = $this->deliveryModel->updateDeliveryStatus($assignmentId, $nextStatus, $failedReason);
         $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
+    public function failedDeliveryAction(): void
+    {
+        $action = trim($_POST['failed_delivery_action'] ?? '');
+        $assignmentId = (int) ($_POST['assignment_id'] ?? 0);
+
+        if ($action === 'reassign') {
+            $agentId = (int) ($_POST['agent_id'] ?? 0);
+            $result = $this->deliveryModel->reassignFailedDelivery($assignmentId, $agentId);
+            $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+            return;
+        }
+
+        if ($action === 'notify') {
+            $note = trim($_POST['notification_note'] ?? '');
+            $result = $this->deliveryModel->notifyFailedDeliveryCustomer($assignmentId, $note);
+            $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+            return;
+        }
+
+        $this->jsonResponse(['success' => false, 'message' => 'Invalid failed delivery action.'], 422);
     }
 
     private function uploadProfileImage(array &$errors): ?string

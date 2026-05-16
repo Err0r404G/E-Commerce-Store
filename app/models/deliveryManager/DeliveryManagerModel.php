@@ -186,8 +186,69 @@ class DeliveryManagerModel
         return [$deliveries, $stats];
     }
 
-    public function updateDeliveryStatus(int $assignmentId, string $nextStatus): array
+    public function getFailedDeliveriesData(): array
     {
+        $this->ensureDeliveryFailureColumns();
+
+        $deliveries = [];
+        $result = $this->conn->query(
+            "SELECT da.id AS assignment_id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
+                    da.failed_reason, da.failed_at, da.failure_resolution, da.customer_notified_at, da.customer_notification_note,
+                    (SELECT COUNT(*) FROM delivery_assignments retry WHERE retry.retry_of_assignment_id = da.id) AS retry_count,
+                    TIMESTAMPDIFF(MINUTE, COALESCE(da.failed_at, da.assigned_at), NOW()) AS minutes_since_failed,
+                    o.shipping_address, o.payment_method, o.total_amount,
+                    customer.name AS customer_name,
+                    customer.email AS customer_email,
+                    agent.name AS agent_name,
+                    agent.phone AS agent_phone,
+                    agent.vehicle_type,
+                    COUNT(oi.id) AS item_count,
+                    COALESCE(SUM(oi.quantity), 0) AS total_quantity
+             FROM delivery_assignments da
+             INNER JOIN orders o ON o.id = da.order_id
+             LEFT JOIN users customer ON customer.id = o.customer_id
+             LEFT JOIN delivery_agents agent ON agent.id = da.agent_id
+             LEFT JOIN order_items oi ON oi.order_id = o.id
+             WHERE da.status = 'failed'
+             GROUP BY da.id, da.order_id, da.agent_id, da.assigned_at, da.status, da.delivery_zone,
+                      da.failed_reason, da.failed_at, da.failure_resolution, da.customer_notified_at, da.customer_notification_note,
+                      o.shipping_address, o.payment_method, o.total_amount,
+                      customer.name, customer.email, agent.name, agent.phone, agent.vehicle_type
+             ORDER BY COALESCE(da.failed_at, da.assigned_at) DESC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $deliveries[] = $row;
+            }
+        }
+
+        $stats = [
+            'failed' => count($deliveries),
+            'open' => 0,
+            'reassigned' => 0,
+            'customer_notified' => 0,
+        ];
+
+        foreach ($deliveries as $delivery) {
+            $resolution = (string) ($delivery['failure_resolution'] ?? 'open');
+
+            if (isset($stats[$resolution])) {
+                $stats[$resolution]++;
+            }
+        }
+
+        return [
+            'deliveries' => $deliveries,
+            'agents' => $this->getAvailableAgents(),
+            'stats' => $stats,
+        ];
+    }
+
+    public function updateDeliveryStatus(int $assignmentId, string $nextStatus, ?string $failedReason = null): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
         $allowedStatuses = ['picked_up', 'in_transit', 'delivered', 'failed'];
 
         if ($assignmentId <= 0 || !in_array($nextStatus, $allowedStatuses, true)) {
@@ -220,11 +281,28 @@ class DeliveryManagerModel
             return ['success' => false, 'status' => 422, 'message' => 'Delivery status cannot move to the selected step.'];
         }
 
+        $failedReason = trim((string) $failedReason);
+
+        if ($nextStatus === 'failed' && $failedReason === '') {
+            return ['success' => false, 'status' => 422, 'message' => 'Please provide a failure reason.'];
+        }
+
         $this->conn->begin_transaction();
 
         try {
-            $statusStmt = $this->conn->prepare("UPDATE delivery_assignments SET status = ? WHERE id = ?");
-            $statusStmt->bind_param('si', $nextStatus, $assignmentId);
+            if ($nextStatus === 'failed') {
+                $resolution = 'open';
+                $statusStmt = $this->conn->prepare(
+                    "UPDATE delivery_assignments
+                     SET status = ?, failed_reason = ?, failed_at = NOW(), failure_resolution = ?
+                     WHERE id = ?"
+                );
+                $statusStmt->bind_param('sssi', $nextStatus, $failedReason, $resolution, $assignmentId);
+            } else {
+                $statusStmt = $this->conn->prepare("UPDATE delivery_assignments SET status = ? WHERE id = ?");
+                $statusStmt->bind_param('si', $nextStatus, $assignmentId);
+            }
+
             $statusStmt->execute();
             $success = $statusStmt->affected_rows >= 0;
             $statusStmt->close();
@@ -253,6 +331,119 @@ class DeliveryManagerModel
         return [
             'success' => $success,
             'message' => 'Delivery status updated.',
+        ];
+    }
+
+    public function reassignFailedDelivery(int $assignmentId, int $agentId): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
+        if ($assignmentId <= 0 || $agentId <= 0) {
+            return ['success' => false, 'status' => 422, 'message' => 'Select a failed delivery and a new agent.'];
+        }
+
+        $stmt = $this->conn->prepare(
+            "SELECT id, order_id, agent_id, delivery_zone, failure_resolution
+             FROM delivery_assignments
+             WHERE id = ? AND status = 'failed'
+             LIMIT 1"
+        );
+        $stmt->bind_param('i', $assignmentId);
+        $stmt->execute();
+        $assignment = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$assignment) {
+            return ['success' => false, 'status' => 404, 'message' => 'Failed delivery not found.'];
+        }
+
+        if ((string) ($assignment['failure_resolution'] ?? 'open') === 'reassigned' || $this->failedDeliveryHasRetry($assignmentId)) {
+            return ['success' => false, 'status' => 422, 'message' => 'This failed delivery has already been reassigned.'];
+        }
+
+        if ((int) $assignment['agent_id'] === $agentId) {
+            return ['success' => false, 'status' => 422, 'message' => 'Choose a different delivery agent.'];
+        }
+
+        if (!$this->isAgentAvailable($agentId)) {
+            return ['success' => false, 'status' => 422, 'message' => 'Selected agent is not available.'];
+        }
+
+        $this->conn->begin_transaction();
+
+        try {
+            $orderId = (int) $assignment['order_id'];
+            $deliveryZone = $assignment['delivery_zone'] !== null ? (string) $assignment['delivery_zone'] : null;
+            $status = 'assigned';
+
+            $insert = $this->conn->prepare(
+                "INSERT INTO delivery_assignments (order_id, agent_id, status, delivery_zone, retry_of_assignment_id)
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            $insert->bind_param('iissi', $orderId, $agentId, $status, $deliveryZone, $assignmentId);
+            $insert->execute();
+            $success = $insert->affected_rows === 1;
+            $insert->close();
+
+            if ($success) {
+                $resolution = 'reassigned';
+                $update = $this->conn->prepare(
+                    "UPDATE delivery_assignments
+                     SET failure_resolution = ?
+                     WHERE id = ?"
+                );
+                $update->bind_param('si', $resolution, $assignmentId);
+                $update->execute();
+                $update->close();
+
+                $orderStatus = 'shipped';
+                $orderStmt = $this->conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
+                $orderStmt->bind_param('si', $orderStatus, $orderId);
+                $orderStmt->execute();
+                $orderStmt->close();
+            }
+
+            $this->conn->commit();
+        } catch (mysqli_sql_exception $e) {
+            $this->conn->rollback();
+            return ['success' => false, 'status' => 422, 'message' => 'Could not reassign this failed delivery.'];
+        }
+
+        return [
+            'success' => $success,
+            'message' => $success ? 'Failed delivery reassigned to a different agent.' : 'Failed delivery reassignment failed.',
+        ];
+    }
+
+    public function notifyFailedDeliveryCustomer(int $assignmentId, string $note): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
+        $note = trim($note);
+
+        if ($assignmentId <= 0 || $note === '') {
+            return ['success' => false, 'status' => 422, 'message' => 'Write a customer notification note.'];
+        }
+
+        $stmt = $this->conn->prepare(
+            "UPDATE delivery_assignments
+             SET customer_notification_note = ?,
+                 customer_notified_at = NOW(),
+                 failure_resolution = CASE
+                    WHEN failure_resolution = 'reassigned' THEN 'reassigned'
+                    ELSE 'customer_notified'
+                 END
+             WHERE id = ? AND status = 'failed'"
+        );
+        $stmt->bind_param('si', $note, $assignmentId);
+        $stmt->execute();
+        $success = $stmt->affected_rows > 0;
+        $stmt->close();
+
+        return [
+            'success' => $success,
+            'status' => $success ? 200 : 404,
+            'message' => $success ? 'Customer notification recorded.' : 'Customer notification could not be recorded.',
         ];
     }
 
@@ -351,6 +542,22 @@ class DeliveryManagerModel
         return $exists;
     }
 
+    private function failedDeliveryHasRetry(int $assignmentId): bool
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT id
+             FROM delivery_assignments
+             WHERE retry_of_assignment_id = ?
+             LIMIT 1"
+        );
+        $stmt->bind_param('i', $assignmentId);
+        $stmt->execute();
+        $exists = (bool) $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $exists;
+    }
+
     private function ensureDeliveryAgentColumns(): void
     {
         $nameColumn = $this->conn->query("SHOW COLUMNS FROM delivery_agents LIKE 'name'");
@@ -376,5 +583,25 @@ class DeliveryManagerModel
         }
 
         $this->conn->query("ALTER TABLE order_items ADD tracking_note text DEFAULT NULL AFTER item_status");
+    }
+
+    private function ensureDeliveryFailureColumns(): void
+    {
+        $columns = [
+            'failed_reason' => "ALTER TABLE delivery_assignments ADD failed_reason text DEFAULT NULL AFTER delivery_zone",
+            'failed_at' => "ALTER TABLE delivery_assignments ADD failed_at datetime DEFAULT NULL AFTER failed_reason",
+            'failure_resolution' => "ALTER TABLE delivery_assignments ADD failure_resolution enum('open','reassigned','customer_notified') NOT NULL DEFAULT 'open' AFTER failed_at",
+            'customer_notified_at' => "ALTER TABLE delivery_assignments ADD customer_notified_at datetime DEFAULT NULL AFTER failure_resolution",
+            'customer_notification_note' => "ALTER TABLE delivery_assignments ADD customer_notification_note text DEFAULT NULL AFTER customer_notified_at",
+            'retry_of_assignment_id' => "ALTER TABLE delivery_assignments ADD retry_of_assignment_id int(11) DEFAULT NULL AFTER customer_notification_note",
+        ];
+
+        foreach ($columns as $column => $sql) {
+            $result = $this->conn->query("SHOW COLUMNS FROM delivery_assignments LIKE '" . $this->conn->real_escape_string($column) . "'");
+
+            if (!$result || $result->num_rows === 0) {
+                $this->conn->query($sql);
+            }
+        }
     }
 }

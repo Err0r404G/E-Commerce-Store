@@ -419,6 +419,13 @@ elseif ($page === 'deliveryActiveDeliveriesAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryFailedDeliveriesAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showFailedDeliveriesAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');
@@ -451,6 +458,13 @@ elseif ($page === 'deliveryStatusAction') {
 
     requireRole('delivery_manager');
     $deliveryManager->deliveryStatusAction();
+    exit;
+}
+
+elseif ($page === 'deliveryFailedAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->failedDeliveryAction();
     exit;
 }
 

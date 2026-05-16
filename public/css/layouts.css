@@ -2853,6 +2853,44 @@ body {
     opacity: 0.65;
 }
 
+.delivery-status-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.failed-delivery-table td {
+    vertical-align: top;
+}
+
+.failed-delivery-inline-form {
+    display: grid;
+    gap: 8px;
+    min-width: 190px;
+}
+
+.failed-delivery-inline-form select,
+.failed-delivery-inline-form textarea {
+    background: #fbf9fd;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #1f2937;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 8px 10px;
+    width: 100%;
+}
+
+.failed-delivery-inline-form textarea {
+    min-height: 68px;
+    resize: vertical;
+}
+
+.failed-delivery-inline-form button {
+    margin-right: 0;
+}
+
 .approval-status {
     display: inline-block;
     padding: 5px 10px;
