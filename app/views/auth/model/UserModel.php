@@ -580,6 +580,16 @@ class UserModel
     {
         $this->ensureOrderItemTrackingNoteColumn();
 
+        $orderStmt = $this->conn->prepare("SELECT order_id FROM order_items WHERE id = ? AND seller_id = ? LIMIT 1");
+        $orderStmt->bind_param("ii", $orderItemId, $sellerId);
+        $orderStmt->execute();
+        $order = $orderStmt->get_result()->fetch_assoc();
+        $orderStmt->close();
+
+        if (!$order) {
+            return false;
+        }
+
         $stmt = $this->conn->prepare(
             "UPDATE order_items
              SET item_status = ?, tracking_note = ?
@@ -589,7 +599,62 @@ class UserModel
         $updated = $stmt->execute();
         $stmt->close();
 
+        if ($updated) {
+            $this->syncOrderStatusFromItems((int) $order['order_id']);
+        }
+
         return $updated;
+    }
+
+    private function syncOrderStatusFromItems(int $orderId): void
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS total_items,
+                    SUM(CASE WHEN item_status = 'pending' THEN 1 ELSE 0 END) AS pending_items,
+                    SUM(CASE WHEN item_status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed_items,
+                    SUM(CASE WHEN item_status = 'shipped' THEN 1 ELSE 0 END) AS shipped_items,
+                    SUM(CASE WHEN item_status = 'delivered' THEN 1 ELSE 0 END) AS delivered_items
+             FROM order_items
+             WHERE order_id = ?"
+        );
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $summary = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $total = (int) ($summary['total_items'] ?? 0);
+        if ($total === 0) {
+            return;
+        }
+
+        $pending = (int) ($summary['pending_items'] ?? 0);
+        $confirmed = (int) ($summary['confirmed_items'] ?? 0);
+        $shipped = (int) ($summary['shipped_items'] ?? 0);
+        $delivered = (int) ($summary['delivered_items'] ?? 0);
+
+        if ($delivered === $total) {
+            $nextStatus = 'delivered';
+        } elseif ($shipped === $total) {
+            $nextStatus = 'shipped';
+        } elseif ($shipped > 0 || ($confirmed > 0 && $pending > 0)) {
+            $nextStatus = 'processing';
+        } elseif ($confirmed === $total) {
+            $nextStatus = 'confirmed';
+        } elseif ($confirmed > 0) {
+            $nextStatus = 'processing';
+        } else {
+            $nextStatus = 'pending';
+        }
+
+        $update = $this->conn->prepare(
+            "UPDATE orders
+             SET status = ?
+             WHERE id = ?
+               AND status NOT IN ('delivered', 'cancelled', 'return_requested', 'returned')"
+        );
+        $update->bind_param("si", $nextStatus, $orderId);
+        $update->execute();
+        $update->close();
     }
 
     public function getVendorReturnRequests(int $sellerId): array

@@ -295,6 +295,7 @@ input, select, textarea, button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     min-height: 40px;
     padding: 0 16px;
     border-radius: 8px;
@@ -312,6 +313,14 @@ input, select, textarea, button {
     border-color: var(--line);
     background: transparent;
     color: #fff;
+}
+
+.customer-topbar .ghost-button {
+    color: var(--primary);
+}
+
+.customer-topbar .ghost-button:hover {
+    background: #f0edf0;
 }
 
 .ghost-button.dark {
@@ -334,6 +343,22 @@ input, select, textarea, button {
     border-color: var(--line);
     background: #fff;
     color: var(--primary);
+}
+
+.wishlist-button.is-active,
+.wishlist-text-button.is-active {
+    border-color: #e84c73;
+    background: #ffe7ee;
+    color: #bf1d4b;
+}
+
+.wishlist-button.is-active .material-symbols-outlined,
+.wishlist-text-button.is-active .material-symbols-outlined {
+    font-variation-settings: "FILL" 1, "wght" 700, "GRAD" 0, "opsz" 24;
+}
+
+.customer-logout .material-symbols-outlined {
+    font-size: 20px;
 }
 
 .full {
@@ -724,10 +749,15 @@ th {
     display: flex;
     justify-content: space-between;
     gap: 18px;
-    padding: 28px 32px;
+    padding: 18px 32px;
     border-top: 1px solid var(--line);
-    background: #fff;
+    background: #fafafa;
     color: var(--muted);
+    font-size: 14px;
+}
+
+.customer-footer strong {
+    color: var(--primary);
 }
 
 @media (max-width: 1050px) {

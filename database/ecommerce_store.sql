@@ -313,6 +313,26 @@ INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `phone`, `role`, `p
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `customer_addresses`
+--
+
+CREATE TABLE `customer_addresses` (
+  `id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `label` varchar(80) NOT NULL DEFAULT 'Home',
+  `recipient_name` varchar(120) NOT NULL,
+  `phone` varchar(30) DEFAULT NULL,
+  `address_line` text NOT NULL,
+  `city` varchar(80) NOT NULL,
+  `postal_code` varchar(30) DEFAULT NULL,
+  `delivery_zone_id` int(11) DEFAULT NULL,
+  `is_default` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `wishlists`
 --
 
@@ -446,6 +466,14 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `customer_addresses`
+--
+ALTER TABLE `customer_addresses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_customer_addresses_customer` (`customer_id`),
+  ADD KEY `fk_customer_address_zone` (`delivery_zone_id`);
+
+--
 -- Indexes for table `wishlists`
 --
 ALTER TABLE `wishlists`
@@ -548,6 +576,12 @@ ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `customer_addresses`
+--
+ALTER TABLE `customer_addresses`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `wishlists`
 --
 ALTER TABLE `wishlists`
@@ -640,6 +674,13 @@ ALTER TABLE `reviews`
 --
 ALTER TABLE `sellers`
   ADD CONSTRAINT `fk_seller_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `customer_addresses`
+--
+ALTER TABLE `customer_addresses`
+  ADD CONSTRAINT `fk_customer_address_user` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_customer_address_zone` FOREIGN KEY (`delivery_zone_id`) REFERENCES `delivery_zones` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `wishlists`

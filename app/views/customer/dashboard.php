@@ -1,10 +1,10 @@
 <main class="customer-app">
     <aside class="customer-sidebar">
         <h2>Customer Hub</h2>
-        <a class="active" href="/E-Commerce-Store/customer.php"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
-        <a href="/E-Commerce-Store/customer.php?page=orders"><span class="material-symbols-outlined">package_2</span>My Orders</a>
-        <a href="/E-Commerce-Store/customer.php?page=wishlist"><span class="material-symbols-outlined">favorite</span>Wishlist</a>
-        <a href="/E-Commerce-Store/customer.php?page=profile"><span class="material-symbols-outlined">person</span>Profile</a>
+        <a class="active" href="<?= customerUrl('dashboard') ?>"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+        <a href="<?= customerUrl('orders') ?>"><span class="material-symbols-outlined">package_2</span>My Orders</a>
+        <a href="<?= customerUrl('wishlist') ?>"><span class="material-symbols-outlined">favorite</span>Wishlist</a>
+        <a href="<?= customerUrl('profile') ?>"><span class="material-symbols-outlined">person</span>Profile</a>
     </aside>
     <section class="customer-content">
         <header class="page-heading">
@@ -12,7 +12,7 @@
                 <p class="eyebrow">Premium Member</p>
                 <h1>Good day, <?= e($_SESSION['user']['name'] ?? 'Customer') ?>.</h1>
             </div>
-            <a class="primary-button" href="/E-Commerce-Store/customer.php?page=marketplace">Browse Products</a>
+            <a class="primary-button" href="<?= customerUrl('marketplace') ?>">Browse Products</a>
         </header>
 
         <div class="metric-grid">
@@ -26,7 +26,7 @@
             <section class="panel">
                 <div class="section-title">
                     <h2>Active Shipment</h2>
-                    <?php if ($activeOrder): ?><a href="/E-Commerce-Store/customer.php?page=order&id=<?= (int) $activeOrder['id'] ?>">Track</a><?php endif; ?>
+                    <?php if ($activeOrder): ?><a href="<?= customerUrl('order', ['id' => (int) $activeOrder['id']]) ?>">Track</a><?php endif; ?>
                 </div>
                 <?php if ($activeOrder): ?>
                     <div class="status-line" data-order-id="<?= (int) $activeOrder['id'] ?>">
@@ -47,7 +47,7 @@
             <section class="panel dark-panel">
                 <h2>Share a Review</h2>
                 <p>After delivery, purchased products can be rated from the order detail page.</p>
-                <a class="light-button" href="/E-Commerce-Store/customer.php?page=orders">Review purchases</a>
+                <a class="light-button" href="<?= customerUrl('orders') ?>">Review purchases</a>
             </section>
         </div>
     </section>

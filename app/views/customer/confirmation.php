@@ -13,8 +13,8 @@
         <?php endforeach; ?>
         <p class="helper-text"><?= nl2br(e($order['shipping_address'])) ?></p>
         <div class="button-row confirmation-actions">
-            <a class="primary-button" href="/E-Commerce-Store/customer.php?page=order&id=<?= (int) $order['id'] ?>">Track Order</a>
-            <a class="ghost-button dark" href="/E-Commerce-Store/customer.php?page=marketplace">Continue Shopping</a>
+            <a class="primary-button" href="<?= customerUrl('order', ['id' => (int) $order['id']]) ?>">Track Order</a>
+            <a class="ghost-button dark" href="<?= customerUrl('marketplace') ?>">Continue Shopping</a>
         </div>
     </section>
 </main>

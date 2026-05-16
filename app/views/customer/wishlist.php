@@ -1,10 +1,10 @@
 <main class="customer-shell">
     <section class="panel">
-        <div class="section-title"><h1>Wishlist</h1><a href="/E-Commerce-Store/customer.php?page=marketplace">Find more</a></div>
+        <div class="section-title"><h1>Wishlist</h1><a href="<?= customerUrl('marketplace') ?>">Find more</a></div>
         <div class="product-grid compact">
             <?php foreach ($items as $item): ?>
                 <article class="product-card">
-                    <a class="product-image" href="/E-Commerce-Store/customer.php?page=product&id=<?= (int) $item['id'] ?>">
+                    <a class="product-image" href="<?= customerUrl('product', ['id' => (int) $item['id']]) ?>">
                         <img src="<?= e(productImage($item['primary_image_path'])) ?>" alt="<?= e($item['name']) ?>">
                     </a>
                     <div class="product-body">

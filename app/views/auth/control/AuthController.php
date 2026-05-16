@@ -224,7 +224,7 @@ class AuthController
         }
 
         if ($role === 'customer') {
-            return '/E-Commerce-Store/customer.php';
+            return '/E-Commerce-Store/index.php?page=customerDashboard';
         }
 
         return '/E-Commerce-Store/index.php';

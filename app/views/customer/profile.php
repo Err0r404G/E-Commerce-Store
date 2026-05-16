@@ -99,6 +99,6 @@
                 </article>
             <?php endforeach; ?>
         </div>
-        <?php if (!$addresses): ?><p>No saved addresses yet. Run `database/customer_required_tables.sql` if saves do not persist.</p><?php endif; ?>
+        <?php if (!$addresses): ?><p>No saved addresses yet. Re-import `database/ecommerce_store.sql` if saves do not persist.</p><?php endif; ?>
     </section>
 </main>

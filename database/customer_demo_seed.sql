@@ -17,12 +17,16 @@ SET @demo_seller_id := (SELECT id FROM sellers WHERE user_id = @demo_seller_user
 SET @electronics_id := (SELECT id FROM categories WHERE name = 'Electronics' LIMIT 1);
 SET @clothing_id := (SELECT id FROM categories WHERE name = 'Clothing' LIMIT 1);
 
+DELETE FROM products
+WHERE seller_id = @demo_seller_id
+  AND name IN ('Nexus Audio H1', 'Nexus Slate Mini', 'Velocity Runner V1');
+
 INSERT INTO products (seller_id, category_id, name, description, price, stock_qty, primary_image_path, is_available)
 VALUES
-(@demo_seller_id, @electronics_id, 'Nexus Audio H1', 'Wireless noise-cancelling headphones with premium comfort and long battery life.', 149.00, 24, NULL, 1),
-(@demo_seller_id, @electronics_id, 'Nexus Slate Mini', 'Compact productivity tablet for study, browsing, and entertainment.', 329.00, 12, NULL, 1),
-(@demo_seller_id, @clothing_id, 'Velocity Runner V1', 'Lightweight everyday sneakers with breathable textile upper.', 89.00, 35, NULL, 1)
-ON DUPLICATE KEY UPDATE stock_qty = VALUES(stock_qty), is_available = 1;
+(@demo_seller_id, @electronics_id, 'Nexus Audio H1', 'Wireless noise-cancelling headphones with premium comfort and long battery life.', 149.00, 24, 'public/uploads/products/product_6a07704a2e2211.88191982.png', 1),
+(@demo_seller_id, @electronics_id, 'Nexus Slate Mini', 'Compact productivity tablet for study, browsing, and entertainment.', 329.00, 12, 'public/uploads/products/product_6a07703b25d7d3.38440774.png', 1),
+(@demo_seller_id, @clothing_id, 'Velocity Runner V1', 'Lightweight everyday sneakers with breathable textile upper.', 89.00, 35, 'public/uploads/products/product_6a072b4c2a9f78.61708632.jpg', 1)
+ON DUPLICATE KEY UPDATE stock_qty = VALUES(stock_qty), primary_image_path = VALUES(primary_image_path), is_available = 1;
 
 INSERT INTO coupons (seller_id, code, discount_pct, max_uses, uses_count, valid_until, is_active)
 VALUES (@demo_seller_id, 'CUSTOMER10', 10.00, 100, 0, DATE_ADD(CURDATE(), INTERVAL 90 DAY), 1)

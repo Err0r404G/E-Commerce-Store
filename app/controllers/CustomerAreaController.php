@@ -58,8 +58,9 @@ class CustomerAreaController
         ];
         $products = $this->model->products($filters);
         $categories = $this->model->categories();
+        $wishlistProductIds = $this->model->wishlistProductIds($this->customerId());
         $cartCount = $this->cartCount();
-        $this->render('marketplace', compact('filters', 'products', 'categories', 'cartCount'));
+        $this->render('marketplace', compact('filters', 'products', 'categories', 'wishlistProductIds', 'cartCount'));
     }
 
     private function product(): void
@@ -73,8 +74,9 @@ class CustomerAreaController
         }
         $images = $this->model->productImages($id);
         $reviews = $this->model->reviews($id);
+        $isWishlisted = in_array($id, $this->model->wishlistProductIds($this->customerId()), true);
         $cartCount = $this->cartCount();
-        $this->render('product', compact('product', 'images', 'reviews', 'cartCount'));
+        $this->render('product', compact('product', 'images', 'reviews', 'isWishlisted', 'cartCount'));
     }
 
     private function cart(): void
@@ -312,7 +314,7 @@ class CustomerAreaController
         }
 
         $ok = $this->model->saveAddress($this->customerId(), $data);
-        $this->flash($ok ? 'Address saved.' : 'Address table is missing. Run database/customer_required_tables.sql first.');
+        $this->flash($ok ? 'Address saved.' : 'Address table is missing. Re-import database/ecommerce_store.sql first.');
         $this->redirect('profile');
     }
 
@@ -465,7 +467,7 @@ class CustomerAreaController
     private function render(string $view, array $data = []): void
     {
         extract($data, EXTR_SKIP);
-        require __DIR__ . '/../views/customer_area/layout.php';
+        require __DIR__ . '/../views/customer/layout.php';
     }
 
     private function requireCustomer(): void
@@ -483,8 +485,31 @@ class CustomerAreaController
 
     private function redirect(string $page): void
     {
-        header('Location: /E-Commerce-Store/customer.php?page=' . $page);
+        header('Location: ' . $this->url($page));
         exit;
+    }
+
+    private function url(string $page): string
+    {
+        $parts = explode('&', $page, 2);
+        $route = $parts[0] ?: 'dashboard';
+        $query = $parts[1] ?? '';
+        $pageMap = [
+            'dashboard' => 'customerDashboard',
+            'marketplace' => 'customerMarketplace',
+            'product' => 'customerProduct',
+            'cart' => 'customerCart',
+            'checkout' => 'customerCheckout',
+            'confirmation' => 'customerConfirmation',
+            'orders' => 'customerOrders',
+            'order' => 'customerOrder',
+            'wishlist' => 'customerWishlist',
+            'profile' => 'customerProfile',
+            'disputes' => 'customerDisputes',
+        ];
+
+        $url = '/E-Commerce-Store/index.php?page=' . ($pageMap[$route] ?? 'customerDashboard');
+        return $query !== '' ? $url . '&' . $query : $url;
     }
 
     private function flash(string $message): void

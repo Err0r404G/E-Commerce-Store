@@ -2,7 +2,7 @@
     <section class="panel">
         <div class="section-title">
             <h1>Cart</h1>
-            <a href="/E-Commerce-Store/customer.php?page=marketplace">Continue shopping</a>
+            <a href="<?= customerUrl('marketplace') ?>">Continue shopping</a>
         </div>
         <?php if ($items): ?>
             <form method="post">
@@ -30,6 +30,6 @@
         <h2>Cart Summary</h2>
         <div class="summary-row"><span>Items</span><strong><?= (int) $summary['count'] ?></strong></div>
         <div class="summary-row"><span>Subtotal</span><strong><?= money((float) $summary['subtotal']) ?></strong></div>
-        <a class="primary-button full" href="/E-Commerce-Store/customer.php?page=checkout">Proceed to Checkout</a>
+        <a class="primary-button full" href="<?= customerUrl('checkout') ?>">Proceed to Checkout</a>
     </aside>
 </main>

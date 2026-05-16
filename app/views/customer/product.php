@@ -1,5 +1,5 @@
 <main class="customer-shell">
-    <nav class="breadcrumbs"><a href="/E-Commerce-Store/customer.php?page=marketplace">Marketplace</a><span>/</span><span><?= e($product['name']) ?></span></nav>
+    <nav class="breadcrumbs"><a href="<?= customerUrl('marketplace') ?>">Marketplace</a><span>/</span><span><?= e($product['name']) ?></span></nav>
     <section class="product-detail">
         <div>
             <div class="hero-product-image">
@@ -32,7 +32,10 @@
                 <input type="hidden" name="customer_action" value="toggle_wishlist">
                 <input type="hidden" name="product_id" value="<?= (int) $product['id'] ?>">
                 <input type="hidden" name="return_to" value="product&id=<?= (int) $product['id'] ?>">
-                <button class="ghost-button dark" type="submit">Save to Wishlist</button>
+                <button class="ghost-button dark wishlist-text-button <?= !empty($isWishlisted) ? 'is-active' : '' ?>" type="submit">
+                    <span class="material-symbols-outlined">favorite</span>
+                    <?= !empty($isWishlisted) ? 'Saved to Wishlist' : 'Save to Wishlist' ?>
+                </button>
             </form>
         </div>
     </section>

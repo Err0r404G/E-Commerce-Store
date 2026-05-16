@@ -504,6 +504,21 @@ class CustomerAreaModel
         return $rows;
     }
 
+    public function wishlistProductIds(int $customerId): array
+    {
+        if ($customerId <= 0) {
+            return [];
+        }
+
+        $stmt = $this->conn->prepare("SELECT product_id FROM wishlists WHERE customer_id = ?");
+        $stmt->bind_param('i', $customerId);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return array_map('intval', array_column($rows, 'product_id'));
+    }
+
     public function toggleWishlist(int $customerId, int $productId): bool
     {
         $stmt = $this->conn->prepare("SELECT id FROM wishlists WHERE customer_id = ? AND product_id = ? LIMIT 1");

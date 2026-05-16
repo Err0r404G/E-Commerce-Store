@@ -27,8 +27,7 @@ A multi-role e-commerce marketplace built with **PHP**, **MySQL**, **mysqli**, a
 
 ## Separation of Concerns
 
-- `index.php` works as the main front controller for auth, admin, vendor, delivery manager, and home routes.
-- `customer.php` works as the customer area entry point.
+- `index.php` works as the main front controller for auth, admin, vendor, delivery manager, customer, and home routes.
 - Controllers handle request routing and business actions.
 - Models handle data access and database operations.
 - Views render the UI.
@@ -58,7 +57,6 @@ E-Commerce-Store/
 │       ├── admin/
 │       ├── auth/
 │       ├── customer/
-│       ├── customer_area/
 │       ├── deliveryManager/
 │       ├── layouts/
 │       └── vendor/
@@ -66,19 +64,17 @@ E-Commerce-Store/
 │   └── db.php                   # Database connection
 ├── database/
 │   ├── ecommerce_store.sql      # Main schema and seed data
-│   ├── customer_required_tables.sql
 │   └── customer_demo_seed.sql
 ├── public/
 │   ├── css/                     # Stylesheets
 │   ├── js/                      # AJAX and page scripts
 │   └── uploads/                 # Uploaded profile/product images
-├── customer.php                 # Customer front controller
 └── index.php                    # Main front controller
 ```
 
 ## Shared Database Tables
 
-`categories`, `coupons`, `delivery_agents`, `delivery_assignments`, `delivery_zones`, `disputes`, `orders`, `platform_coupons`, `order_items`, `products`, `product_images`, `return_requests`, `reviews`, `sellers`, `users`, `wishlists`
+`categories`, `coupons`, `customer_addresses`, `delivery_agents`, `delivery_assignments`, `delivery_zones`, `disputes`, `orders`, `platform_coupons`, `order_items`, `products`, `product_images`, `return_requests`, `reviews`, `sellers`, `users`, `wishlists`
 
 See `database/ecommerce_store.sql`.
 
@@ -101,11 +97,11 @@ See `database/ecommerce_store.sql`.
 | `/E-Commerce-Store/index.php?page=adminDashboard` | Admin dashboard |
 | `/E-Commerce-Store/index.php?page=vendorDashboard` | Vendor dashboard |
 | `/E-Commerce-Store/index.php?page=deliveryDashboard` | Delivery manager dashboard |
-| `/E-Commerce-Store/customer.php` | Customer dashboard |
-| `/E-Commerce-Store/customer.php?page=marketplace` | Product marketplace |
-| `/E-Commerce-Store/customer.php?page=cart` | Customer cart |
-| `/E-Commerce-Store/customer.php?page=checkout` | Checkout |
-| `/E-Commerce-Store/customer.php?page=orders` | Customer orders |
+| `/E-Commerce-Store/index.php?page=customerDashboard` | Customer dashboard |
+| `/E-Commerce-Store/index.php?page=customerMarketplace` | Product marketplace |
+| `/E-Commerce-Store/index.php?page=customerCart` | Customer cart |
+| `/E-Commerce-Store/index.php?page=customerCheckout` | Checkout |
+| `/E-Commerce-Store/index.php?page=customerOrders` | Customer orders |
 
 ## Local Setup
 
@@ -161,7 +157,7 @@ Password hashes are stored in the database. Use the password assigned during set
 
 | Folder / Area | Owner |
 |---------------|-------|
-| `app/controllers/CustomerAreaController.php`, `app/views/customer_area/`, `api/customer_*`, `public/js/customer.js` | Customer role |
+| `app/controllers/CustomerAreaController.php`, `app/models/CustomerAreaModel.php`, `app/views/customer/`, `api/customer_*`, `public/js/customer.js` | Customer role |
 | `app/controllers/vendor/`, `app/views/vendor/`, `public/js/vendorAjax.js` | Vendor role |
 | `app/controllers/deliveryManager/`, `app/views/deliveryManager/`, `public/js/deliveryManagerAjax.js` | Delivery manager role |
 | `app/controllers/admin/`, `app/models/admin/`, `app/views/admin/`, `public/js/adminAjax.js` | Platform admin role |

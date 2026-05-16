@@ -26,23 +26,24 @@
 
     <!-- MENU -->
     <nav class="menu">
-        <a href="#" class="active">Marketplace</a>
-        <a href="#">Categories</a>
-        <a href="#">Deals</a>
+        <a href="/E-Commerce-Store/index.php?page=customerMarketplace" class="active">Marketplace</a>
+        <a href="/E-Commerce-Store/index.php?page=customerMarketplace">Categories</a>
+        <a href="/E-Commerce-Store/index.php?page=customerMarketplace&sort=price_low">Deals</a>
     </nav>
 
     <!-- SEARCH -->
-    <div class="search-box">
+    <form class="search-box" method="get" action="/E-Commerce-Store/index.php">
+        <input type="hidden" name="page" value="customerMarketplace">
         <i class="fa fa-search"></i>
-        <input type="text" placeholder="Search premium products...">
-    </div>
+        <input type="text" name="keyword" placeholder="Search premium products...">
+    </form>
 
     <!-- RIGHT SIDE -->
     <div class="right-section">
 
         <div class="icons">
-            <i class="fa fa-shopping-cart"></i>
-            <i class="fa fa-heart"></i>
+            <a href="/E-Commerce-Store/index.php?page=customerCart" aria-label="Cart"><i class="fa fa-shopping-cart"></i></a>
+            <a href="/E-Commerce-Store/index.php?page=customerWishlist" aria-label="Wishlist"><i class="fa fa-heart"></i></a>
         </div>
 
 <div class="auth">

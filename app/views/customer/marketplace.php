@@ -1,7 +1,7 @@
 <main class="customer-shell marketplace-layout">
     <aside class="filter-panel">
         <form method="get">
-            <input type="hidden" name="page" value="marketplace">
+            <input type="hidden" name="page" value="customerMarketplace">
             <label>Search</label>
             <input name="keyword" value="<?= e($filters['keyword']) ?>" placeholder="Search products, sellers...">
             <label>Category</label>
@@ -36,7 +36,7 @@
                 <p><?= count($products) ?> available result<?= count($products) === 1 ? '' : 's' ?></p>
             </div>
             <form method="get" class="sort-form">
-                <input type="hidden" name="page" value="marketplace">
+                <input type="hidden" name="page" value="customerMarketplace">
                 <input type="hidden" name="keyword" value="<?= e($filters['keyword']) ?>">
                 <input type="hidden" name="category_id" value="<?= e($filters['category_id']) ?>">
                 <select name="sort" onchange="this.form.submit()">
@@ -50,8 +50,9 @@
 
         <div class="product-grid">
             <?php foreach ($products as $product): ?>
+                <?php $isWishlisted = in_array((int) $product['id'], $wishlistProductIds ?? [], true); ?>
                 <article class="product-card">
-                    <a class="product-image" href="/E-Commerce-Store/customer.php?page=product&id=<?= (int) $product['id'] ?>">
+                    <a class="product-image" href="<?= customerUrl('product', ['id' => (int) $product['id']]) ?>">
                         <img src="<?= e(productImage($product['primary_image_path'])) ?>" alt="<?= e($product['name']) ?>">
                     </a>
                     <div class="product-body">
@@ -76,7 +77,9 @@
                                 <input type="hidden" name="customer_action" value="toggle_wishlist">
                                 <input type="hidden" name="product_id" value="<?= (int) $product['id'] ?>">
                                 <input type="hidden" name="return_to" value="marketplace">
-                                <button class="icon-button" type="submit" aria-label="Wishlist"><span class="material-symbols-outlined">favorite</span></button>
+                                <button class="icon-button wishlist-button <?= $isWishlisted ? 'is-active' : '' ?>" type="submit" aria-label="<?= $isWishlisted ? 'Remove from wishlist' : 'Add to wishlist' ?>" title="<?= $isWishlisted ? 'Saved to wishlist' : 'Add to wishlist' ?>">
+                                    <span class="material-symbols-outlined">favorite</span>
+                                </button>
                             </form>
                         </div>
                     </div>
