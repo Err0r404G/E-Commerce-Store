@@ -100,6 +100,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const resetButton = document.getElementById("vendorProductReset");
         const search = document.getElementById("vendorInventorySearch");
         const additionalImages = document.getElementById("vendorAdditionalImages");
+        const additionalImagesCount = document.getElementById("vendorAdditionalImagesCount");
+        let selectedAdditionalImages = [];
 
         function resetForm() {
             if (!form) {
@@ -109,6 +111,11 @@ document.addEventListener("DOMContentLoaded", function () {
             form.reset();
             document.getElementById("vendorProductId").value = "";
             document.getElementById("vendorProductAvailable").checked = true;
+            selectedAdditionalImages = [];
+
+            if (additionalImagesCount) {
+                additionalImagesCount.textContent = "Optional, up to 4 images";
+            }
         }
 
         if (search) {
@@ -126,28 +133,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (additionalImages) {
-            const additionalImagesCount = document.getElementById("vendorAdditionalImagesCount");
             const maxAdditionalImages = Number(additionalImages.dataset.maxFiles || 4);
 
             additionalImages.addEventListener("change", function () {
-                if (this.files.length > maxAdditionalImages) {
-                    if (window.DataTransfer) {
-                        const selectedFiles = new DataTransfer();
+                selectedAdditionalImages = selectedAdditionalImages.concat(Array.from(this.files));
 
-                        Array.from(this.files).slice(0, maxAdditionalImages).forEach(file => {
-                            selectedFiles.items.add(file);
-                        });
-
-                        this.files = selectedFiles.files;
-                    } else {
-                        this.value = "";
-                    }
-
+                if (selectedAdditionalImages.length > maxAdditionalImages) {
+                    selectedAdditionalImages = selectedAdditionalImages.slice(0, maxAdditionalImages);
                     alert(`You can upload up to ${maxAdditionalImages} additional images.`);
                 }
 
+                if (window.DataTransfer) {
+                    const selectedFiles = new DataTransfer();
+
+                    selectedAdditionalImages.forEach(file => {
+                        selectedFiles.items.add(file);
+                    });
+
+                    this.files = selectedFiles.files;
+                }
+
                 if (additionalImagesCount) {
-                    const selectedCount = this.files.length;
+                    const selectedCount = selectedAdditionalImages.length;
                     additionalImagesCount.textContent = selectedCount > 0
                         ? `${selectedCount} of ${maxAdditionalImages} additional images selected`
                         : `Optional, up to ${maxAdditionalImages} images`;
