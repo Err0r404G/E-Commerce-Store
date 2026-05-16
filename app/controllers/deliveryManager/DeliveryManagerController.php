@@ -14,6 +14,15 @@ class DeliveryManagerController
         $this->deliveryModel = new DeliveryManagerModel($conn);
     }
 
+    public function showDashboard(): void
+    {
+        $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
+        $profile = $this->users->findDeliveryManagerProfile($deliveryManagerId);
+        $dashboardMetrics = $this->deliveryModel->getDashboardData();
+
+        require __DIR__ . '/../../views/deliveryManager/deliveryManagerDashboard.php';
+    }
+
     public function showSettingsAjax(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);

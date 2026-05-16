@@ -69,6 +69,43 @@ class DeliveryManagerModel
         return [$orders, $stats];
     }
 
+    public function getDashboardData(): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
+        [$readyOrders, $dispatchStats] = $this->getReadyDispatchData();
+        [$activeDeliveries, $activeStats] = $this->getActiveDeliveriesData();
+
+        $deliveredToday = 0;
+        $deliveredResult = $this->conn->query(
+            "SELECT COUNT(*) AS total
+             FROM delivery_assignments
+             WHERE status = 'delivered'
+               AND (
+                    DATE(completed_at) = CURDATE()
+                    OR (completed_at IS NULL AND DATE(assigned_at) = CURDATE())
+               )"
+        );
+
+        if ($deliveredResult) {
+            $row = $deliveredResult->fetch_assoc();
+            $deliveredToday = (int) ($row['total'] ?? 0);
+        }
+
+        return [
+            'pending_dispatch' => (int) ($dispatchStats['ready'] ?? count($readyOrders)),
+            'active_deliveries' => (int) ($activeStats['active'] ?? count($activeDeliveries)),
+            'delivered_today' => $deliveredToday,
+            'assigned' => (int) ($activeStats['assigned'] ?? 0),
+            'picked_up' => (int) ($activeStats['picked_up'] ?? 0),
+            'in_transit' => (int) ($activeStats['in_transit'] ?? 0),
+            'ready_items' => (int) ($dispatchStats['items'] ?? 0),
+            'ready_value' => (float) ($dispatchStats['value'] ?? 0),
+            'oldest_pending_days' => (int) ($dispatchStats['oldest_days'] ?? 0),
+            'recent_active' => array_slice($activeDeliveries, 0, 5),
+        ];
+    }
+
     public function getAssignAgentData(): array
     {
         [$orders, $dispatchStats] = $this->getReadyDispatchData();

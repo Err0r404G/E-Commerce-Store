@@ -373,7 +373,7 @@ elseif ($page === 'vendorReviewAction') {
 elseif ($page === 'deliveryDashboard') {
 
     requireRole('delivery_manager');
-    includeViewOrShowMissing(__DIR__ . '/app/views/deliveryManager/deliveryManagerDashboard.php', 'Delivery Dashboard');
+    $deliveryManager->showDashboard();
     exit;
 }
 
