@@ -51,7 +51,7 @@
             <span>Zone Report</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'delivery_summary' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliverySummaryAjax" class="<?= ($activeDeliveryPage ?? '') === 'delivery_summary' ? 'active' : '' ?>">
             <i class="fa-regular fa-chart-bar"></i>
             <span>Daily Weekly Summary</span>
         </a>

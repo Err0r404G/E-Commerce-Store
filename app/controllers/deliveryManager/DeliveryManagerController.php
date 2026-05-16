@@ -91,6 +91,13 @@ class DeliveryManagerController
         require __DIR__ . '/../../views/deliveryManager/partials/zone_report.php';
     }
 
+    public function showDeliverySummaryAjax(): void
+    {
+        $deliverySummaryData = $this->deliveryModel->getDeliverySummaryData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/delivery_summary.php';
+    }
+
     public function profileAction(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);

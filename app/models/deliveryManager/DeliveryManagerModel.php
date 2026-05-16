@@ -456,6 +456,89 @@ class DeliveryManagerModel
         return [$zones, $stats];
     }
 
+    public function getDeliverySummaryData(): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
+        $dailyRows = $this->buildEmptyDailySummary();
+        $weeklyRows = $this->buildEmptyWeeklySummary();
+
+        $dailyResult = $this->conn->query(
+            "SELECT period_date, metric, COUNT(*) AS total
+             FROM (
+                SELECT DATE(completed_at) AS period_date, 'delivered' AS metric
+                FROM delivery_assignments
+                WHERE status = 'delivered' AND completed_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+                UNION ALL
+                SELECT DATE(failed_at) AS period_date, 'failed' AS metric
+                FROM delivery_assignments
+                WHERE status = 'failed' AND failed_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+                UNION ALL
+                SELECT DATE(assigned_at) AS period_date, 'in_transit' AS metric
+                FROM delivery_assignments
+                WHERE status = 'in_transit' AND assigned_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+             ) summary
+             WHERE period_date IS NOT NULL
+             GROUP BY period_date, metric"
+        );
+
+        if ($dailyResult) {
+            while ($row = $dailyResult->fetch_assoc()) {
+                $date = (string) ($row['period_date'] ?? '');
+                $metric = (string) ($row['metric'] ?? '');
+
+                if (isset($dailyRows[$date], $dailyRows[$date][$metric])) {
+                    $dailyRows[$date][$metric] = (int) ($row['total'] ?? 0);
+                }
+            }
+        }
+
+        $weeklyResult = $this->conn->query(
+            "SELECT week_start, metric, COUNT(*) AS total
+             FROM (
+                SELECT DATE_SUB(DATE(completed_at), INTERVAL WEEKDAY(completed_at) DAY) AS week_start, 'delivered' AS metric
+                FROM delivery_assignments
+                WHERE status = 'delivered'
+                  AND completed_at >= DATE_SUB(CURDATE(), INTERVAL (WEEKDAY(CURDATE()) + 35) DAY)
+                UNION ALL
+                SELECT DATE_SUB(DATE(failed_at), INTERVAL WEEKDAY(failed_at) DAY) AS week_start, 'failed' AS metric
+                FROM delivery_assignments
+                WHERE status = 'failed'
+                  AND failed_at >= DATE_SUB(CURDATE(), INTERVAL (WEEKDAY(CURDATE()) + 35) DAY)
+                UNION ALL
+                SELECT DATE_SUB(DATE(assigned_at), INTERVAL WEEKDAY(assigned_at) DAY) AS week_start, 'in_transit' AS metric
+                FROM delivery_assignments
+                WHERE status = 'in_transit'
+                  AND assigned_at >= DATE_SUB(CURDATE(), INTERVAL (WEEKDAY(CURDATE()) + 35) DAY)
+             ) summary
+             WHERE week_start IS NOT NULL
+             GROUP BY week_start, metric"
+        );
+
+        if ($weeklyResult) {
+            while ($row = $weeklyResult->fetch_assoc()) {
+                $weekStart = (string) ($row['week_start'] ?? '');
+                $metric = (string) ($row['metric'] ?? '');
+
+                if (isset($weeklyRows[$weekStart], $weeklyRows[$weekStart][$metric])) {
+                    $weeklyRows[$weekStart][$metric] = (int) ($row['total'] ?? 0);
+                }
+            }
+        }
+
+        $dailyRows = array_values(array_reverse($dailyRows));
+        $weeklyRows = array_values(array_reverse($weeklyRows));
+        $today = $dailyRows[0] ?? ['delivered' => 0, 'failed' => 0, 'in_transit' => 0];
+        $thisWeek = $weeklyRows[0] ?? ['delivered' => 0, 'failed' => 0, 'in_transit' => 0];
+
+        return [
+            'today' => $today,
+            'this_week' => $thisWeek,
+            'daily' => $dailyRows,
+            'weekly' => $weeklyRows,
+        ];
+    }
+
     public function updateDeliveryStatus(int $assignmentId, string $nextStatus, ?string $failedReason = null): array
     {
         $this->ensureDeliveryFailureColumns();
@@ -770,6 +853,48 @@ class DeliveryManagerModel
         $stmt->close();
 
         return $exists;
+    }
+
+    private function buildEmptyDailySummary(): array
+    {
+        $rows = [];
+
+        for ($offset = 6; $offset >= 0; $offset--) {
+            $timestamp = strtotime('-' . $offset . ' days');
+            $date = date('Y-m-d', $timestamp);
+
+            $rows[$date] = [
+                'period' => $date,
+                'label' => date('M j, Y', $timestamp),
+                'delivered' => 0,
+                'failed' => 0,
+                'in_transit' => 0,
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function buildEmptyWeeklySummary(): array
+    {
+        $rows = [];
+        $currentWeekStart = strtotime('monday this week');
+
+        for ($offset = 5; $offset >= 0; $offset--) {
+            $weekStartTimestamp = strtotime('-' . $offset . ' weeks', $currentWeekStart);
+            $weekEndTimestamp = strtotime('+6 days', $weekStartTimestamp);
+            $weekStart = date('Y-m-d', $weekStartTimestamp);
+
+            $rows[$weekStart] = [
+                'period' => $weekStart,
+                'label' => date('M j', $weekStartTimestamp) . ' - ' . date('M j, Y', $weekEndTimestamp),
+                'delivered' => 0,
+                'failed' => 0,
+                'in_transit' => 0,
+            ];
+        }
+
+        return $rows;
     }
 
     private function ensureDeliveryAgentColumns(): void
