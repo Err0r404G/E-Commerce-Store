@@ -49,8 +49,8 @@
 
                 <label class="vendor-file-field">
                     Additional Images
-                    <input type="file" name="additional_images[]" id="vendorAdditionalImages" accept="image/jpeg,image/png,image/webp" multiple>
-                    <span>Optional, up to 4 images</span>
+                    <input type="file" name="additional_images[]" id="vendorAdditionalImages" accept="image/jpeg,image/png,image/webp" multiple data-max-files="4">
+                    <span id="vendorAdditionalImagesCount">Optional, up to 4 images</span>
                 </label>
 
                 <label class="vendor-check-label">

@@ -126,10 +126,31 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (additionalImages) {
+            const additionalImagesCount = document.getElementById("vendorAdditionalImagesCount");
+            const maxAdditionalImages = Number(additionalImages.dataset.maxFiles || 4);
+
             additionalImages.addEventListener("change", function () {
-                if (this.files.length > 4) {
-                    alert("You can upload up to 4 additional images.");
-                    this.value = "";
+                if (this.files.length > maxAdditionalImages) {
+                    if (window.DataTransfer) {
+                        const selectedFiles = new DataTransfer();
+
+                        Array.from(this.files).slice(0, maxAdditionalImages).forEach(file => {
+                            selectedFiles.items.add(file);
+                        });
+
+                        this.files = selectedFiles.files;
+                    } else {
+                        this.value = "";
+                    }
+
+                    alert(`You can upload up to ${maxAdditionalImages} additional images.`);
+                }
+
+                if (additionalImagesCount) {
+                    const selectedCount = this.files.length;
+                    additionalImagesCount.textContent = selectedCount > 0
+                        ? `${selectedCount} of ${maxAdditionalImages} additional images selected`
+                        : `Optional, up to ${maxAdditionalImages} images`;
                 }
             });
         }
