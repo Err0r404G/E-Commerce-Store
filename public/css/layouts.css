@@ -59,12 +59,6 @@ body {
     background: #1e293b;
 }
 
-.vendor-brand-wrap {
-    align-items: center;
-    display: flex;
-    gap: 12px;
-}
-
 .delivery-manager-navbar {
     background: #172344;
 }
@@ -92,41 +86,6 @@ body {
     font-weight: 700;
     gap: 7px;
     padding: 6px 10px;
-}
-
-.vendor-notification-badge {
-    align-items: center;
-    background: rgba(248, 113, 113, 0.16);
-    border: 1px solid rgba(248, 113, 113, 0.68);
-    border-radius: 999px;
-    color: #fecaca;
-    display: inline-flex;
-    gap: 6px;
-    min-height: 28px;
-    padding: 5px 9px;
-}
-
-.vendor-notification-badge i {
-    color: #fca5a5;
-    font-size: 12px;
-}
-
-.vendor-notification-badge strong {
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.vendor-notification-badge::after {
-    background: #ef4444;
-    border: 2px solid #1e293b;
-    border-radius: 50%;
-    content: "";
-    height: 8px;
-    margin-left: -3px;
-    margin-top: -16px;
-    width: 8px;
 }
 
 .delivery-manager-status-badge {
@@ -1433,6 +1392,29 @@ body {
 
 .vendor-menu a i {
     font-size: 16px;
+}
+
+.vendor-menu-icon-wrap {
+    display: inline-flex;
+    position: relative;
+    width: 18px;
+}
+
+.vendor-menu-alert {
+    align-items: center;
+    background: #172344;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 800;
+    height: 15px;
+    justify-content: center;
+    line-height: 1;
+    position: absolute;
+    right: -8px;
+    top: -9px;
+    width: 15px;
 }
 
 .delivery-manager-menu a i {
@@ -2895,6 +2877,10 @@ body {
 
     .admin-menu a {
         justify-content: center;
+    }
+
+    .admin-menu a .vendor-menu-icon-wrap {
+        display: inline-flex;
     }
 
     .admin-content {

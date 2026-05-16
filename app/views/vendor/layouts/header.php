@@ -13,27 +13,9 @@
 <body class="vendor-body">
 
 <header class="navbar admin-navbar vendor-navbar">
-    <?php
-    $vendorNotifications = $vendorNotifications ?? ['orders' => 0, 'returns' => 0, 'reviews' => 0, 'total' => 0];
-    $vendorNotificationTotal = (int) ($vendorNotifications['total'] ?? 0);
-    ?>
-
-    <div class="vendor-brand-wrap">
-        <a class="logo" href="/E-Commerce-Store/index.php?page=vendorDashboard">
-            Nexus<span>Commerce</span>
-        </a>
-
-        <span
-            class="vendor-notification-badge"
-            id="vendorNotificationBadge"
-            title="<?= htmlspecialchars((int) $vendorNotifications['orders'] . ' new orders, ' . (int) $vendorNotifications['returns'] . ' return requests, ' . (int) $vendorNotifications['reviews'] . ' new reviews') ?>"
-            aria-label="<?= htmlspecialchars($vendorNotificationTotal . ' vendor notifications') ?>"
-            <?= $vendorNotificationTotal > 0 ? '' : 'hidden' ?>
-        >
-            <i class="fa-solid fa-bell"></i>
-            <strong id="vendorNotificationCount"><?= $vendorNotificationTotal > 99 ? '99+' : $vendorNotificationTotal ?></strong>
-        </span>
-    </div>
+    <a class="logo" href="/E-Commerce-Store/index.php?page=vendorDashboard">
+        Nexus<span>Commerce</span>
+    </a>
 
     <div class="vendor-top-actions">
         <span class="vendor-status-badge">

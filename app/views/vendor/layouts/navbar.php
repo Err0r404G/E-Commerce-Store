@@ -1,4 +1,5 @@
 <aside class="admin-sidebar vendor-sidebar">
+    <?php $vendorNotifications = $vendorNotifications ?? ['orders' => 0, 'returns' => 0, 'reviews' => 0, 'total' => 0]; ?>
 
     <nav class="admin-menu vendor-menu">
         <a href="/E-Commerce-Store/index.php?page=vendorDashboard" class="<?= ($activeVendorPage ?? 'dashboard') === 'dashboard' ? 'active' : '' ?>">
@@ -12,12 +13,18 @@
         </a>
 
         <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorOrdersAjax">
-            <i class="fa-regular fa-clipboard"></i>
+            <span class="vendor-menu-icon-wrap">
+                <i class="fa-regular fa-clipboard"></i>
+                <strong class="vendor-menu-alert" data-vendor-alert="orders" <?= (int) ($vendorNotifications['orders'] ?? 0) > 0 ? '' : 'hidden' ?>>!</strong>
+            </span>
             <span>Orders</span>
         </a>
 
         <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorReturnsAjax">
-            <i class="fa-solid fa-rotate-left"></i>
+            <span class="vendor-menu-icon-wrap">
+                <i class="fa-solid fa-rotate-left"></i>
+                <strong class="vendor-menu-alert" data-vendor-alert="returns" <?= (int) ($vendorNotifications['returns'] ?? 0) > 0 ? '' : 'hidden' ?>>!</strong>
+            </span>
             <span>Returns</span>
         </a>
 
@@ -27,7 +34,10 @@
         </a>
 
         <a href="#" data-vendor-page="/E-Commerce-Store/index.php?page=vendorReviewsAjax">
-            <i class="fa-regular fa-star"></i>
+            <span class="vendor-menu-icon-wrap">
+                <i class="fa-regular fa-star"></i>
+                <strong class="vendor-menu-alert" data-vendor-alert="reviews" <?= (int) ($vendorNotifications['reviews'] ?? 0) > 0 ? '' : 'hidden' ?>>!</strong>
+            </span>
             <span>Reviews</span>
         </a>
 

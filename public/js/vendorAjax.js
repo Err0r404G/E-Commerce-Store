@@ -19,10 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateVendorNotifications() {
-        const badge = document.getElementById("vendorNotificationBadge");
-        const count = document.getElementById("vendorNotificationCount");
+        const alerts = document.querySelectorAll("[data-vendor-alert]");
 
-        if (!badge || !count) {
+        if (!alerts.length) {
             return;
         }
 
@@ -34,12 +33,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 const notifications = data.notifications;
-                const total = Number(notifications.total || 0);
 
-                badge.hidden = total <= 0;
-                count.textContent = total > 99 ? "99+" : String(total);
-                badge.title = `${notifications.orders || 0} new orders, ${notifications.returns || 0} return requests, ${notifications.reviews || 0} new reviews`;
-                badge.setAttribute("aria-label", `${total} vendor notifications`);
+                alerts.forEach(alert => {
+                    const type = alert.dataset.vendorAlert;
+                    alert.hidden = Number(notifications[type] || 0) <= 0;
+                });
             })
             .catch(() => {});
     }
