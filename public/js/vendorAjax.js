@@ -618,4 +618,5 @@ document.addEventListener("DOMContentLoaded", function () {
             loadPage(this.dataset.vendorPage, this);
         });
     });
+
 });

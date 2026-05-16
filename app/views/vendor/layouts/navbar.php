@@ -1,5 +1,4 @@
 <aside class="admin-sidebar vendor-sidebar">
-
     <nav class="admin-menu vendor-menu">
         <a href="/E-Commerce-Store/index.php?page=vendorDashboard" class="<?= ($activeVendorPage ?? 'dashboard') === 'dashboard' ? 'active' : '' ?>">
             <i class="fa-solid fa-table-cells-large"></i>
