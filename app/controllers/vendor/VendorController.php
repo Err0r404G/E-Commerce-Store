@@ -196,6 +196,7 @@ class VendorController
     {
         $seller = $this->requireSeller();
         $analytics = $this->users->getVendorAnalytics((int) $seller['id']);
+        $earnings = $this->users->getVendorEarnings((int) $seller['id']);
 
         require __DIR__ . '/../../views/vendor/partials/analytics.php';
     }
