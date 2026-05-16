@@ -187,7 +187,7 @@ include __DIR__ . '/../layouts/header.php';
                                     <span><?= (int) $product['is_available'] === 1 ? 'Active' : 'Unavailable' ?></span>
                                 </div>
                                 <div>
-                                    <strong><?= $number($product['stock_qty'] ?? 0) ?></strong>
+                                    <strong><?= $number($product['stock_qty'] ?? 0) ?></strong >
                                     <span>In stock</span>
                                 </div>
                             </div>
