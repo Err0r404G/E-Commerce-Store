@@ -85,19 +85,25 @@
                             </td>
                             <td><?= htmlspecialchars(date('M d, Y', strtotime($order['created_at']))) ?></td>
                             <td>
-                                <?php if ($status === 'pending'): ?>
-                                    <button type="button" class="vendor-order-action-btn" data-order-confirm data-order-item-id="<?= (int) $order['order_item_id'] ?>">
-                                        Confirm
+                                <div class="vendor-order-actions">
+                                    <button type="button" class="vendor-order-detail-btn" data-order-detail data-order-id="<?= (int) $order['order_id'] ?>">
+                                        View
                                     </button>
-                                <?php elseif ($status === 'confirmed'): ?>
-                                    <form class="vendor-ship-form" data-order-ship-form>
-                                        <input type="hidden" name="order_item_id" value="<?= (int) $order['order_item_id'] ?>">
-                                        <input type="text" name="tracking_note" placeholder="Tracking note" required>
-                                        <button type="submit">Ship</button>
-                                    </form>
-                                <?php else: ?>
-                                    <span class="vendor-muted-action">No action</span>
-                                <?php endif; ?>
+
+                                    <?php if ($status === 'pending'): ?>
+                                        <button type="button" class="vendor-order-action-btn" data-order-confirm data-order-item-id="<?= (int) $order['order_item_id'] ?>">
+                                            Confirm
+                                        </button>
+                                    <?php elseif ($status === 'confirmed'): ?>
+                                        <form class="vendor-ship-form" data-order-ship-form>
+                                            <input type="hidden" name="order_item_id" value="<?= (int) $order['order_item_id'] ?>">
+                                            <input type="text" name="tracking_note" placeholder="Tracking note" required>
+                                            <button type="submit">Ship</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="vendor-muted-action">No action</span>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -105,4 +111,18 @@
             </table>
         </div>
     </section>
+
+    <div class="vendor-order-modal-backdrop" id="vendorOrderDetailModal" hidden>
+        <div class="vendor-order-modal" role="dialog" aria-modal="true" aria-labelledby="vendorOrderDetailTitle">
+            <div class="vendor-order-modal-top">
+                <h2 id="vendorOrderDetailTitle">Order Detail</h2>
+                <button type="button" class="vendor-order-modal-close" data-order-detail-close aria-label="Close order detail">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="vendorOrderDetailBody" class="vendor-order-modal-body">
+                <div class="admin-loading">Loading...</div>
+            </div>
+        </div>
+    </div>
 </section>

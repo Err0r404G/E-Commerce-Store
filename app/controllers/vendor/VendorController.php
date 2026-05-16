@@ -162,6 +162,28 @@ class VendorController
         require __DIR__ . '/../../views/vendor/partials/orders.php';
     }
 
+    public function showOrderDetailAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $orderId = (int) ($_GET['order_id'] ?? 0);
+
+        if ($orderId <= 0) {
+            http_response_code(422);
+            echo '<p class="admin-error">Invalid order.</p>';
+            return;
+        }
+
+        $order = $this->users->getVendorOrderDetail((int) $seller['id'], $orderId);
+
+        if (!$order) {
+            http_response_code(404);
+            echo '<p class="admin-error">Order detail not found.</p>';
+            return;
+        }
+
+        require __DIR__ . '/../../views/vendor/partials/order_detail.php';
+    }
+
     public function profileAction(): void
     {
         $result = $this->saveProfileFromRequest();

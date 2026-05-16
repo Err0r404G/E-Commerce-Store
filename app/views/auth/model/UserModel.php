@@ -296,6 +296,56 @@ class UserModel
         return $orders;
     }
 
+    public function getVendorOrderDetail(int $sellerId, int $orderId): ?array
+    {
+        $this->ensureOrderItemTrackingNoteColumn();
+
+        $stmt = $this->conn->prepare(
+            "SELECT o.id AS order_id, o.shipping_address, o.payment_method, o.created_at,
+                    u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+             FROM orders o
+             INNER JOIN users u ON u.id = o.customer_id
+             WHERE o.id = ?
+               AND EXISTS (
+                   SELECT 1
+                   FROM order_items oi
+                   WHERE oi.order_id = o.id AND oi.seller_id = ?
+               )
+             LIMIT 1"
+        );
+        $stmt->bind_param("ii", $orderId, $sellerId);
+        $stmt->execute();
+
+        $order = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$order) {
+            return null;
+        }
+
+        $items = [];
+        $itemsStmt = $this->conn->prepare(
+            "SELECT oi.id AS order_item_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status, oi.tracking_note,
+                    p.name AS product_name
+             FROM order_items oi
+             INNER JOIN products p ON p.id = oi.product_id
+             WHERE oi.seller_id = ? AND oi.order_id = ?
+             ORDER BY oi.id ASC"
+        );
+        $itemsStmt->bind_param("ii", $sellerId, $orderId);
+        $itemsStmt->execute();
+
+        $result = $itemsStmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $items[] = $row;
+        }
+
+        $itemsStmt->close();
+        $order['items'] = $items;
+
+        return $order;
+    }
+
     public function updateVendorOrderItemStatus(int $sellerId, int $orderItemId, string $status, ?string $trackingNote = null): bool
     {
         $this->ensureOrderItemTrackingNoteColumn();

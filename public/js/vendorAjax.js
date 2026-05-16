@@ -292,6 +292,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function bindOrderEvents() {
         const statusFilter = document.getElementById("vendorOrderStatusFilter");
         const search = document.getElementById("vendorOrderSearch");
+        const detailModal = document.getElementById("vendorOrderDetailModal");
+        const detailBody = document.getElementById("vendorOrderDetailBody");
 
         function filterOrders() {
             const status = statusFilter ? statusFilter.value : "";
@@ -304,6 +306,42 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        function closeOrderDetail() {
+            if (!detailModal) {
+                return;
+            }
+
+            detailModal.hidden = true;
+            document.body.classList.remove("modal-open");
+        }
+
+        function openOrderDetail(orderId) {
+            if (!detailModal || !detailBody) {
+                return;
+            }
+
+            detailModal.hidden = false;
+            document.body.classList.add("modal-open");
+            detailBody.innerHTML = "<div class=\"admin-loading\">Loading...</div>";
+
+            fetch(`/E-Commerce-Store/index.php?page=vendorOrderDetailAjax&order_id=${encodeURIComponent(orderId)}`, {
+                credentials: "same-origin"
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Order detail failed to load.");
+                    }
+
+                    return response.text();
+                })
+                .then(html => {
+                    detailBody.innerHTML = html;
+                })
+                .catch(error => {
+                    detailBody.innerHTML = `<p class="admin-error">${error.message || "Order detail failed to load."}</p>`;
+                });
+        }
+
         if (statusFilter) {
             statusFilter.addEventListener("change", filterOrders);
         }
@@ -311,6 +349,30 @@ document.addEventListener("DOMContentLoaded", function () {
         if (search) {
             search.addEventListener("input", filterOrders);
         }
+
+        document.querySelectorAll("[data-order-detail]").forEach(button => {
+            button.addEventListener("click", function () {
+                openOrderDetail(this.dataset.orderId);
+            });
+        });
+
+        document.querySelectorAll("[data-order-detail-close]").forEach(button => {
+            button.addEventListener("click", closeOrderDetail);
+        });
+
+        if (detailModal) {
+            detailModal.addEventListener("click", function (e) {
+                if (e.target === detailModal) {
+                    closeOrderDetail();
+                }
+            });
+        }
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && detailModal && !detailModal.hidden) {
+                closeOrderDetail();
+            }
+        });
 
         document.querySelectorAll("[data-order-confirm]").forEach(button => {
             button.addEventListener("click", function () {
