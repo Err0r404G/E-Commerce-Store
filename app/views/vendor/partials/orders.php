@@ -40,6 +40,7 @@
             <table class="category-table vendor-product-table vendor-orders-table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Order</th>
                         <th>Product</th>
                         <th>Customer</th>
@@ -55,7 +56,7 @@
                 <tbody>
                     <?php if (empty($orders)): ?>
                         <tr>
-                            <td colspan="10" class="empty-cell">No incoming order items found.</td>
+                            <td colspan="11" class="empty-cell">No incoming order items found.</td>
                         </tr>
                     <?php endif; ?>
 
@@ -64,14 +65,31 @@
                         $status = $order['item_status'] ?? 'pending';
                         $statusLabel = $status === 'confirmed' ? 'Processing' : ucwords($status);
                         $amount = (float) $order['unit_price'] * (int) $order['quantity'];
+                        $orderId = (int) $order['order_id'];
+                        $detailKey = $orderId . '-' . (int) $order['order_item_id'];
+                        $storeItems = $orderItemsByOrder[$orderId] ?? [$order];
                         ?>
                         <tr
                             data-vendor-order-row
+                            data-order-id="<?= $orderId ?>"
+                            data-order-detail-key="<?= htmlspecialchars($detailKey) ?>"
                             data-status="<?= htmlspecialchars($status) ?>"
                             data-search="<?= htmlspecialchars(strtolower('#' . $order['order_id'] . ' item ' . $order['order_item_id'] . ' ' . ($order['product_name'] ?? '') . ' ' . ($order['customer_name'] ?? '') . ' ' . ($order['customer_email'] ?? '') . ' ' . ($order['payment_method'] ?? ''))) ?>"
                         >
+                            <td class="vendor-order-toggle-cell">
+                                <button
+                                    type="button"
+                                    class="vendor-order-toggle"
+                                    data-order-toggle
+                                    data-order-detail-key="<?= htmlspecialchars($detailKey) ?>"
+                                    aria-expanded="false"
+                                    aria-label="Show order details"
+                                >
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </button>
+                            </td>
                             <td>
-                                <strong>#<?= (int) $order['order_id'] ?></strong>
+                                <strong>#<?= $orderId ?></strong>
                                 <small>Item #<?= (int) $order['order_item_id'] ?></small>
                             </td>
                             <td><?= htmlspecialchars($order['product_name'] ?? 'Unknown product') ?></td>
@@ -109,6 +127,59 @@
                                 <?php else: ?>
                                     <span class="vendor-muted-action">No action</span>
                                 <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr class="vendor-order-detail-row" data-vendor-order-detail-row data-order-detail-key="<?= htmlspecialchars($detailKey) ?>" hidden>
+                            <td colspan="11">
+                                <div class="vendor-order-dropdown">
+                                    <section>
+                                        <h3>Customer Shipping Address</h3>
+                                        <p><?= nl2br(htmlspecialchars($order['shipping_address'] ?? 'No shipping address available.')) ?></p>
+                                    </section>
+
+                                    <section>
+                                        <h3>Payment Method</h3>
+                                        <p><?= htmlspecialchars(strtoupper($order['payment_method'] ?? 'COD')) ?></p>
+                                    </section>
+
+                                    <section class="vendor-order-dropdown-items">
+                                        <h3>Store Items In This Order</h3>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Qty</th>
+                                                    <th>Unit Price</th>
+                                                    <th>Total</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($storeItems as $storeItem): ?>
+                                                    <?php
+                                                    $itemStatus = $storeItem['item_status'] ?? 'pending';
+                                                    $itemStatusLabel = $itemStatus === 'confirmed' ? 'Processing' : ucwords($itemStatus);
+                                                    $itemTotal = (float) $storeItem['unit_price'] * (int) $storeItem['quantity'];
+                                                    ?>
+                                                    <tr>
+                                                        <td>
+                                                            <strong><?= htmlspecialchars($storeItem['product_name'] ?? 'Unknown product') ?></strong>
+                                                            <small>Item #<?= (int) $storeItem['order_item_id'] ?></small>
+                                                        </td>
+                                                        <td><?= (int) $storeItem['quantity'] ?></td>
+                                                        <td>$<?= number_format((float) $storeItem['unit_price'], 2) ?></td>
+                                                        <td>$<?= number_format($itemTotal, 2) ?></td>
+                                                        <td>
+                                                            <span class="status-badge <?= htmlspecialchars($itemStatus) ?>">
+                                                                <?= htmlspecialchars($itemStatusLabel) ?>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </section>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

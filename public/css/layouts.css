@@ -1449,11 +1449,13 @@ body {
 }
 
 @media (max-width: 1100px) {
-    .admin-home-stats {
+    .admin-home-stats,
+    .vendor-dashboard-stats {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .admin-home-grid {
+    .admin-home-grid,
+    .vendor-dashboard-panels {
         grid-template-columns: 1fr;
     }
 }
@@ -1463,6 +1465,69 @@ body {
     gap: 20px;
     grid-template-columns: repeat(3, 1fr);
     margin: 38px 0;
+}
+
+.vendor-dashboard-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.vendor-dashboard-grid {
+    margin-bottom: 24px;
+}
+
+.vendor-dashboard-panels {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 24px;
+}
+
+.vendor-dashboard-list {
+    display: grid;
+}
+
+.vendor-dashboard-row {
+    align-items: center;
+    border-top: 1px solid #d4d6dd;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    min-height: 72px;
+    padding: 14px 18px;
+}
+
+.vendor-dashboard-row strong,
+.vendor-dashboard-row span {
+    display: block;
+}
+
+.vendor-dashboard-row strong {
+    color: #172344;
+    font-size: 14px;
+}
+
+.vendor-dashboard-row span {
+    color: #596783;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.vendor-dashboard-row > div:last-child {
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.vendor-top-products-card {
+    margin-bottom: 20px;
+}
+
+.vendor-top-products-card .admin-report-row small {
+    color: #596783;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 8px;
 }
 
 .delivery-manager-stats-grid {
@@ -1966,11 +2031,29 @@ body {
 
 .vendor-orders-page {
     margin: 0 auto;
-    max-width: 1280px;
+    max-width: none;
+    width: 100%;
 }
 
 .vendor-orders-panel {
     margin-top: 34px;
+    padding-left: 28px;
+    padding-right: 28px;
+}
+
+.vendor-body .admin-content:has(.vendor-orders-page) {
+    padding-left: 32px;
+    padding-right: 32px;
+}
+
+.vendor-orders-panel .table-wrapper {
+    overflow-x: visible;
+}
+
+.vendor-orders-table th,
+.vendor-orders-table td {
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 .vendor-orders-page .page-header {
@@ -2024,6 +2107,81 @@ body {
     height: 38px;
     min-width: 180px;
     padding: 0 10px;
+}
+
+.vendor-order-toggle-cell {
+    width: 42px;
+}
+
+.vendor-order-toggle {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #172344;
+    cursor: pointer;
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.vendor-order-toggle i {
+    font-size: 11px;
+    transition: transform 0.2s ease;
+}
+
+.vendor-order-toggle.is-open i {
+    transform: rotate(180deg);
+}
+
+.vendor-order-detail-row td {
+    background: #fbf9fd;
+    padding: 0;
+}
+
+.vendor-order-dropdown {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.6fr) minmax(360px, 2fr);
+    padding: 20px 22px;
+}
+
+.vendor-order-dropdown h3 {
+    color: #172344;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.vendor-order-dropdown p {
+    color: #52607c;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.vendor-order-dropdown-items {
+    min-width: 0;
+}
+
+.vendor-order-dropdown-items table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.vendor-order-dropdown-items th,
+.vendor-order-dropdown-items td {
+    border-top: 1px solid #d4d6dd;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.vendor-order-dropdown-items th {
+    color: #7b808a;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .vendor-orders-table .status-badge.pending {
@@ -2479,6 +2637,14 @@ body {
     .vendor-order-search,
     .vendor-order-filter select {
         width: 100%;
+    }
+
+    .vendor-order-dropdown {
+        grid-template-columns: 1fr;
+    }
+
+    .vendor-order-dropdown-items {
+        overflow-x: auto;
     }
 }
 .admin-main {

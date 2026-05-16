@@ -11,6 +11,14 @@ class VendorController
         $this->users = new UserModel($conn);
     }
 
+    public function showDashboard(): void
+    {
+        $seller = $this->requireSeller();
+        $dashboardMetrics = $this->users->getVendorDashboardMetrics((int) $seller['id']);
+
+        require __DIR__ . '/../../views/vendor/view/vendor_home_page_screen.php';
+    }
+
     public function showProfile(array $errors = [], array $success = [], ?array $profileOverride = null): void
     {
         $vendorId = (int) ($_SESSION['user']['id'] ?? 0);
@@ -168,6 +176,10 @@ class VendorController
         }
 
         $orders = $this->users->getVendorOrderItems((int) $seller['id'], $selectedStatus);
+        $orderItemsByOrder = $this->users->getVendorOrderItemsGroupedByOrderIds(
+            (int) $seller['id'],
+            array_column($orders, 'order_id')
+        );
 
         require __DIR__ . '/../../views/vendor/partials/orders.php';
     }
@@ -192,6 +204,7 @@ class VendorController
     {
         $seller = $this->requireSeller();
         $analytics = $this->users->getVendorAnalytics((int) $seller['id']);
+        $earnings = $this->users->getVendorEarnings((int) $seller['id']);
 
         require __DIR__ . '/../../views/vendor/partials/analytics.php';
     }

@@ -142,6 +142,177 @@ class UserModel
         return $products;
     }
 
+    public function getVendorDashboardMetrics(int $sellerId): array
+    {
+        $metrics = [
+            'total_products' => 0,
+            'active_products' => 0,
+            'low_stock_products' => 0,
+            'active_coupons' => 0,
+            'order_items' => 0,
+            'pending_items' => 0,
+            'confirmed_items' => 0,
+            'shipped_items' => 0,
+            'delivered_items' => 0,
+            'total_revenue' => 0,
+            'monthly_revenue' => 0,
+            'units_sold' => 0,
+            'pending_returns' => 0,
+            'review_count' => 0,
+            'average_rating' => 0,
+            'commission_rate' => 0,
+            'commission_deducted' => 0,
+            'net_payout' => 0,
+            'recent_orders' => [],
+            'low_stock_items' => [],
+            'top_products' => [],
+        ];
+
+        $seller = $this->findSellerById($sellerId);
+        $metrics['commission_rate'] = (float) ($seller['commission_rate'] ?? 10);
+
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS total_products,
+                    COALESCE(SUM(CASE WHEN is_available = 1 THEN 1 ELSE 0 END), 0) AS active_products,
+                    COALESCE(SUM(CASE WHEN stock_qty <= 5 THEN 1 ELSE 0 END), 0) AS low_stock_products
+             FROM products
+             WHERE seller_id = ?"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $productRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($productRow) {
+            $metrics['total_products'] = (int) $productRow['total_products'];
+            $metrics['active_products'] = (int) $productRow['active_products'];
+            $metrics['low_stock_products'] = (int) $productRow['low_stock_products'];
+        }
+
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS order_items,
+                    COALESCE(SUM(CASE WHEN oi.item_status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_items,
+                    COALESCE(SUM(CASE WHEN oi.item_status = 'confirmed' THEN 1 ELSE 0 END), 0) AS confirmed_items,
+                    COALESCE(SUM(CASE WHEN oi.item_status = 'shipped' THEN 1 ELSE 0 END), 0) AS shipped_items,
+                    COALESCE(SUM(CASE WHEN oi.item_status = 'delivered' THEN 1 ELSE 0 END), 0) AS delivered_items,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_revenue,
+                    COALESCE(SUM(CASE WHEN DATE_FORMAT(o.created_at, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m') THEN oi.quantity * oi.unit_price ELSE 0 END), 0) AS monthly_revenue
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             WHERE oi.seller_id = ?"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $orderRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($orderRow) {
+            foreach (['order_items', 'pending_items', 'confirmed_items', 'shipped_items', 'delivered_items', 'units_sold'] as $key) {
+                $metrics[$key] = (int) $orderRow[$key];
+            }
+
+            $metrics['total_revenue'] = (float) $orderRow['total_revenue'];
+            $metrics['monthly_revenue'] = (float) $orderRow['monthly_revenue'];
+        }
+
+        $metrics['commission_deducted'] = $metrics['total_revenue'] * ($metrics['commission_rate'] / 100);
+        $metrics['net_payout'] = $metrics['total_revenue'] - $metrics['commission_deducted'];
+
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS active_coupons
+             FROM coupons
+             WHERE seller_id = ? AND is_active = 1"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $couponRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $metrics['active_coupons'] = (int) ($couponRow['active_coupons'] ?? 0);
+
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS pending_returns
+             FROM return_requests rr
+             INNER JOIN order_items oi ON oi.id = rr.order_item_id
+             WHERE oi.seller_id = ? AND rr.status = 'pending'"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $returnRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $metrics['pending_returns'] = (int) ($returnRow['pending_returns'] ?? 0);
+
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS review_count,
+                    COALESCE(AVG(r.rating), 0) AS average_rating
+             FROM reviews r
+             INNER JOIN products p ON p.id = r.product_id
+             WHERE p.seller_id = ?"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $reviewRow = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $metrics['review_count'] = (int) ($reviewRow['review_count'] ?? 0);
+        $metrics['average_rating'] = (float) ($reviewRow['average_rating'] ?? 0);
+
+        $stmt = $this->conn->prepare(
+            "SELECT oi.id AS order_item_id, oi.order_id, oi.quantity, oi.unit_price, oi.item_status, o.created_at,
+                    p.name AS product_name,
+                    u.name AS customer_name
+             FROM order_items oi
+             INNER JOIN orders o ON o.id = oi.order_id
+             INNER JOIN products p ON p.id = oi.product_id
+             INNER JOIN users u ON u.id = o.customer_id
+             WHERE oi.seller_id = ?
+             ORDER BY o.created_at DESC, oi.id DESC
+             LIMIT 5"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $metrics['recent_orders'][] = $row;
+        }
+        $stmt->close();
+
+        $stmt = $this->conn->prepare(
+            "SELECT id, name, stock_qty, is_available
+             FROM products
+             WHERE seller_id = ? AND stock_qty <= 5
+             ORDER BY stock_qty ASC, name ASC
+             LIMIT 6"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $metrics['low_stock_items'][] = $row;
+        }
+        $stmt->close();
+
+        $stmt = $this->conn->prepare(
+            "SELECT p.name,
+                    COALESCE(SUM(oi.quantity), 0) AS units_sold,
+                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS revenue
+             FROM order_items oi
+             INNER JOIN products p ON p.id = oi.product_id
+             WHERE oi.seller_id = ?
+             GROUP BY p.id, p.name
+             ORDER BY units_sold DESC, revenue DESC
+             LIMIT 5"
+        );
+        $stmt->bind_param("i", $sellerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $metrics['top_products'][] = $row;
+        }
+        $stmt->close();
+
+        return $metrics;
+    }
+
     public function saveVendorProduct(int $sellerId, array $data): ?int
     {
         $productId = (int) ($data['product_id'] ?? 0);
@@ -358,6 +529,51 @@ class UserModel
 
         $stmt->close();
         return $orders;
+    }
+
+    public function getVendorOrderItemsGroupedByOrderIds(int $sellerId, array $orderIds): array
+    {
+        $this->ensureOrderItemTrackingNoteColumn();
+
+        $orderIds = array_values(array_unique(array_filter(array_map('intval', $orderIds))));
+
+        if (empty($orderIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $types = 'i' . str_repeat('i', count($orderIds));
+        $params = array_merge([$sellerId], $orderIds);
+        $bindParams = [$types];
+
+        $stmt = $this->conn->prepare(
+            "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status, oi.tracking_note,
+                    p.name AS product_name, o.shipping_address, o.payment_method, o.created_at,
+                    u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+             FROM order_items oi
+             INNER JOIN products p ON p.id = oi.product_id
+             INNER JOIN orders o ON o.id = oi.order_id
+             INNER JOIN users u ON u.id = o.customer_id
+             WHERE oi.seller_id = ? AND oi.order_id IN ($placeholders)
+             ORDER BY o.created_at DESC, oi.id DESC"
+        );
+
+        foreach ($params as $index => $value) {
+            $bindParams[] = &$params[$index];
+        }
+
+        call_user_func_array([$stmt, 'bind_param'], $bindParams);
+        $stmt->execute();
+
+        $grouped = [];
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $grouped[(int) $row['order_id']][] = $row;
+        }
+
+        $stmt->close();
+        return $grouped;
     }
 
     public function updateVendorOrderItemStatus(int $sellerId, int $orderItemId, string $status, ?string $trackingNote = null): bool

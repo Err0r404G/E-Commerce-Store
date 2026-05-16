@@ -316,7 +316,20 @@ document.addEventListener("DOMContentLoaded", function () {
             const term = search ? search.value.trim().toLowerCase() : "";
 
             document.querySelectorAll("[data-vendor-order-row]").forEach(row => {
-                row.style.display = term === "" || row.dataset.search.includes(term) ? "" : "none";
+                const isVisible = term === "" || row.dataset.search.includes(term);
+                const detailRow = document.querySelector(`[data-vendor-order-detail-row][data-order-detail-key="${row.dataset.orderDetailKey}"]`);
+                const toggleButton = row.querySelector("[data-order-toggle]");
+
+                row.style.display = isVisible ? "" : "none";
+
+                if (!isVisible && detailRow) {
+                    detailRow.hidden = true;
+                }
+
+                if (!isVisible && toggleButton) {
+                    toggleButton.setAttribute("aria-expanded", "false");
+                    toggleButton.classList.remove("is-open");
+                }
             });
         }
 
@@ -337,6 +350,21 @@ document.addEventListener("DOMContentLoaded", function () {
         if (search) {
             search.addEventListener("input", filterOrders);
         }
+
+        document.querySelectorAll("[data-order-toggle]").forEach(button => {
+            button.addEventListener("click", function () {
+                const detailRow = document.querySelector(`[data-vendor-order-detail-row][data-order-detail-key="${this.dataset.orderDetailKey}"]`);
+
+                if (!detailRow) {
+                    return;
+                }
+
+                const isOpening = detailRow.hidden;
+                detailRow.hidden = !isOpening;
+                this.setAttribute("aria-expanded", isOpening ? "true" : "false");
+                this.classList.toggle("is-open", isOpening);
+            });
+        });
 
         document.querySelectorAll("[data-order-confirm]").forEach(button => {
             button.addEventListener("click", function () {
