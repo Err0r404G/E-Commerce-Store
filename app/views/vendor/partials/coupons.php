@@ -8,7 +8,6 @@
         <form class="vendor-product-form vendor-profile-panel" id="vendorCouponForm">
             <input type="hidden" name="coupon_action" value="save">
             <input type="hidden" name="coupon_id" id="vendorCouponId">
-            <input type="hidden" name="is_active" value="1">
 
             <h2>Coupon Details</h2>
 
@@ -31,6 +30,11 @@
                 <label>
                     Valid Until
                     <input type="date" name="valid_until" id="vendorCouponValidUntil" required>
+                </label>
+
+                <label class="vendor-check-label">
+                    <input type="checkbox" name="is_active" id="vendorCouponActive" checked>
+                    Active
                 </label>
 
             </div>

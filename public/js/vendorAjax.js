@@ -244,6 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             form.reset();
             document.getElementById("vendorCouponId").value = "";
+            document.getElementById("vendorCouponActive").checked = true;
         }
 
         if (resetButton) {
@@ -257,6 +258,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("vendorCouponDiscount").value = this.dataset.discount || "";
                 document.getElementById("vendorCouponMaxUses").value = this.dataset.maxUses || "";
                 document.getElementById("vendorCouponValidUntil").value = this.dataset.validUntil || "";
+                document.getElementById("vendorCouponActive").checked = this.dataset.active === "1";
                 form.scrollIntoView({ behavior: "smooth", block: "start" });
             });
         });
