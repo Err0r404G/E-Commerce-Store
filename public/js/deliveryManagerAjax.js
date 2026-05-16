@@ -317,11 +317,75 @@ document.addEventListener("DOMContentLoaded", function () {
         filterReadyDispatch();
     }
 
+    function bindAssignAgentEvents() {
+        const form = document.getElementById("deliveryAssignAgentForm");
+        const message = document.getElementById("deliveryAssignAgentMessage");
+        const search = document.getElementById("deliveryAssignSearch");
+        const countText = document.getElementById("deliveryAssignCountText");
+        const assignLink = document.querySelector("[data-delivery-page*='deliveryAssignAgentAjax']");
+
+        function filterAssignments() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-delivery-assign-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} order${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterAssignments);
+        }
+
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryAssignAgentAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        showMessage(message, data.message || "Assignment complete.", Boolean(data.success));
+
+                        if (!data.success) {
+                            throw new Error(data.message || "Assignment failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=deliveryAssignAgentAjax", assignLink);
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Assignment failed.", false);
+                        submitButton.disabled = false;
+                    });
+            });
+        }
+
+        filterAssignments();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
         bindZoneEvents();
         bindReadyDispatchEvents();
+        bindAssignAgentEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

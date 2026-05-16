@@ -21,7 +21,7 @@
             <span>Ready Dispatch</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'assignments' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryAssignAgentAjax" class="<?= ($activeDeliveryPage ?? '') === 'assignments' ? 'active' : '' ?>">
             <i class="fa-solid fa-route"></i>
             <span>Assign Agent</span>
         </a>

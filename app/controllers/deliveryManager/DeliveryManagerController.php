@@ -49,6 +49,13 @@ class DeliveryManagerController
         require __DIR__ . '/../../views/deliveryManager/partials/ready_dispatch.php';
     }
 
+    public function showAssignAgentAjax(): void
+    {
+        $assignmentData = $this->deliveryModel->getAssignAgentData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/assign_agent.php';
+    }
+
     public function profileAction(): void
     {
         $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
@@ -232,6 +239,17 @@ class DeliveryManagerController
             'success' => $saved,
             'message' => $saved ? 'Delivery zone saved.' : 'Delivery zone save failed.',
         ], $saved ? 200 : 422);
+    }
+
+    public function assignAgentAction(): void
+    {
+        $orderId = (int) ($_POST['order_id'] ?? 0);
+        $agentId = (int) ($_POST['agent_id'] ?? 0);
+        $deliveryZone = trim($_POST['delivery_zone'] ?? '');
+        $deliveryZone = $deliveryZone !== '' ? $deliveryZone : null;
+
+        $result = $this->deliveryModel->assignAgentToOrder($orderId, $agentId, $deliveryZone);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
     }
 
     private function uploadProfileImage(array &$errors): ?string
