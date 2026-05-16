@@ -313,55 +313,6 @@ class UserModel
         return $metrics;
     }
 
-    public function getVendorNotificationCounts(int $sellerId): array
-    {
-        $counts = [
-            'orders' => 0,
-            'returns' => 0,
-            'reviews' => 0,
-            'total' => 0,
-        ];
-
-        $stmt = $this->conn->prepare(
-            "SELECT COUNT(*) AS count
-             FROM order_items
-             WHERE seller_id = ? AND item_status = 'pending'"
-        );
-        $stmt->bind_param("i", $sellerId);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        $counts['orders'] = (int) ($row['count'] ?? 0);
-
-        $stmt = $this->conn->prepare(
-            "SELECT COUNT(*) AS count
-             FROM return_requests rr
-             INNER JOIN order_items oi ON oi.id = rr.order_item_id
-             WHERE oi.seller_id = ? AND rr.status = 'pending'"
-        );
-        $stmt->bind_param("i", $sellerId);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        $counts['returns'] = (int) ($row['count'] ?? 0);
-
-        $stmt = $this->conn->prepare(
-            "SELECT COUNT(*) AS count
-             FROM reviews r
-             INNER JOIN products p ON p.id = r.product_id
-             WHERE p.seller_id = ?
-                AND (r.seller_reply IS NULL OR r.seller_reply = '')"
-        );
-        $stmt->bind_param("i", $sellerId);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        $counts['reviews'] = (int) ($row['count'] ?? 0);
-        $counts['total'] = $counts['orders'] + $counts['returns'] + $counts['reviews'];
-
-        return $counts;
-    }
-
     public function saveVendorProduct(int $sellerId, array $data): ?int
     {
         $productId = (int) ($data['product_id'] ?? 0);

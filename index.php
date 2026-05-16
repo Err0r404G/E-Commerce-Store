@@ -348,20 +348,6 @@ elseif ($page === 'vendorSettingsAjax') {
     exit;
 }
 
-elseif ($page === 'vendorNotificationsAjax') {
-
-    requireRole('vendor');
-    $vendor->showNotificationCountsAjax();
-    exit;
-}
-
-elseif ($page === 'vendorNotificationSeenAjax') {
-
-    requireRole('vendor');
-    $vendor->markNotificationSeenAjax();
-    exit;
-}
-
 elseif ($page === 'vendorCouponsAjax') {
 
     requireRole('vendor');

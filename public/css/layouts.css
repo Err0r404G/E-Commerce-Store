@@ -1394,29 +1394,6 @@ body {
     font-size: 16px;
 }
 
-.vendor-menu-icon-wrap {
-    display: inline-flex;
-    position: relative;
-    width: 18px;
-}
-
-.vendor-menu-alert {
-    align-items: center;
-    background: #172344;
-    border-radius: 50%;
-    color: #fff;
-    display: inline-flex;
-    font-size: 10px;
-    font-weight: 800;
-    height: 15px;
-    justify-content: center;
-    line-height: 1;
-    position: absolute;
-    right: -8px;
-    top: -9px;
-    width: 15px;
-}
-
 .delivery-manager-menu a i {
     font-size: 16px;
 }
@@ -2877,10 +2854,6 @@ body {
 
     .admin-menu a {
         justify-content: center;
-    }
-
-    .admin-menu a .vendor-menu-icon-wrap {
-        display: inline-flex;
     }
 
     .admin-content {

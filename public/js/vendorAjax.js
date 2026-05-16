@@ -18,71 +18,6 @@ document.addEventListener("DOMContentLoaded", function () {
         element.classList.toggle("auth-message-error", !isSuccess);
     }
 
-    function updateVendorNotifications() {
-        const alerts = document.querySelectorAll("[data-vendor-alert]");
-
-        if (!alerts.length) {
-            return;
-        }
-
-        fetch("/E-Commerce-Store/index.php?page=vendorNotificationsAjax", { credentials: "same-origin" })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success || !data.notifications) {
-                    return;
-                }
-
-                applyVendorNotifications(data.notifications);
-            })
-            .catch(() => {});
-    }
-
-    function applyVendorNotifications(notifications) {
-        document.querySelectorAll("[data-vendor-alert]").forEach(alert => {
-            const type = alert.dataset.vendorAlert;
-            alert.hidden = Number(notifications[type] || 0) <= 0;
-        });
-    }
-
-    function notificationTypeForPage(pageUrl) {
-        if (pageUrl.includes("vendorOrdersAjax")) {
-            return "orders";
-        }
-
-        if (pageUrl.includes("vendorReturnsAjax")) {
-            return "returns";
-        }
-
-        if (pageUrl.includes("vendorReviewsAjax")) {
-            return "reviews";
-        }
-
-        return "";
-    }
-
-    function markVendorNotificationSeen(type) {
-        if (!type) {
-            updateVendorNotifications();
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("type", type);
-
-        fetch("/E-Commerce-Store/index.php?page=vendorNotificationSeenAjax", {
-            method: "POST",
-            body: formData,
-            credentials: "same-origin"
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.notifications) {
-                    applyVendorNotifications(data.notifications);
-                }
-            })
-            .catch(() => {});
-    }
-
     function bindSettingsEvents() {
         const form = document.getElementById("vendorSettingsForm");
         const message = document.getElementById("vendorSettingsMessage");
@@ -670,7 +605,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 bindLoadedPage();
-                markVendorNotificationSeen(notificationTypeForPage(pageUrl));
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";
@@ -685,6 +619,4 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    updateVendorNotifications();
-    window.setInterval(updateVendorNotifications, 30000);
 });
