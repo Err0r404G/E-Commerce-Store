@@ -70,9 +70,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const sidebarName = document.getElementById("deliverySidebarName");
                     const sidebarLogo = document.getElementById("deliverySidebarLogo");
+                    const settingsProfileName = document.getElementById("deliverySettingsProfileName");
 
                     if (sidebarName && data.name) {
                         sidebarName.textContent = data.name;
+                    }
+
+                    if (settingsProfileName && data.name) {
+                        settingsProfileName.textContent = data.name;
                     }
 
                     if (sidebarLogo && data.profile_pic) {
@@ -288,10 +293,330 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindReadyDispatchEvents() {
+        const search = document.getElementById("deliveryReadyDispatchSearch");
+        const countText = document.getElementById("deliveryReadyDispatchCountText");
+
+        function filterReadyDispatch() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-delivery-ready-dispatch-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} order${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterReadyDispatch);
+        }
+
+        filterReadyDispatch();
+    }
+
+    function bindAssignAgentEvents() {
+        const form = document.getElementById("deliveryAssignAgentForm");
+        const message = document.getElementById("deliveryAssignAgentMessage");
+        const search = document.getElementById("deliveryAssignSearch");
+        const countText = document.getElementById("deliveryAssignCountText");
+        const assignLink = document.querySelector("[data-delivery-page*='deliveryAssignAgentAjax']");
+
+        function filterAssignments() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-delivery-assign-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} order${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterAssignments);
+        }
+
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryAssignAgentAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        showMessage(message, data.message || "Assignment complete.", Boolean(data.success));
+
+                        if (!data.success) {
+                            throw new Error(data.message || "Assignment failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=deliveryAssignAgentAjax", assignLink);
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Assignment failed.", false);
+                        submitButton.disabled = false;
+                    });
+            });
+        }
+
+        filterAssignments();
+    }
+
+    function bindActiveDeliveryEvents() {
+        const search = document.getElementById("activeDeliverySearch");
+        const countText = document.getElementById("activeDeliveryCountText");
+        const message = document.getElementById("deliveryStatusMessage");
+        const activeLink = document.querySelector("[data-delivery-page*='deliveryActiveDeliveriesAjax']");
+
+        function filterActiveDeliveries() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-active-delivery-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} deliver${visibleCount === 1 ? "y" : "ies"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterActiveDeliveries);
+        }
+
+        document.querySelectorAll("[data-delivery-status-action]").forEach(button => {
+            button.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("assignment_id", this.dataset.assignmentId);
+                formData.append("next_status", this.dataset.nextStatus);
+
+                if (this.dataset.nextStatus === "failed") {
+                    const reason = prompt("Why did this delivery fail?");
+
+                    if (!reason || !reason.trim()) {
+                        showMessage(message, "Please provide a failure reason.", false);
+                        return;
+                    }
+
+                    formData.append("failed_reason", reason.trim());
+                }
+
+                this.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryStatusAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        showMessage(message, data.message || "Delivery status updated.", Boolean(data.success));
+
+                        if (!data.success) {
+                            throw new Error(data.message || "Delivery status update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=deliveryActiveDeliveriesAjax", activeLink);
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Delivery status update failed.", false);
+                        this.disabled = false;
+                    });
+            });
+        });
+
+        filterActiveDeliveries();
+    }
+
+    function bindFailedDeliveryEvents() {
+        const search = document.getElementById("failedDeliverySearch");
+        const countText = document.getElementById("failedDeliveryCountText");
+        const message = document.getElementById("failedDeliveryMessage");
+        const failedLink = document.querySelector("[data-delivery-page*='deliveryFailedDeliveriesAjax']");
+
+        function filterFailedDeliveries() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-failed-delivery-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} failed deliver${visibleCount === 1 ? "y" : "ies"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterFailedDeliveries);
+        }
+
+        document.querySelectorAll("[data-failed-delivery-form]").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const submitButton = form.querySelector("[type='submit']");
+                const formData = new FormData(form);
+
+                submitButton.disabled = true;
+
+                fetch("/E-Commerce-Store/index.php?page=deliveryFailedAction", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        showMessage(message, data.message || "Failed delivery updated.", Boolean(data.success));
+
+                        if (!data.success) {
+                            throw new Error(data.message || "Failed delivery update failed.");
+                        }
+
+                        loadPage("/E-Commerce-Store/index.php?page=deliveryFailedDeliveriesAjax", failedLink);
+                    })
+                    .catch(error => {
+                        showMessage(message, error.message || "Failed delivery update failed.", false);
+                        submitButton.disabled = false;
+                    });
+            });
+        });
+
+        filterFailedDeliveries();
+    }
+
+    function bindDeliveryHistoryEvents() {
+        const search = document.getElementById("deliveryHistorySearch");
+        const countText = document.getElementById("deliveryHistoryCountText");
+
+        function filterDeliveryHistory() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-delivery-history-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} deliver${visibleCount === 1 ? "y" : "ies"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterDeliveryHistory);
+        }
+
+        filterDeliveryHistory();
+    }
+
+    function bindAgentReportEvents() {
+        const search = document.getElementById("agentReportSearch");
+        const countText = document.getElementById("agentReportCountText");
+
+        function filterAgentReport() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-agent-report-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} agent${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterAgentReport);
+        }
+
+        filterAgentReport();
+    }
+
+    function bindZoneReportEvents() {
+        const search = document.getElementById("zoneReportSearch");
+        const countText = document.getElementById("zoneReportCountText");
+
+        function filterZoneReport() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-zone-report-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} zone${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterZoneReport);
+        }
+
+        filterZoneReport();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
         bindZoneEvents();
+        bindReadyDispatchEvents();
+        bindAssignAgentEvents();
+        bindActiveDeliveryEvents();
+        bindFailedDeliveryEvents();
+        bindDeliveryHistoryEvents();
+        bindAgentReportEvents();
+        bindZoneReportEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

@@ -1,14 +1,26 @@
 <?php
 
 require_once __DIR__ . '/../../views/auth/model/UserModel.php';
+require_once __DIR__ . '/../../models/deliveryManager/DeliveryManagerModel.php';
 
 class DeliveryManagerController
 {
     private UserModel $users;
+    private DeliveryManagerModel $deliveryModel;
 
     public function __construct(mysqli $conn)
     {
         $this->users = new UserModel($conn);
+        $this->deliveryModel = new DeliveryManagerModel($conn);
+    }
+
+    public function showDashboard(): void
+    {
+        $deliveryManagerId = (int) ($_SESSION['user']['id'] ?? 0);
+        $profile = $this->users->findDeliveryManagerProfile($deliveryManagerId);
+        $dashboardMetrics = $this->deliveryModel->getDashboardData();
+
+        require __DIR__ . '/../../views/deliveryManager/deliveryManagerDashboard.php';
     }
 
     public function showSettingsAjax(): void
@@ -37,6 +49,62 @@ class DeliveryManagerController
         $zones = $this->users->getDeliveryZones();
 
         require __DIR__ . '/../../views/deliveryManager/partials/zones.php';
+    }
+
+    public function showReadyDispatchAjax(): void
+    {
+        [$orders, $dispatchStats] = $this->deliveryModel->getReadyDispatchData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/ready_dispatch.php';
+    }
+
+    public function showAssignAgentAjax(): void
+    {
+        $assignmentData = $this->deliveryModel->getAssignAgentData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/assign_agent.php';
+    }
+
+    public function showActiveDeliveriesAjax(): void
+    {
+        [$deliveries, $deliveryStats] = $this->deliveryModel->getActiveDeliveriesData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/active_deliveries.php';
+    }
+
+    public function showFailedDeliveriesAjax(): void
+    {
+        $failedDeliveryData = $this->deliveryModel->getFailedDeliveriesData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/failed_deliveries.php';
+    }
+
+    public function showDeliveryHistoryAjax(): void
+    {
+        [$historyDeliveries, $historyStats] = $this->deliveryModel->getDeliveryHistoryData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/delivery_history.php';
+    }
+
+    public function showAgentReportAjax(): void
+    {
+        [$agentReports, $agentReportStats] = $this->deliveryModel->getAgentReportData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/agent_report.php';
+    }
+
+    public function showZoneReportAjax(): void
+    {
+        [$zoneReports, $zoneReportStats] = $this->deliveryModel->getZoneReportData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/zone_report.php';
+    }
+
+    public function showDeliverySummaryAjax(): void
+    {
+        $deliverySummaryData = $this->deliveryModel->getDeliverySummaryData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/delivery_summary.php';
     }
 
     public function profileAction(): void
@@ -222,6 +290,49 @@ class DeliveryManagerController
             'success' => $saved,
             'message' => $saved ? 'Delivery zone saved.' : 'Delivery zone save failed.',
         ], $saved ? 200 : 422);
+    }
+
+    public function assignAgentAction(): void
+    {
+        $orderId = (int) ($_POST['order_id'] ?? 0);
+        $agentId = (int) ($_POST['agent_id'] ?? 0);
+        $deliveryZone = trim($_POST['delivery_zone'] ?? '');
+        $deliveryZone = $deliveryZone !== '' ? $deliveryZone : null;
+
+        $result = $this->deliveryModel->assignAgentToOrder($orderId, $agentId, $deliveryZone);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
+    public function deliveryStatusAction(): void
+    {
+        $assignmentId = (int) ($_POST['assignment_id'] ?? 0);
+        $nextStatus = trim($_POST['next_status'] ?? '');
+        $failedReason = trim($_POST['failed_reason'] ?? '');
+
+        $result = $this->deliveryModel->updateDeliveryStatus($assignmentId, $nextStatus, $failedReason);
+        $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+    }
+
+    public function failedDeliveryAction(): void
+    {
+        $action = trim($_POST['failed_delivery_action'] ?? '');
+        $assignmentId = (int) ($_POST['assignment_id'] ?? 0);
+
+        if ($action === 'reassign') {
+            $agentId = (int) ($_POST['agent_id'] ?? 0);
+            $result = $this->deliveryModel->reassignFailedDelivery($assignmentId, $agentId);
+            $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+            return;
+        }
+
+        if ($action === 'notify') {
+            $note = trim($_POST['notification_note'] ?? '');
+            $result = $this->deliveryModel->notifyFailedDeliveryCustomer($assignmentId, $note);
+            $this->jsonResponse($result, (int) ($result['status'] ?? 200));
+            return;
+        }
+
+        $this->jsonResponse(['success' => false, 'message' => 'Invalid failed delivery action.'], 422);
     }
 
     private function uploadProfileImage(array &$errors): ?string

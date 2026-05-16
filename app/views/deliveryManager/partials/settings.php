@@ -17,12 +17,33 @@
             </div>
 
             <div>
-                <h2><?= htmlspecialchars($profile['name'] ?? 'Delivery Manager') ?></h2>
+                <h2 id="deliverySettingsProfileName"><?= htmlspecialchars($profile['name'] ?? 'Delivery Manager') ?></h2>
                 <p>Upload a new profile picture.</p>
                 <label class="vendor-file-btn">
                     <i class="fa-solid fa-camera"></i>
                     Choose Photo
                     <input type="file" name="profile_pic" id="deliveryProfileImageInput" accept="image/jpeg,image/png,image/webp" hidden>
+                </label>
+            </div>
+        </section>
+
+        <section class="vendor-profile-panel">
+            <h2>Account Overview</h2>
+
+            <div class="vendor-profile-grid">
+                <label>
+                    Account ID
+                    <input type="text" value="#<?= (int) ($profile['id'] ?? 0) ?>" disabled>
+                </label>
+
+                <label>
+                    Role
+                    <input type="text" value="<?= htmlspecialchars(strtoupper(str_replace('_', ' ', $profile['role'] ?? 'delivery_manager'))) ?>" disabled>
+                </label>
+
+                <label>
+                    Account Status
+                    <input type="text" value="<?= ((int) ($profile['is_active'] ?? 1) === 1) ? 'Active' : 'Inactive' ?>" disabled>
                 </label>
             </div>
         </section>

@@ -373,7 +373,7 @@ elseif ($page === 'vendorReviewAction') {
 elseif ($page === 'deliveryDashboard') {
 
     requireRole('delivery_manager');
-    includeViewOrShowMissing(__DIR__ . '/app/views/deliveryManager/deliveryManagerDashboard.php', 'Delivery Dashboard');
+    $deliveryManager->showDashboard();
     exit;
 }
 
@@ -398,6 +398,62 @@ elseif ($page === 'deliveryZonesAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryReadyDispatchAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showReadyDispatchAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryAssignAgentAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showAssignAgentAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryActiveDeliveriesAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showActiveDeliveriesAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryFailedDeliveriesAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showFailedDeliveriesAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryHistoryAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showDeliveryHistoryAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryAgentReportAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showAgentReportAjax();
+    exit;
+}
+
+elseif ($page === 'deliveryZoneReportAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showZoneReportAjax();
+    exit;
+}
+
+elseif ($page === 'deliverySummaryAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showDeliverySummaryAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');
@@ -416,6 +472,27 @@ elseif ($page === 'deliveryZoneAction') {
 
     requireRole('delivery_manager');
     $deliveryManager->zoneAction();
+    exit;
+}
+
+elseif ($page === 'deliveryAssignAgentAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->assignAgentAction();
+    exit;
+}
+
+elseif ($page === 'deliveryStatusAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->deliveryStatusAction();
+    exit;
+}
+
+elseif ($page === 'deliveryFailedAction') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->failedDeliveryAction();
     exit;
 }
 

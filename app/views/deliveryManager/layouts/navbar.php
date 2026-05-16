@@ -16,42 +16,42 @@
             <span>Manage Zones</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'dispatch' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryReadyDispatchAjax" class="<?= ($activeDeliveryPage ?? '') === 'dispatch' ? 'active' : '' ?>">
             <i class="fa-solid fa-box-open"></i>
             <span>Ready Dispatch</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'assignments' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryAssignAgentAjax" class="<?= ($activeDeliveryPage ?? '') === 'assignments' ? 'active' : '' ?>">
             <i class="fa-solid fa-route"></i>
             <span>Assign Agent</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'active_deliveries' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryActiveDeliveriesAjax" class="<?= ($activeDeliveryPage ?? '') === 'active_deliveries' ? 'active' : '' ?>">
             <i class="fa-solid fa-truck-fast"></i>
             <span>Active Deliveries</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'failed_deliveries' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryFailedDeliveriesAjax" class="<?= ($activeDeliveryPage ?? '') === 'failed_deliveries' ? 'active' : '' ?>">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span>Failed Deliveries</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'history' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryHistoryAjax" class="<?= ($activeDeliveryPage ?? '') === 'history' ? 'active' : '' ?>">
             <i class="fa-solid fa-clock-rotate-left"></i>
             <span>Delivery History</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'agent_reports' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryAgentReportAjax" class="<?= ($activeDeliveryPage ?? '') === 'agent_reports' ? 'active' : '' ?>">
             <i class="fa-regular fa-chart-bar"></i>
             <span>Agent Report</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'zone_reports' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryZoneReportAjax" class="<?= ($activeDeliveryPage ?? '') === 'zone_reports' ? 'active' : '' ?>">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Zone Report</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'delivery_summary' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliverySummaryAjax" class="<?= ($activeDeliveryPage ?? '') === 'delivery_summary' ? 'active' : '' ?>">
             <i class="fa-regular fa-chart-bar"></i>
             <span>Daily Weekly Summary</span>
         </a>
