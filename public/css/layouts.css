@@ -2026,6 +2026,81 @@ body {
     padding: 0 10px;
 }
 
+.vendor-order-toggle-cell {
+    width: 42px;
+}
+
+.vendor-order-toggle {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #cfd3dc;
+    border-radius: 4px;
+    color: #172344;
+    cursor: pointer;
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.vendor-order-toggle i {
+    font-size: 11px;
+    transition: transform 0.2s ease;
+}
+
+.vendor-order-toggle.is-open i {
+    transform: rotate(180deg);
+}
+
+.vendor-order-detail-row td {
+    background: #fbf9fd;
+    padding: 0;
+}
+
+.vendor-order-dropdown {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.6fr) minmax(360px, 2fr);
+    padding: 20px 22px;
+}
+
+.vendor-order-dropdown h3 {
+    color: #172344;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.vendor-order-dropdown p {
+    color: #52607c;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.vendor-order-dropdown-items {
+    min-width: 0;
+}
+
+.vendor-order-dropdown-items table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.vendor-order-dropdown-items th,
+.vendor-order-dropdown-items td {
+    border-top: 1px solid #d4d6dd;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.vendor-order-dropdown-items th {
+    color: #7b808a;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
 .vendor-orders-table .status-badge.pending {
     background: rgba(245, 158, 11, 0.18);
     color: #92400e;
@@ -2479,6 +2554,14 @@ body {
     .vendor-order-search,
     .vendor-order-filter select {
         width: 100%;
+    }
+
+    .vendor-order-dropdown {
+        grid-template-columns: 1fr;
+    }
+
+    .vendor-order-dropdown-items {
+        overflow-x: auto;
     }
 }
 .admin-main {

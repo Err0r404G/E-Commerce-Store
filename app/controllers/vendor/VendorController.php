@@ -168,6 +168,10 @@ class VendorController
         }
 
         $orders = $this->users->getVendorOrderItems((int) $seller['id'], $selectedStatus);
+        $orderItemsByOrder = $this->users->getVendorOrderItemsGroupedByOrderIds(
+            (int) $seller['id'],
+            array_column($orders, 'order_id')
+        );
 
         require __DIR__ . '/../../views/vendor/partials/orders.php';
     }

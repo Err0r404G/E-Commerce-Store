@@ -360,6 +360,51 @@ class UserModel
         return $orders;
     }
 
+    public function getVendorOrderItemsGroupedByOrderIds(int $sellerId, array $orderIds): array
+    {
+        $this->ensureOrderItemTrackingNoteColumn();
+
+        $orderIds = array_values(array_unique(array_filter(array_map('intval', $orderIds))));
+
+        if (empty($orderIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $types = 'i' . str_repeat('i', count($orderIds));
+        $params = array_merge([$sellerId], $orderIds);
+        $bindParams = [$types];
+
+        $stmt = $this->conn->prepare(
+            "SELECT oi.id AS order_item_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price, oi.item_status, oi.tracking_note,
+                    p.name AS product_name, o.shipping_address, o.payment_method, o.created_at,
+                    u.name AS customer_name, u.email AS customer_email, u.phone AS customer_phone
+             FROM order_items oi
+             INNER JOIN products p ON p.id = oi.product_id
+             INNER JOIN orders o ON o.id = oi.order_id
+             INNER JOIN users u ON u.id = o.customer_id
+             WHERE oi.seller_id = ? AND oi.order_id IN ($placeholders)
+             ORDER BY o.created_at DESC, oi.id DESC"
+        );
+
+        foreach ($params as $index => $value) {
+            $bindParams[] = &$params[$index];
+        }
+
+        call_user_func_array([$stmt, 'bind_param'], $bindParams);
+        $stmt->execute();
+
+        $grouped = [];
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            $grouped[(int) $row['order_id']][] = $row;
+        }
+
+        $stmt->close();
+        return $grouped;
+    }
+
     public function updateVendorOrderItemStatus(int $sellerId, int $orderItemId, string $status, ?string $trackingNote = null): bool
     {
         $this->ensureOrderItemTrackingNoteColumn();
