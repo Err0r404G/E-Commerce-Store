@@ -32,12 +32,53 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                const notifications = data.notifications;
+                applyVendorNotifications(data.notifications);
+            })
+            .catch(() => {});
+    }
 
-                alerts.forEach(alert => {
-                    const type = alert.dataset.vendorAlert;
-                    alert.hidden = Number(notifications[type] || 0) <= 0;
-                });
+    function applyVendorNotifications(notifications) {
+        document.querySelectorAll("[data-vendor-alert]").forEach(alert => {
+            const type = alert.dataset.vendorAlert;
+            alert.hidden = Number(notifications[type] || 0) <= 0;
+        });
+    }
+
+    function notificationTypeForPage(pageUrl) {
+        if (pageUrl.includes("vendorOrdersAjax")) {
+            return "orders";
+        }
+
+        if (pageUrl.includes("vendorReturnsAjax")) {
+            return "returns";
+        }
+
+        if (pageUrl.includes("vendorReviewsAjax")) {
+            return "reviews";
+        }
+
+        return "";
+    }
+
+    function markVendorNotificationSeen(type) {
+        if (!type) {
+            updateVendorNotifications();
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("type", type);
+
+        fetch("/E-Commerce-Store/index.php?page=vendorNotificationSeenAjax", {
+            method: "POST",
+            body: formData,
+            credentials: "same-origin"
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.notifications) {
+                    applyVendorNotifications(data.notifications);
+                }
             })
             .catch(() => {});
     }
@@ -629,7 +670,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 bindLoadedPage();
-                updateVendorNotifications();
+                markVendorNotificationSeen(notificationTypeForPage(pageUrl));
             })
             .catch(error => {
                 content.innerHTML = "<p class=\"admin-error\">Page failed to load.</p>";

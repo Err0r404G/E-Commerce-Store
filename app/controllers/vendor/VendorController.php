@@ -15,7 +15,7 @@ class VendorController
     {
         $seller = $this->requireSeller();
         $dashboardMetrics = $this->users->getVendorDashboardMetrics((int) $seller['id']);
-        $vendorNotifications = $this->users->getVendorNotificationCounts((int) $seller['id']);
+        $vendorNotifications = $this->getVisibleVendorNotifications((int) $seller['id']);
 
         require __DIR__ . '/../../views/vendor/view/vendor_home_page_screen.php';
     }
@@ -33,7 +33,7 @@ class VendorController
 
         $seller = $this->users->ensureSellerForVendor($vendorId);
         $vendorNotifications = $seller
-            ? $this->users->getVendorNotificationCounts((int) $seller['id'])
+            ? $this->getVisibleVendorNotifications((int) $seller['id'])
             : ['orders' => 0, 'returns' => 0, 'reviews' => 0, 'total' => 0];
 
         require __DIR__ . '/../../views/vendor/view/vendor_profile.php';
@@ -168,7 +168,28 @@ class VendorController
         $seller = $this->requireSeller();
         $this->jsonResponse([
             'success' => true,
-            'notifications' => $this->users->getVendorNotificationCounts((int) $seller['id']),
+            'notifications' => $this->getVisibleVendorNotifications((int) $seller['id']),
+        ]);
+    }
+
+    public function markNotificationSeenAjax(): void
+    {
+        $seller = $this->requireSeller();
+        $type = $_POST['type'] ?? '';
+
+        if (!in_array($type, ['orders', 'returns', 'reviews'], true)) {
+            $this->jsonResponse(['success' => false, 'message' => 'Invalid notification type.'], 422);
+            return;
+        }
+
+        $counts = $this->users->getVendorNotificationCounts((int) $seller['id']);
+        $key = $this->vendorNotificationSessionKey((int) $seller['id']);
+        $_SESSION[$key] = $_SESSION[$key] ?? [];
+        $_SESSION[$key][$type] = (int) ($counts[$type] ?? 0);
+
+        $this->jsonResponse([
+            'success' => true,
+            'notifications' => $this->getVisibleVendorNotifications((int) $seller['id']),
         ]);
     }
 
@@ -651,6 +672,27 @@ class VendorController
         }
 
         return $seller;
+    }
+
+    private function getVisibleVendorNotifications(int $sellerId): array
+    {
+        $counts = $this->users->getVendorNotificationCounts($sellerId);
+        $seen = $_SESSION[$this->vendorNotificationSessionKey($sellerId)] ?? [];
+        $visible = ['orders' => 0, 'returns' => 0, 'reviews' => 0, 'total' => 0];
+
+        foreach (['orders', 'returns', 'reviews'] as $type) {
+            $current = (int) ($counts[$type] ?? 0);
+            $seenCount = (int) ($seen[$type] ?? 0);
+            $visible[$type] = $current > $seenCount ? $current - $seenCount : 0;
+            $visible['total'] += $visible[$type];
+        }
+
+        return $visible;
+    }
+
+    private function vendorNotificationSessionKey(int $sellerId): string
+    {
+        return 'vendor_seen_notifications_' . $sellerId;
     }
 
     private function jsonResponse(array $payload, int $status = 200): void

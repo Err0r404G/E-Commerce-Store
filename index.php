@@ -355,6 +355,13 @@ elseif ($page === 'vendorNotificationsAjax') {
     exit;
 }
 
+elseif ($page === 'vendorNotificationSeenAjax') {
+
+    requireRole('vendor');
+    $vendor->markNotificationSeenAjax();
+    exit;
+}
+
 elseif ($page === 'vendorCouponsAjax') {
 
     requireRole('vendor');
