@@ -52,6 +52,7 @@ E-Commerce-Store/
 │   ├── models/                  # Data access models
 │   │   ├── admin/
 │   │   ├── auth/
+│   │   ├── deliveryManager/
 │   │   └── CustomerAreaModel.php
 │   └── views/                   # UI templates and partials
 │       ├── admin/
