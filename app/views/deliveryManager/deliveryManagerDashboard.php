@@ -91,5 +91,5 @@ include __DIR__ . '/layouts/header.php';
     </main>
 </section>
 
-<script src="/E-Commerce-Store/public/js/deliveryManagerAjax.js?v=delivery-manager-ajax-1"></script>
+<script src="/E-Commerce-Store/public/js/deliveryManagerAjax.js?v=delivery-ready-dispatch-1"></script>
 <?php include __DIR__ . '/layouts/footer.php'; ?>

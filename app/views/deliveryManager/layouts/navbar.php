@@ -16,7 +16,7 @@
             <span>Manage Zones</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'dispatch' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryReadyDispatchAjax" class="<?= ($activeDeliveryPage ?? '') === 'dispatch' ? 'active' : '' ?>">
             <i class="fa-solid fa-box-open"></i>
             <span>Ready Dispatch</span>
         </a>

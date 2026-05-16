@@ -1,14 +1,17 @@
 <?php
 
 require_once __DIR__ . '/../../views/auth/model/UserModel.php';
+require_once __DIR__ . '/../../models/deliveryManager/DeliveryManagerModel.php';
 
 class DeliveryManagerController
 {
     private UserModel $users;
+    private DeliveryManagerModel $deliveryModel;
 
     public function __construct(mysqli $conn)
     {
         $this->users = new UserModel($conn);
+        $this->deliveryModel = new DeliveryManagerModel($conn);
     }
 
     public function showSettingsAjax(): void
@@ -37,6 +40,13 @@ class DeliveryManagerController
         $zones = $this->users->getDeliveryZones();
 
         require __DIR__ . '/../../views/deliveryManager/partials/zones.php';
+    }
+
+    public function showReadyDispatchAjax(): void
+    {
+        [$orders, $dispatchStats] = $this->deliveryModel->getReadyDispatchData();
+
+        require __DIR__ . '/../../views/deliveryManager/partials/ready_dispatch.php';
     }
 
     public function profileAction(): void

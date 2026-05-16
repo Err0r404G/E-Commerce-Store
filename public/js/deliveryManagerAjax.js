@@ -288,10 +288,40 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function bindReadyDispatchEvents() {
+        const search = document.getElementById("deliveryReadyDispatchSearch");
+        const countText = document.getElementById("deliveryReadyDispatchCountText");
+
+        function filterReadyDispatch() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-delivery-ready-dispatch-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} order${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterReadyDispatch);
+        }
+
+        filterReadyDispatch();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
         bindZoneEvents();
+        bindReadyDispatchEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

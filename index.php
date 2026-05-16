@@ -398,6 +398,13 @@ elseif ($page === 'deliveryZonesAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryReadyDispatchAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showReadyDispatchAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');
