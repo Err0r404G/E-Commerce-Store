@@ -46,7 +46,7 @@
             <span>Agent Report</span>
         </a>
 
-        <a href="#" class="<?= ($activeDeliveryPage ?? '') === 'zone_reports' ? 'active' : '' ?>">
+        <a href="#" data-delivery-page="/E-Commerce-Store/index.php?page=deliveryZoneReportAjax" class="<?= ($activeDeliveryPage ?? '') === 'zone_reports' ? 'active' : '' ?>">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Zone Report</span>
         </a>

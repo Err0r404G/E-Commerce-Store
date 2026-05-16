@@ -388,6 +388,74 @@ class DeliveryManagerModel
         return [$agents, $stats];
     }
 
+    public function getZoneReportData(): array
+    {
+        $this->ensureDeliveryFailureColumns();
+
+        $zones = [];
+        $result = $this->conn->query(
+            "SELECT COALESCE(NULLIF(assignments.delivery_zone, ''), 'No zone selected') AS zone_name,
+                    COUNT(assignments.id) AS total_deliveries,
+                    SUM(CASE WHEN assignments.status = 'delivered' THEN 1 ELSE 0 END) AS completed_deliveries,
+                    SUM(CASE WHEN assignments.status = 'failed' THEN 1 ELSE 0 END) AS failed_deliveries,
+                    SUM(CASE WHEN assignments.status IN ('assigned', 'picked_up', 'in_transit') THEN 1 ELSE 0 END) AS active_deliveries,
+                    AVG(
+                        CASE
+                            WHEN assignments.status = 'delivered'
+                            THEN TIMESTAMPDIFF(MINUTE, assignments.assigned_at, COALESCE(assignments.completed_at, assignments.assigned_at))
+                            ELSE NULL
+                        END
+                    ) AS average_delivery_minutes,
+                    MAX(COALESCE(assignments.completed_at, assignments.failed_at, assignments.assigned_at)) AS last_activity_at
+             FROM delivery_assignments assignments
+             GROUP BY COALESCE(NULLIF(assignments.delivery_zone, ''), 'No zone selected')
+             ORDER BY total_deliveries DESC, completed_deliveries DESC, zone_name ASC"
+        );
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $total = (int) ($row['total_deliveries'] ?? 0);
+                $completed = (int) ($row['completed_deliveries'] ?? 0);
+                $failed = (int) ($row['failed_deliveries'] ?? 0);
+
+                $row['total_deliveries'] = $total;
+                $row['completed_deliveries'] = $completed;
+                $row['failed_deliveries'] = $failed;
+                $row['active_deliveries'] = (int) ($row['active_deliveries'] ?? 0);
+                $row['average_delivery_minutes'] = $row['average_delivery_minutes'] !== null ? (float) $row['average_delivery_minutes'] : null;
+                $row['completed_rate'] = $total > 0 ? round(($completed / $total) * 100, 2) : 0.0;
+
+                $zones[] = $row;
+            }
+        }
+
+        $stats = [
+            'zones' => count($zones),
+            'total_deliveries' => 0,
+            'completed' => 0,
+            'average_delivery_minutes' => null,
+        ];
+
+        $averageMinutesTotal = 0.0;
+        $averageMinutesCount = 0;
+
+        foreach ($zones as $zone) {
+            $stats['total_deliveries'] += (int) $zone['total_deliveries'];
+            $stats['completed'] += (int) $zone['completed_deliveries'];
+
+            if ($zone['average_delivery_minutes'] !== null) {
+                $averageMinutesTotal += (float) $zone['average_delivery_minutes'];
+                $averageMinutesCount++;
+            }
+        }
+
+        if ($averageMinutesCount > 0) {
+            $stats['average_delivery_minutes'] = $averageMinutesTotal / $averageMinutesCount;
+        }
+
+        return [$zones, $stats];
+    }
+
     public function updateDeliveryStatus(int $assignmentId, string $nextStatus, ?string $failedReason = null): array
     {
         $this->ensureDeliveryFailureColumns();

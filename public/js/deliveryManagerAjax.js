@@ -572,6 +572,35 @@ document.addEventListener("DOMContentLoaded", function () {
         filterAgentReport();
     }
 
+    function bindZoneReportEvents() {
+        const search = document.getElementById("zoneReportSearch");
+        const countText = document.getElementById("zoneReportCountText");
+
+        function filterZoneReport() {
+            const term = search ? search.value.trim().toLowerCase() : "";
+            let visibleCount = 0;
+
+            document.querySelectorAll("[data-zone-report-row]").forEach(row => {
+                const isVisible = row.dataset.search.includes(term);
+
+                row.style.display = isVisible ? "" : "none";
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if (countText) {
+                countText.textContent = `Showing ${visibleCount} zone${visibleCount === 1 ? "" : "s"}`;
+            }
+        }
+
+        if (search) {
+            search.addEventListener("input", filterZoneReport);
+        }
+
+        filterZoneReport();
+    }
+
     function bindLoadedPage() {
         bindSettingsEvents();
         bindAgentEvents();
@@ -582,6 +611,7 @@ document.addEventListener("DOMContentLoaded", function () {
         bindFailedDeliveryEvents();
         bindDeliveryHistoryEvents();
         bindAgentReportEvents();
+        bindZoneReportEvents();
     }
 
     function loadPage(pageUrl, activeLink) {

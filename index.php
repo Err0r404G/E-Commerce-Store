@@ -440,6 +440,13 @@ elseif ($page === 'deliveryAgentReportAjax') {
     exit;
 }
 
+elseif ($page === 'deliveryZoneReportAjax') {
+
+    requireRole('delivery_manager');
+    $deliveryManager->showZoneReportAjax();
+    exit;
+}
+
 elseif ($page === 'deliveryProfileAction') {
 
     requireRole('delivery_manager');
